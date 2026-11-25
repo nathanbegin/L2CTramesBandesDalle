@@ -40,6 +40,7 @@ h1{font-size:15px;font-weight:600;color:#191716;margin:0;letter-spacing:.01em}
 .tg:focus-visible,.item:focus-visible,.btn:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
 .sw{width:12px;height:12px;border-radius:2px;border:1.5px solid currentColor;display:inline-block}
 .sw.A{color:var(--colA);background:color-mix(in srgb,var(--colA) 28%,transparent)}
+.sw.O{color:#7c3aed;background:color-mix(in srgb,#7c3aed 28%,transparent)}
 .sw.B{color:var(--colB);background:color-mix(in srgb,var(--colB) 28%,transparent)}
 .sw.M{color:var(--mid);background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--mid) 55%,transparent) 0 2px,transparent 2px 5px)}
 .sw.F{color:var(--foot);background:color-mix(in srgb,var(--foot) 30%,transparent)}
@@ -407,7 +408,8 @@ let D = {"gx":[{"l":"1","m":53.06808068033855},{"l":"2","m":50.12168068033855},{
 const SEED_JSON = JSON.stringify(D);
 const $ = s => document.querySelector(s);
 const f2 = v => v.toFixed(2);
-const show = {A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
+const lk=l=>l==='A'||l==='B'?l:'O';
+const show = {A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
 let selId = null;
 
 /* ---------- géométrie : y du plan vers y écran (inversé) ---------- */
@@ -478,23 +480,23 @@ function planSVG(){
   if(show.sl) (D.slabs||[]).forEach(s=>{ const g=(D.sigs||[])[s.sig]||{color:'#999',label:''}; r.push(`<polygon class="slb${selObj&&selObj.t==='s'&&D.slabs[selObj.i]===s?' on':''}" data-obj="s:${D.slabs.indexOf(s)}" style="--c:${g.color}" points="${s.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Dalle ${s.id} · ${g.label}</title></polygon>`); });
   if(show.op) D.open.forEach(o=>r.push(`<polygon class="opn" points="${o.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Ouverture .f2k ${o.id}</title></polygon>`));
   if(show.det) D.detail.forEach(s=>r.push(`<line class="dl" x1="${s[0]}" y1="${-s[1]}" x2="${s[2]}" y2="${-s[3]}"/>`));
-  if(show.ms) mids.filter(m=>show[m.layer]).forEach(m=>{
+  if(show.ms) mids.filter(m=>show[lk(m.layer)]).forEach(m=>{
     const q=m.rect; r.push(`<rect class="ms${m.id===selId?' sel':''}" data-id="${m.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`);
   });
-  if(show.cs) strips.filter(s=>show[s.layer]).forEach(s=>{
+  if(show.cs) strips.filter(s=>show[lk(s.layer)]).forEach(s=>{
     const q=s.rect; r.push(`<rect class="cs ${s.layer}${s.id===selId?' sel':''}" data-id="${s.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`);
     if(s.layer==='A') r.push(`<line class="cl A" x1="${s.axis}" x2="${s.axis}" y1="${-s.a}" y2="${-s.b}"/>`);
     else r.push(`<line class="cl B" x1="${s.a}" x2="${s.b}" y1="${-s.axis}" y2="${-s.axis}"/>`);
   });
-  [['gm','gm'],['gc','gc']].forEach(([k,kind])=>{ if(show[k]) genObjs.filter(f=>f.kind===kind&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  [['gm','gm'],['gc','gc']].forEach(([k,kind])=>{ if(show[k]) genObjs.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="gs ${kind} ${f.layer}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
-  if(show.ctr) genObjs.filter(f=>show[f.layer]).forEach(f=>{
+  if(show.ctr) genObjs.filter(f=>show[lk(f.layer)]).forEach(f=>{
     r.push(f.layer==='A'?`<line class="ax ctr" x1="${f.axis}" x2="${f.axis}" y1="${-f.lo}" y2="${-f.hi}"/>`:`<line class="ax ctr" x1="${f.lo}" x2="${f.hi}" y1="${-f.axis}" y2="${-f.axis}"/>`);
     (D.cols||[]).forEach(c=>{ const p=f.layer==='A'?c.x:c.y,q=f.layer==='A'?c.y:c.x; if(Math.abs(p-f.axis)<=(f.layer==='A'?c.w:c.h)/2+0.02&&q>=f.lo-.05&&q<=f.hi+.05) r.push(`<circle class="ctrd" cx="${c.x}" cy="${-c.y}" r="0.22"/>`); });
   });
-  [['rm','rm'],['rc','rc']].forEach(([k,kind])=>{ if(show[k]) recon.filter(f=>f.kind===kind&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  [['rm','rm'],['rc','rc']].forEach(([k,kind])=>{ if(show[k]) recon.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="rs ${kind}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
-  [['fm','fm'],['fc','fc']].forEach(([k,kind])=>{ if(show[k]) f2k.filter(f=>f.kind===kind&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  [['fm','fm'],['fc','fc']].forEach(([k,kind])=>{ if(show[k]) f2k.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="fs ${kind}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
   LIM.forEach((l,i)=>{
     if(l.del) return;
@@ -530,16 +532,16 @@ function planSVG(){
     r.push(`<polygon class="wl${selObj&&selObj.t==='w'&&selObj.i===i?' on':''}" data-obj="w:${i}" points="${[[w.a[0]+nx,w.a[1]+ny],[w.b[0]+nx,w.b[1]+ny],[w.b[0]-nx,w.b[1]-ny],[w.a[0]-nx,w.a[1]-ny]].map(q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3)).join(' ')}"/>`); });
   if(show.col) D.cols.forEach((c,i)=>r.push(`<rect class="col${selObj&&selObj.t==='c'&&selObj.i===i?' on':''}" data-obj="c:${i}" x="${c.x-c.w/2}" y="${-c.y-c.h/2}" width="${c.w}" height="${c.h}"/>`));
   if(gen.mode==='cols'||gen.mode==='lines') D.cols.forEach((c,i)=>r.push(`<rect class="chit${(gen.mode==='cols'?gen.first:gen.axCol)===i?' on':''}" data-col="${i}" x="${c.x-.6}" y="${-c.y-.6}" width="1.2" height="1.2"/>`));
-  ['gc','gm'].forEach(k=>{ if(show[k]) genObjs.filter(f=>f.kind===k&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  ['gc','gm'].forEach(k=>{ if(show[k]) genObjs.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='gc'?'GC':'GM'}" x="${q.x+.15}" y="${q.y+.65}">${f.id}</text>`); }); });
-  ['rc','rm'].forEach(k=>{ if(show[k]) recon.filter(f=>f.kind===k&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  ['rc','rm'].forEach(k=>{ if(show[k]) recon.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='rc'?'RC':'RM'}" x="${q.x+.15}" y="${q.y+q.h-.2}">${f.id}</text>`); }); });
-  ['fc','fm'].forEach(k=>{ if(show[k]) f2k.filter(f=>f.kind===k&&show[f.layer]).forEach(f=>{ const q=f.rect;
+  ['fc','fm'].forEach(k=>{ if(show[k]) f2k.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='fc'?'FC':'FM'}" x="${q.x+q.w-.15}" y="${q.y+q.h-.2}">${f.id}</text>`); }); });
-  if(show.cs) strips.filter(s=>show[s.layer]).forEach(s=>{
+  if(show.cs) strips.filter(s=>show[lk(s.layer)]).forEach(s=>{
     const q=s.rect; r.push(`<text class="lbl ${s.layer}" x="${q.x+.15}" y="${q.y+.65}">${s.id}</text>`);
   });
-  if(show.ms) mids.filter(m=>show[m.layer]).forEach(m=>{
+  if(show.ms) mids.filter(m=>show[lk(m.layer)]).forEach(m=>{
     const q=m.rect; r.push(`<text class="lbl M" x="${q.x+.15}" y="${q.y+q.h-.2}">${m.id}</text>`);
   });
   const s = byId[selId];
@@ -574,18 +576,19 @@ function draw(){ $('#plan').innerHTML = planSVG(); if(typeof renderSteps==='func
 
 /* ---------- calques ---------- */
 const TG = [
-  ['A','Couche A (verticales)','A'],['B','Couche B (horizontales)','B'],
+  ['A','Bandes · couche A (verticales)','A'],['B','Bandes · couche B (horizontales)','B'],['O','Bandes · autres couches','O'],
   ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G']
 ];
 function buildToggles(){
   const L=D.lines||[], nV=L.filter(l=>l.o==='V'&&!l.del).length, nH=L.filter(l=>l.o==='H'&&!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0;
+  const nl=k=>[strips,mids,(typeof gen!=='undefined'?gen.list:[]),D.f2k||[],D.recon||[]].reduce((a,L)=>a+(L||[]).filter(x=>lk(x.layer)===k).length,0);
   const cnt={wl:(D.walls||[]).length,col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
-    A:strips.filter(x=>x.layer==='A').length+(typeof gen!=='undefined'?gen.list.filter(x=>x.layer==='A').length:0),B:strips.filter(x=>x.layer==='B').length+(typeof gen!=='undefined'?gen.list.filter(x=>x.layer==='B').length:0),
+    A:nl('A'),B:nl('B'),O:nl('O'),
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
-  const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Couches du PDF',['A','B']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
+  const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
-  const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
-  $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&cnt[k]>0); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
+  const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',O:'Autres couches',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
+  $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&(cnt[k]>0||(k==='O'&&cnt.A+cnt.B>0))); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
 }
 $('#toggles').addEventListener('click',e=>{
   const b=e.target.closest('.tg'); if(!b) return;
@@ -1285,7 +1288,7 @@ const PJ={id:'exemple',name:SEED_NAME,hasF2k:false,fname:'',Z:47.244,maxPt:847,O
 const ST={ok:false,id:null,col:null,dcol:null,timer:null,chain:Promise.resolve(),loading:false,list:[]};
 PJ.levels=[44450,47244,50038]; setZUI();
 function pjMsg(s){ const e=$('#pj-msg'); if(e) e.textContent=s||''; }
-function resetShow(sl){ Object.assign(show,{A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,wl:true,mk:true}); }
+function resetShow(sl){ Object.assign(show,{A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,wl:true,mk:true}); }
 function setZUI(){ const z=$('#x-z'); if(!z) return; z.value=Math.round(PJ.zsel||PJ.Z*1000);
   $('#x-zl').innerHTML=(PJ.levels||[]).map(v=>`<option value="${v}">${v}</option>`).join('');
   $('#x-zh').textContent=`Niveau des dalles du modèle : Z = ${Math.round(PJ.Z*1000)} mm.`+((PJ.levels||[]).length>1?` Autres niveaux détectés (colonnes, étages) : ${PJ.levels.filter(v=>v!==Math.round(PJ.Z*1000)).join(', ')} mm.`:''); }
