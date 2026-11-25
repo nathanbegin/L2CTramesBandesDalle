@@ -338,6 +338,7 @@ header{display:block;padding:10px 16px 8px}
 </div>
 <dialog id="pdfdlg"><form method="dialog" id="pdfform">
   <h2>Importer un PDF de plan</h2><p id="pd-sum"></p>
+  <label id="pd-pgw" hidden>Page du plan à utiliser<select id="pd-pg"></select></label>
   <label>Échelle du plan<select id="pd-sc"></select></label>
   <label id="pd-cw">Échelle personnalisée (m par point PDF)<input id="pd-cus" type="number" step="0.00001" min="0.0001" value="0.03387"></label>
   <div id="pd-org"><label>Origine SAFE · X (m) de l’axe <b id="pd-lx"></b><input id="pd-ox" type="number" step="0.001" value="0"></label><label>Origine SAFE · Y (m) de l’axe <b id="pd-ly"></b><input id="pd-oy" type="number" step="0.001" value="0"></label></div>
@@ -1259,8 +1260,8 @@ const SCALES=[['1/8" = 1\'-0"',0.0254/72*96],['1/4" = 1\'-0"',0.0254/72*48],['3/
 async function pdfLoad(){ if(PDFJS) return; const m=await import('./pdf.min.mjs'); m.GlobalWorkerOptions.workerSrc=new URL('./pdf.worker.min.mjs',location.href).href; PDFJS=m; EXTRACT=(await import('./pdfx.js')).extractPdf; }
 async function importPdfBuffer(buf,fname,asNew){
   pjMsg('Lecture du PDF…');
-  let px; try{ await pdfLoad(); px=await EXTRACT(PDFJS,buf,1); }catch(e){ pjMsg('PDF illisible : '+(e&&e.message||e)); return; }
-  PDFX={px,fname,asNew:asNew||PJ.id==='exemple'}; openPdfDlg();
+  let px; try{ await pdfLoad(); px=await EXTRACT(PDFJS,buf.slice(0),1); }catch(e){ pjMsg('PDF illisible : '+(e&&e.message||e)); return; }
+  PDFX={px,buf,fname,asNew:asNew||PJ.id==='exemple'}; $('#pd-pg').innerHTML=''; openPdfDlg();
 }
 function pdScale(){ const v=$('#pd-sc').value; return v==='cus'?(parseFloat($('#pd-cus').value)||0.03387):parseFloat(v); }
 function pdCheck(){ const px=PDFX.px, S=pdScale(), g=a=>a.length?(Math.max(...a.map(q=>q.pos))-Math.min(...a.map(q=>q.pos)))*S:0;
@@ -1269,13 +1270,17 @@ function pdCheck(){ const px=PDFX.px, S=pdScale(), g=a=>a.length?(Math.max(...a.
   $('#pd-chk').textContent=`Contrôle : axe ${lx[0]} → ${lx[lx.length-1]} = ${g(px.grid.x).toFixed(2)} m · axe ${ly[0]} → ${ly[ly.length-1]} = ${g(px.grid.y).toFixed(2)} m. Comparez à une cote du plan.`; }
 function openPdfDlg(){
   const px=PDFX.px, hasDs=!PDFX.asNew&&PJ.hasF2k;
-  $('#pd-sum').textContent=`${PDFX.fname} · ${px.grid.x.length} axes (X) · ${px.grid.y.length} axes (Y) · ${px.limits.length} limites bleues/violettes · ${px.cols.length} colonnes · ${px.foot.length} segments d’empreinte`+(px.page.n>1?` · page 1 sur ${px.page.n}`:'')+'.'+(!px.grid.x.length||!px.grid.y.length?' Trame non détectée : les bulles d’axes doivent être du texte dans le PDF.':'');
+  $('#pd-sum').textContent=`${PDFX.fname} · ${px.grid.x.length} axes (X) · ${px.grid.y.length} axes (Y) · ${px.limits.length} limites bleues/violettes · ${px.cols.length} colonnes · ${px.foot.length} segments d’empreinte`+(px.page.n>1?` · page ${px.page.no||1} sur ${px.page.n}`:'')+'.'+(!px.grid.x.length||!px.grid.y.length?' Trame non détectée : les bulles d’axes doivent être du texte dans le PDF.':'');
+  const pgs=$('#pd-pg'); if(!pgs.options.length){ pgs.innerHTML=Array.from({length:px.page.n},(_,i)=>`<option value="${i+1}">Page ${i+1} sur ${px.page.n}</option>`).join(''); } pgs.value=px.page.no||1; $('#pd-pgw').hidden=px.page.n<2;
+  const prevSc=$('#pd-sc').value;
   $('#pd-sc').innerHTML=(px.scaleHint?`<option value="${px.scaleHint.mPerPt}">Détectée : ${px.scaleHint.label}</option>`:'')+SCALES.map(([l,v])=>`<option value="${v}">${l}</option>`).join('')+'<option value="cus">Personnalisée…</option>';
+  if(prevSc&&[...$('#pd-sc').options].some(o=>o.value===prevSc)) $('#pd-sc').value=prevSc;
   $('#pd-org').hidden=hasDs; const pm0=(!PDFX.asNew&&PJ.pm)||null; $('#pd-ox').value=pm0?pm0.OX:0; $('#pd-oy').value=pm0?pm0.OY:0;
   if(pm0&&pm0.S){ const sc=$('#pd-sc'); const o=[...sc.options].find(o=>o.value!=='cus'&&Math.abs(parseFloat(o.value)-pm0.S)<1e-9); if(o) sc.value=o.value; else { sc.value='cus'; $('#pd-cus').value=pm0.S; } }
   $('#pd-ok').textContent='Importer'; pdCheck();
-  const dl=$('#pdfdlg'); if(dl.showModal) dl.showModal(); else dl.setAttribute('open','');
+  const dl=$('#pdfdlg'); if(!dl.open){ if(dl.showModal) dl.showModal(); else dl.setAttribute('open',''); }
 }
+$('#pd-pg').onchange=async()=>{ const n=parseInt($('#pd-pg').value); $('#pd-ok').disabled=true; try{ PDFX.px=await EXTRACT(PDFJS,PDFX.buf.slice(0),n); }catch(e){ $('#pd-sum').textContent='Page illisible : '+(e&&e.message||e); $('#pd-ok').disabled=false; return; } $('#pd-ok').disabled=false; openPdfDlg(); };
 $('#pd-sc').onchange=pdCheck; $('#pd-cus').oninput=pdCheck;
 $('#pd-cancel').onclick=e=>{ e.preventDefault(); $('#pdfdlg').close(); pjMsg('Import PDF annulé.'); };
 $('#pd-ok').onclick=async e=>{ e.preventDefault(); $('#pdfdlg').close(); await applyPdf(); };
@@ -1283,7 +1288,7 @@ async function applyPdf(){
   const {px,fname,asNew}=PDFX, S=pdScale(); let id=PJ.id, name=PJ.name, OX=OXm, OY=OYm, ds=asNew?null:PJ.ds;
   if(asNew){ id='p'+Date.now().toString(36); name=fname.replace(/\.[^.]+$/,''); OX=parseFloat($('#pd-ox').value)||0; OY=parseFloat($('#pd-oy').value)||0; }
   else if(!ds){ OX=parseFloat($('#pd-ox').value)||0; OY=parseFloat($('#pd-oy').value)||0; if(/^Nouveau projet/.test(name)) name=fname.replace(/\.[^.]+$/,''); }
-  const pm={S,OX,OY,fname};
+  const pm={S,OX,OY,fname,page:px.page.no||1};
   if(ST.ok){ try{ await ST.pcol.doc(id).set({px}); }catch(e){ pjMsg('Sauvegarde du PDF impossible ('+((e&&e.code)||'erreur')+').'); } }
   const d=buildD(id,ds,px,pm,OX,OY);
   applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:!!ds,fname:ds?PJ.fname:'',Z:ds?ds.Z:47.244,levels:ds?ds.levels:null,maxPt:ds?ds.maxPt:847,hasPdf:true,pm,ds,px},asNew?null:{lines:[],gen:{list:gen.list,seq:gen.seq}});
