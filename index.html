@@ -275,6 +275,7 @@ header{display:block;padding:10px 16px 8px}
 .fpx{stroke:#e11d48;stroke-width:1.6;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
 .fph{stroke:#f59e0b;stroke-width:3.5;vector-effect:non-scaling-stroke;pointer-events:none}
 .fphit{stroke:transparent;stroke-width:12;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}
+.ver{margin-top:auto;flex:none;padding:6px 12px;border-top:1px solid var(--line);font:11px var(--font-mono);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 </style>
 </head>
 <body>
@@ -387,6 +388,7 @@ header{display:block;padding:10px 16px 8px}
       <div id="rv-list" style="display:flex;flex-direction:column;gap:4px"></div>
       <div class="acts"><button class="btn" id="rv-csv" type="button">Exporter le markup (.csv)</button><button class="btn" id="rv-copy" type="button">Copier</button></div></section>
     </div>
+    <div class="ver" id="ver"></div>
   </aside>
 </div>
 <dialog id="setdlg"><form method="dialog" id="setform">
@@ -688,6 +690,8 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
+const APP_VERSION='1.4.0', APP_DATE='2026-11-25';
+$('#ver').innerHTML=`<span>L2C · Trame des bandes de dalle</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
 function select(id){
