@@ -137,9 +137,9 @@ table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:c
 .edsn label{display:flex;gap:6px;align-items:center}
 .edhint{margin:8px 0 0;color:var(--muted,#666);line-height:1.35}
 .ln.nw{stroke-width:2.2}
-.rv{stroke-width:9;stroke-linecap:round;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.38}
+.rv{stroke-width:2.6;stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
 .rv.add{stroke:var(--rvA)}.rv.mod{stroke:var(--rvM)}.rv.del{stroke:var(--rvD)}
-.rv.on{opacity:.8;stroke-width:13}
+.rv.on,.rvdel.on{stroke-width:4.5}
 .rvog{stroke:#8c8f98;stroke-width:1.6;stroke-dasharray:3 4;vector-effect:non-scaling-stroke;pointer-events:none;fill:none}
 .rvdel{stroke:var(--rvD);stroke-width:2;stroke-dasharray:8 5;vector-effect:non-scaling-stroke;pointer-events:none}
 .sw.MK{background:var(--rvM);border-color:var(--rvM)}
@@ -456,7 +456,7 @@ function planSVG(){
     const on=edSel===v.i?' on':'';
     if(v.t==='add') r.push(seg(v.l,'rv add'+on));
     else if(v.t==='mod'){ r.push(seg(v.o,'rvog'),seg(v.l,'rv mod'+on)); }
-    else { r.push(seg(v.o,'rv del'+on),seg(v.o,'rvdel')); } });
+    else { r.push(seg(v.o,'rvdel'+on)); } });
   if(edLim&&!edAdd) D.lines.forEach((l,i)=>{ if(l.del||!(l.o==='V'?show.lnV:show.lnH)) return;
     [['a',l.a],['b',l.b]].forEach(([e,v])=>{ const w=e==='a'?v+0.001:v-0.001, [x1,y1,x2,y2]=l.o==='V'?[l.pos,-v,l.pos,-w]:[v,-l.pos,w,-l.pos];
       r.push(`<line class="lh${hdrag&&hdrag.i===i&&hdrag.e===e?' on':''}" data-h="${i}" data-e="${e}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`); }); });
@@ -514,8 +514,8 @@ function buildToggles(){
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
   const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Couches du PDF',['A','B']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
-  const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions vs PDF',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
-  $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&cnt[k]>0); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
+  const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
+  $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&cnt[k]>0); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
 }
 $('#toggles').addEventListener('click',e=>{
   const b=e.target.closest('.tg'); if(!b) return;
