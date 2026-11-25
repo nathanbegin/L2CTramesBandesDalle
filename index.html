@@ -276,6 +276,7 @@ header{display:block;padding:10px 16px 8px}
 .fph{stroke:#f59e0b;stroke-width:3.5;vector-effect:non-scaling-stroke;pointer-events:none}
 .fphit{stroke:transparent;stroke-width:12;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}
 .ver{margin-top:auto;flex:none;padding:6px 12px;border-top:1px solid var(--line);font:11px var(--font-mono);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.grr{margin-top:8px;font-size:12px}.grr b{display:block;color:var(--muted);font-weight:600;margin:4px 0 3px}.grr .r{display:flex;align-items:center;gap:6px;margin-bottom:4px}.grr select{font:12px var(--font-mono);padding:3px 4px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--ink)}.grr button{font-size:11.5px}
 </style>
 </head>
 <body>
@@ -316,7 +317,7 @@ header{display:block;padding:10px 16px 8px}
         <label><input type="checkbox" data-sn="lim" checked> Autres limites</label></div>
       <p class="edhint" id="edhint"></p>
     </div>
-    <details class="layers" id="layers"><summary>Calques</summary><div id="toggles" role="group" aria-label="Calques"></div></details>
+    <details class="layers" id="layers"><summary>Calques</summary><div id="toggles" role="group" aria-label="Calques"></div><div class="grr" id="grr"></div></details>
 <div class="fpbox" id="fpbox" hidden><b>Empreinte du bâtiment (PDF)</b>
 <p id="fpmsg"></p>
 <div class="fpmode"><label><input type="radio" name="fpm" value="style" checked> Clic sur le plan : basculer le style</label><label><input type="radio" name="fpm" value="trait"> Clic sur le plan : exclure / ajouter un trait</label></div>
@@ -456,6 +457,13 @@ function nearestAxis(v, axes){
   let best=null; axes.forEach(a=>{ if(!best||Math.abs(a.m-v)<Math.abs(best.m-v)) best=a; });
   return best;
 }
+/* plage de la trame affichée : pm.gr = {x:[l1,l2], y:[l1,l2]} (libellés d'axes) */
+function gridVis(){ const gr=(PJ.pm&&PJ.pm.gr)||{}, pick=(A,r)=>{ if(!r) return A; const i=A.findIndex(g=>g.l===r[0]), j=A.findIndex(g=>g.l===r[1]); if(i<0||j<0) return A; return A.slice(Math.min(i,j),Math.max(i,j)+1); }; return {gx:pick(D.gx,gr.x),gy:pick(D.gy,gr.y)}; }
+function grrBuild(){ const el=$('#grr'); if(!el) return; if(!D.gx.length&&!D.gy.length){ el.innerHTML=''; return; }
+  const gr=(PJ.pm&&PJ.pm.gr)||{}, row=(k,t,A)=>{ const r=gr[k]||[A[0]&&A[0].l,A[A.length-1]&&A[A.length-1].l], o=sel=>A.map(g=>`<option${g.l===sel?' selected':''}>${g.l}</option>`).join(''); return A.length?`<b>${t}</b><div class="r">de <select data-k="${k}" data-i="0">${o(r[0])}</select> à <select data-k="${k}" data-i="1">${o(r[1])}</select></div>`:''; };
+  el.innerHTML=row('x','Trame à afficher · axes verticaux',D.gx)+row('y','Trame à afficher · axes horizontaux',D.gy)+'<button class="btn" type="button" id="grr-all">Toute la trame</button>'; }
+document.addEventListener('change',e=>{ const sl=e.target.closest&&e.target.closest('#grr select'); if(!sl) return; const gr=Object.assign({},(PJ.pm&&PJ.pm.gr)||{}), k=sl.dataset.k, A=k==='x'?D.gx:D.gy, cur=(gr[k]||[A[0].l,A[A.length-1].l]).slice(); cur[+sl.dataset.i]=sl.value; gr[k]=cur; PJ.pm=Object.assign({},PJ.pm||{},{gr}); grrBuild(); touch(); draw(); });
+document.addEventListener('click',e=>{ if(e.target.id==='grr-all'){ const pm=Object.assign({},PJ.pm||{}); delete pm.gr; PJ.pm=pm; grrBuild(); touch(); draw(); } });
 function axisRef(layer, v){
   const a = nearestAxis(v, layer==='A'?D.gx:D.gy), d = v-a.m;
   return `axe ${a.l} ${d>=0?'+':'−'} ${Math.abs(d).toFixed(2)} m`;
@@ -466,13 +474,14 @@ function planSVG(){
   const r=[];
   r.push(`<defs><pattern id="hatch" width=".5" height=".5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2=".5" style="stroke:var(--mid);stroke-width:.07;opacity:.7"/></pattern></defs>`);
   if(show.grid){
-    D.gx.forEach(g=>{
-      r.push(`<line class="ax" x1="${g.m}" x2="${g.m}" y1="${-by0+PAD-1.2}" y2="${-by1-PAD+1.2}"/>`);
-      [-by0+PAD-1.2, -by1-PAD+1.2].forEach(y=>r.push(`<circle class="bub" cx="${g.m}" cy="${y}" r=".75"/><text class="bubt" x="${g.m}" y="${y}">${g.l}</text>`));
+    const vg=gridVis(), ex=vg.gx.length?[Math.min(...vg.gx.map(g=>g.m)),Math.max(...vg.gx.map(g=>g.m))]:[bx0,bx1], ey=vg.gy.length?[Math.min(...vg.gy.map(g=>g.m)),Math.max(...vg.gy.map(g=>g.m))]:[by0,by1];
+    vg.gx.forEach(g=>{
+      r.push(`<line class="ax" x1="${g.m}" x2="${g.m}" y1="${-ey[0]+PAD-1.2}" y2="${-ey[1]-PAD+1.2}"/>`);
+      [-ey[0]+PAD-1.2, -ey[1]-PAD+1.2].forEach(y=>r.push(`<circle class="bub" cx="${g.m}" cy="${y}" r=".75"/><text class="bubt" x="${g.m}" y="${y}">${g.l}</text>`));
     });
-    D.gy.forEach(g=>{
-      r.push(`<line class="ax" y1="${-g.m}" y2="${-g.m}" x1="${bx0-PAD+1.2}" x2="${bx1+PAD-1.2}"/>`);
-      [bx0-PAD+1.2, bx1+PAD-1.2].forEach(x=>r.push(`<circle class="bub" cx="${x}" cy="${-g.m}" r=".75"/><text class="bubt" x="${x}" y="${-g.m}">${g.l}</text>`));
+    vg.gy.forEach(g=>{
+      r.push(`<line class="ax" y1="${-g.m}" y2="${-g.m}" x1="${ex[0]-PAD+1.2}" x2="${ex[1]+PAD-1.2}"/>`);
+      [ex[0]-PAD+1.2, ex[1]+PAD-1.2].forEach(x=>r.push(`<circle class="bub" cx="${x}" cy="${-g.m}" r=".75"/><text class="bubt" x="${x}" y="${-g.m}">${g.l}</text>`));
     });
   }
   if(show.foot){
@@ -590,6 +599,7 @@ function buildToggles(){
   const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
   const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',O:'Autres couches',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
+  grrBuild();
   $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&(cnt[k]>0||(k==='O'&&cnt.A+cnt.B>0))); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
 }
 $('#toggles').addEventListener('click',e=>{
@@ -690,7 +700,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.4.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.5.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes de dalle</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
