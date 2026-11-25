@@ -27,7 +27,8 @@ header{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:cen
 .legend .lg{display:grid;grid-template-columns:14px 1fr auto;gap:8px;align-items:center;margin-top:5px}
 .legend .lg i{width:14px;height:14px;border-radius:3px;display:block;border:1px solid #0003}
 .legend .lg em{font-style:normal;color:var(--muted);font-size:11.5px}
-.slb{fill:color-mix(in srgb,var(--c) 38%,transparent);stroke:var(--c);stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.slb{fill:color-mix(in srgb,var(--c) 38%,transparent);stroke:var(--c);stroke-width:1.2;vector-effect:non-scaling-stroke;cursor:pointer}.slb.on{stroke:#f59e0b;stroke-width:3}
+.wl{fill:#6b7280;fill-opacity:.55;stroke:#374151;stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}.wl.on,.col.on{stroke:#f59e0b;stroke-width:3;vector-effect:non-scaling-stroke}
 .sw.SL{color:var(--brand);background:color-mix(in srgb,var(--brand) 28%,transparent)}
 .brand{display:flex;align-items:center;gap:12px}
 .logo{height:34px;width:auto;display:block}
@@ -183,7 +184,7 @@ table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:c
 .sel{stroke:var(--sel)!important;stroke-width:3!important;stroke-dasharray:none!important}
 .cl{stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke;pointer-events:none}
 .cl.A{stroke:var(--colA)} .cl.B{stroke:var(--colB)}
-.col{fill:var(--ink);pointer-events:none}
+.col{fill:var(--ink);cursor:pointer}
 .lbl{font:500 calc(.56px*var(--fs,1)) var(--font-mono);pointer-events:none;paint-order:stroke;stroke:var(--paper);stroke-width:.14px}
 .lbl.A{fill:var(--colA)} .lbl.B{fill:var(--colB)} .lbl.M{fill:var(--mid)}
 .dim{font:calc(.5px*var(--fs,1)) var(--font-mono);fill:var(--sel);pointer-events:none;paint-order:stroke;stroke:var(--paper);stroke-width:.14px;text-anchor:middle}
@@ -406,7 +407,7 @@ let D = {"gx":[{"l":"1","m":53.06808068033855},{"l":"2","m":50.12168068033855},{
 const SEED_JSON = JSON.stringify(D);
 const $ = s => document.querySelector(s);
 const f2 = v => v.toFixed(2);
-const show = {A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,mk:true};
+const show = {A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
 let selId = null;
 
 /* ---------- géométrie : y du plan vers y écran (inversé) ---------- */
@@ -474,7 +475,7 @@ function planSVG(){
     D.fill.forEach(poly=>{ r.push(`<path class="fill" fill-rule="evenodd" d="${poly.map(ring=>'M'+ring.map(p=>p[0]+' '+(-p[1])).join('L')+'Z').join('')}"/>`); });
     D.foot.forEach(s=>r.push(`<line class="fl" x1="${s[0]}" y1="${-s[1]}" x2="${s[2]}" y2="${-s[3]}"/>`));
   }
-  if(show.sl) (D.slabs||[]).forEach(s=>{ const g=(D.sigs||[])[s.sig]||{color:'#999',label:''}; r.push(`<polygon class="slb" style="--c:${g.color}" points="${s.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Dalle ${s.id} · ${g.label}</title></polygon>`); });
+  if(show.sl) (D.slabs||[]).forEach(s=>{ const g=(D.sigs||[])[s.sig]||{color:'#999',label:''}; r.push(`<polygon class="slb${selObj&&selObj.t==='s'&&D.slabs[selObj.i]===s?' on':''}" data-obj="s:${D.slabs.indexOf(s)}" style="--c:${g.color}" points="${s.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Dalle ${s.id} · ${g.label}</title></polygon>`); });
   if(show.op) D.open.forEach(o=>r.push(`<polygon class="opn" points="${o.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Ouverture .f2k ${o.id}</title></polygon>`));
   if(show.det) D.detail.forEach(s=>r.push(`<line class="dl" x1="${s[0]}" y1="${-s[1]}" x2="${s[2]}" y2="${-s[3]}"/>`));
   if(show.ms) mids.filter(m=>show[m.layer]).forEach(m=>{
@@ -525,7 +526,9 @@ function planSVG(){
   if(edLim&&!edAdd) D.lines.forEach((l,i)=>{ if(l.del||!(l.o==='V'?show.lnV:show.lnH)) return;
     [['a',l.a],['b',l.b]].forEach(([e,v])=>{ const w=e==='a'?v+0.001:v-0.001, [x1,y1,x2,y2]=l.o==='V'?[l.pos,-v,l.pos,-w]:[v,-l.pos,w,-l.pos];
       r.push(`<line class="lh${hdrag&&hdrag.i===i&&hdrag.e===e?' on':''}" data-h="${i}" data-e="${e}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`); }); });
-  if(show.col) D.cols.forEach(c=>r.push(`<rect class="col" x="${c.x-c.w/2}" y="${-c.y-c.h/2}" width="${c.w}" height="${c.h}"/>`));
+  if(show.wl) (D.walls||[]).forEach((w,i)=>{ const dx=w.b[0]-w.a[0], dy=w.b[1]-w.a[1], L=Math.hypot(dx,dy)||1, t=(w.t||0.3)/2, nx=-dy/L*t, ny=dx/L*t;
+    r.push(`<polygon class="wl${selObj&&selObj.t==='w'&&selObj.i===i?' on':''}" data-obj="w:${i}" points="${[[w.a[0]+nx,w.a[1]+ny],[w.b[0]+nx,w.b[1]+ny],[w.b[0]-nx,w.b[1]-ny],[w.a[0]-nx,w.a[1]-ny]].map(q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3)).join(' ')}"/>`); });
+  if(show.col) D.cols.forEach((c,i)=>r.push(`<rect class="col${selObj&&selObj.t==='c'&&selObj.i===i?' on':''}" data-obj="c:${i}" x="${c.x-c.w/2}" y="${-c.y-c.h/2}" width="${c.w}" height="${c.h}"/>`));
   if(gen.mode==='cols'||gen.mode==='lines') D.cols.forEach((c,i)=>r.push(`<rect class="chit${(gen.mode==='cols'?gen.first:gen.axCol)===i?' on':''}" data-col="${i}" x="${c.x-.6}" y="${-c.y-.6}" width="1.2" height="1.2"/>`));
   ['gc','gm'].forEach(k=>{ if(show[k]) genObjs.filter(f=>f.kind===k&&show[f.layer]).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='gc'?'GC':'GM'}" x="${q.x+.15}" y="${q.y+.65}">${f.id}</text>`); }); });
@@ -572,11 +575,11 @@ function draw(){ $('#plan').innerHTML = planSVG(); if(typeof renderSteps==='func
 /* ---------- calques ---------- */
 const TG = [
   ['A','Couche A (verticales)','A'],['B','Couche B (horizontales)','B'],
-  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G']
+  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G']
 ];
 function buildToggles(){
   const L=D.lines||[], nV=L.filter(l=>l.o==='V'&&!l.del).length, nH=L.filter(l=>l.o==='H'&&!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0;
-  const cnt={col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
+  const cnt={wl:(D.walls||[]).length,col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
     A:strips.filter(x=>x.layer==='A').length+(typeof gen!=='undefined'?gen.list.filter(x=>x.layer==='A').length:0),B:strips.filter(x=>x.layer==='B').length+(typeof gen!=='undefined'?gen.list.filter(x=>x.layer==='B').length:0),
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
   const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Couches du PDF',['A','B']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
@@ -591,9 +594,27 @@ $('#toggles').addEventListener('click',e=>{
 
 /* ---------- panneau et liste ---------- */
 function sideNames(layer){ return layer==='A' ? ['ouest','est'] : ['nord','sud']; }
+function inPoly(p,pl){ let c=false; for(let i=0,j=pl.length-1;i<pl.length;j=i++){ if((pl[i][1]>p[1])!==(pl[j][1]>p[1])&&p[0]<(pl[j][0]-pl[i][0])*(p[1]-pl[i][1])/(pl[j][1]-pl[i][1])+pl[i][0]) c=!c; } return c; }
+function polyPer(p){ let a=0; for(let i=0;i<p.length;i++){ const q=p[(i+1)%p.length]; a+=Math.hypot(q[0]-p[i][0],q[1]-p[i][1]); } return a; }
+function posRef(x,y){ const ax=nearestAxis(x,D.gx), ay=nearestAxis(y,D.gy); return `${ax.l} ${x-ax.m>=0?'+':'−'} ${Math.abs(x-ax.m).toFixed(2)} m · ${ay.l} ${y-ay.m>=0?'+':'−'} ${Math.abs(y-ay.m).toFixed(2)} m`; }
+function objInfo(){
+  const o=selObj, mm=v=>Math.round(v*1000), dd=(k,v)=>v===null||v===undefined||v===''?'':`<dt>${k}</dt><dd>${v}</dd>`, fc=v=>v?`${v} MPa`:null, mod=(x,y)=>`x = ${f2(x+OXm)} · y = ${f2(y+OYm)} m (SAFE)`;
+  if(o.t==='c'){ const c=D.cols[o.i], ci=(D.cinfo||[]).find(q=>Math.hypot(q.x-c.x,q.y-c.y)<0.25)||c;
+    return `<h2>Colonne${ci.id!==undefined?' '+ci.id:''}</h2><dl>${dd('Section',ci.sec||null)}${dd('Dimensions (x × y)',mm(c.w)+' × '+mm(c.h)+' mm')}${dd('Aire',f2(c.w*c.h)+' m²')}${dd('Matériau',ci.mat?ci.mat+(ci.fc?' · f′c '+ci.fc+' MPa':''):null)}${dd('Hauteur d’étage',ci.len?Math.round(ci.len*1000)+' mm':null)}
+      ${dd('Position',mod(c.x,c.y))}${dd('Repère',posRef(c.x,c.y))}${ci.id===undefined?'<dt>Note</dt><dd>Importez le .f2k pour la section, le matériau et la hauteur.</dd>':''}</dl>`; }
+  if(o.t==='w'){ const w=D.walls[o.i], L=Math.hypot(w.b[0]-w.a[0],w.b[1]-w.a[1]), ang=Math.round(((Math.atan2(w.b[1]-w.a[1],w.b[0]-w.a[0])*180/Math.PI)%180+180)%180), cx=(w.a[0]+w.b[0])/2, cy=(w.a[1]+w.b[1])/2;
+    return `<h2>Mur de refend ${w.id}</h2><dl>${dd('Section',w.sec||null)}${dd('Épaisseur',w.t?mm(w.t)+' mm':null)}${dd('Matériau',w.mat?w.mat+(w.fc?' · f′c '+w.fc+' MPa':''):null)}
+      ${dd('Longueur en plan',f2(L)+' m')}${dd('Hauteur',f2(w.h)+' m ('+w.side+')')}${dd('Aire du mur',f2(L*w.h)+' m²')}${dd('Orientation',ang===0||ang===180?'horizontal (axe x)':ang===90?'vertical (axe y)':ang+'° / x')}
+      ${dd('Extrémité 1',mod(w.a[0],w.a[1]))}${dd('Extrémité 2',mod(w.b[0],w.b[1]))}${dd('Repère (centre)',posRef(cx,cy))}</dl>`; }
+  const sl=D.slabs[o.i]; if(!sl) return '';
+  const A=polyArea(sl.p), per=polyPer(sl.p), cs=D.cols.filter(c=>inPoly([c.x,c.y],sl.p)).length, ops=(D.open||[]).filter(q=>inPoly(q.p.reduce((a,v)=>[a[0]+v[0]/q.p.length,a[1]+v[1]/q.p.length],[0,0]),sl.p)), Ao=ops.reduce((a,q)=>a+polyArea(q.p),0), g=(D.sigs||[])[sl.sig]||{label:''};
+  const pp=sl.t?sl.t*24:null, ld=(sl.loads||[]).map(l=>`${l[0]} : ${Math.abs(l[1])<10?l[1].toFixed(2):l[1].toFixed(1)} kPa`).join('<br>');
+  return `<h2>Dalle ${sl.id}</h2><dl>${dd('Section',sl.sec||null)}${dd('Épaisseur',sl.t?mm(sl.t)+' mm':null)}${dd('Matériau',sl.mat?sl.mat+(sl.fc?' · f′c '+sl.fc+' MPa':''):null)}${dd('Poids propre',pp?'≈ '+pp.toFixed(2)+' kPa (24 kN/m³)':null)}
+    ${dd('Aire',f2(A)+' m²')}${dd('Périmètre',f2(per)+' m')}${dd('Sommets',sl.p.length)}${dd('Colonnes dans la dalle',cs)}${dd('Ouvertures',ops.length?ops.length+' · '+f2(Ao)+' m²':null)}${dd('Charges uniformes',ld||'aucune')}</dl>`; }
 function renderInfo(){
-  const el=$('#info'), s=byId[selId];
-  if(!s){ el.innerHTML = `<h2>Aucune bande sélectionnée</h2><div class="hint">Cliquez une bande sur le plan ou dans la liste. Molette pour zoomer, glisser pour déplacer.<br><br>${strips.length?`PDF : ${strips.length} bandes colonnes · ${mids.length} bandes milieu<br>`:''}.f2k : ${f2k.filter(f=>f.kind==='fc').length} bandes colonnes · ${f2k.filter(f=>f.kind==='fm').length} bandes milieu · ${D.cols.length} colonnes<br>Empreinte (lignes grises) : ≈ ${Math.round(FOOT_AREA).toLocaleString('fr-CA')} m²</div>`; return; }
+  const el=$('#info'); if(selObj){ el.innerHTML=objInfo(); return; }
+  const s=byId[selId];
+  if(!s){ el.innerHTML = `<h2>Aucune bande sélectionnée</h2><div class="hint">Cliquez une bande, une colonne, un mur ou une dalle sur le plan. Molette pour zoomer, glisser pour déplacer.<br><br>${strips.length?`PDF : ${strips.length} bandes colonnes · ${mids.length} bandes milieu<br>`:''}.f2k : ${f2k.filter(f=>f.kind==='fc').length} bandes colonnes · ${f2k.filter(f=>f.kind==='fm').length} bandes milieu · ${D.cols.length} colonnes<br>Empreinte (lignes grises) : ≈ ${Math.round(FOOT_AREA).toLocaleString('fr-CA')} m²</div>`; return; }
   const [L,R]=sideNames(s.layer);
   if(s.kind==='gc'||s.kind==='gm'){
     const rg=a=>a&&a.length?(Math.min(...a)===Math.max(...a)?f2(a[0]):f2(Math.min(...a))+' – '+f2(Math.max(...a)))+' m':'—';
@@ -664,8 +685,10 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
+let selObj=null;
+function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
 function select(id){
-  selId = (id===selId)?null:id; draw(); renderInfo();
+  selObj=null; selId = (id===selId)?null:id; draw(); renderInfo();
   document.querySelectorAll('.item').forEach(b=>b.classList.toggle('on',b.dataset.id===selId));
   const it=document.querySelector('.item.on'); if(it) it.scrollIntoView({block:'nearest'});
   document.querySelectorAll('.gi').forEach(g=>g.classList.toggle('on',g.dataset.id===selId));
@@ -701,12 +724,12 @@ svg.addEventListener('pointerup',e=>{
   if(hdrag){ hdrag=null; moved=false; draw(); touch(); return; }
   const wasMoved=moved; drag=null; svg.classList.remove('drag');
   if(wasMoved) return;
-  const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp]');
+  const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
   if(l4on){ l4Click(e); return; }
   if(edLim&&edAdd){ addPoint(e); return; }
   if(el&&el.dataset.le!==undefined){ edSel=+el.dataset.le; updEd(); draw(); return; }
-  if(el&&el.dataset.ln!==undefined) linePick(+el.dataset.ln); else if(el&&el.dataset.col!==undefined) manualPick(+el.dataset.col); else if(el) select(el.dataset.id); else if(selId) select(selId);
+  if(el&&el.dataset.ln!==undefined) linePick(+el.dataset.ln); else if(el&&el.dataset.col!==undefined) manualPick(+el.dataset.col); else if(el&&el.dataset.obj) selectObj(el.dataset.obj); else if(el) select(el.dataset.id); else if(selObj){ selObj=null; draw(); renderInfo(); } else if(selId) select(selId);
 });
 $('#fit').onclick=fit;
 $('#zin').onclick=()=>zoom(1/1.3,svg.clientWidth/2,svg.clientHeight/2);
@@ -1179,11 +1202,14 @@ function buildDataset(T){
   // dalles, ouvertures
   const secP={}; (T['AREA ASSIGNMENTS - SECTION PROPERTIES']||[]).forEach(r=>{ secP[r.UniqueName]={sec:r['Section Property'],type:r['Property Type']}; });
   const loads={}; (T['AREA LOAD ASSIGNMENTS - UNIFORM']||[]).forEach(r=>{ const l=nz(r.Load); if(l===null) return; (loads[r.UniqueName]=loads[r.UniqueName]||[]).push([r['Load Pattern'],Math.round(l*1e6)/1e3]); });
+  const fcM={}; (T['MATERIAL PROPERTIES - CONCRETE DATA']||[]).forEach(r=>{ const v=nz(r.Fc); if(v!==null) fcM[r.Material]=+v.toFixed(1); });
+  const slP={}; (T['SLAB PROPERTY DEFINITIONS']||[]).forEach(r=>{ slP[r.Name]={t:nz(r['Slab Thickness']),mat:r.Material,type:r['Property Type']}; });
+  const wlP={}; (T['WALL PROPERTY DEFINITIONS - SPECIFIED']||[]).forEach(r=>{ wlP[r.Name]={t:nz(r['Wall Thickness']),mat:r.Material}; });
   const floors=[], openings=[], zc={};
   const F=grp('FLOOR OBJECT CONNECTIVITY');
   Object.keys(F).forEach(id=>{ const pl=polyOf(F[id]); if(pl.length<3) return; pl.forEach(p=>{ const z=Math.round(p[2]*1000); zc[z]=(zc[z]||0)+1; });
     const ld=(loads[id]||[]).slice().sort((a,b)=>a[0].localeCompare(b[0]));
-    floors.push({id,p:pl.map(p=>[p[0],p[1]]),sec:(secP[id]||{}).sec||'',loads:ld}); });
+    const sp=slP[(secP[id]||{}).sec]||{}; floors.push({id,p:pl.map(p=>[p[0],p[1]]),sec:(secP[id]||{}).sec||'',loads:ld,t:sp.t!==null&&sp.t!==undefined?sp.t/1000:null,mat:sp.mat||'',fc:fcM[sp.mat]||null,ptype:sp.type||''}); });
   const N=grp('NULL AREA OBJECT CONNECTIVITY');
   Object.keys(N).forEach(id=>{ if((secP[id]||{}).type!=='Opening') return; const pl=polyOf(N[id]); if(pl.length>=3) openings.push({id,p:pl.map(p=>[p[0],p[1]])}); });
   let Z=47.244; const zk=Object.keys(zc).sort((a,b)=>zc[b]-zc[a]); if(zk.length) Z=parseInt(zk[0])/1000;
@@ -1194,7 +1220,7 @@ function buildDataset(T){
     if(Math.abs(y1-y2)<1) gy.push({l:r.ID,m:y1/1000}); else if(Math.abs(x1-x2)<1) gx.push({l:r.ID,m:x1/1000}); else skipped++; });
   gx.sort((a,b)=>a.m-b.m); gy.sort((a,b)=>a.m-b.m);
   // colonnes
-  const secD={}; (T['FRAME SECTION PROPERTY DEFINITIONS - CONCRETE RECTANGULAR']||[]).forEach(r=>{ secD[r.Name]=[nz(r.Width),nz(r.Depth)]; });
+  const secD={}, secM={}; (T['FRAME SECTION PROPERTY DEFINITIONS - CONCRETE RECTANGULAR']||[]).forEach(r=>{ secD[r.Name]=[nz(r.Width),nz(r.Depth)]; secM[r.Name]=r.Material; });
   const fs={}; (T['FRAME ASSIGNMENTS - SECTION PROPERTIES']||[]).forEach(r=>{ fs[r.UniqueName]=r['Section Property']; });
   const fa={}; (T['FRAME ASSIGNMENTS - LOCAL AXES']||[]).forEach(r=>{ fa[r.UniqueName]=nz(r.Angle)||0; });
   const cols=[], ck={};
@@ -1203,7 +1229,16 @@ function buildDataset(T){
     const k=Math.round(p[0]*100)+'|'+Math.round(p[1]*100); if(ck[k]) return; ck[k]=1;
     const d=secD[fs[u]]||[400,400], sw=Math.round((fa[u]||0)/90)%2===1;
     const w=(sw?d[0]:d[1])/1000, h=(sw?d[1]:d[0])/1000;
-    cols.push({x:p[0],y:p[1],w:+w.toFixed(4),h:+h.toFixed(4)}); });
+    const rowL=nz(r.Length); cols.push({x:p[0],y:p[1],w:+w.toFixed(4),h:+h.toFixed(4),id:u,sec:fs[u]||'',mat:secM[fs[u]]||'',fc:fcM[secM[fs[u]]]||null,len:rowL!==null?rowL/1000:Math.abs(pI[2]-pJ[2]),ang:fa[u]||0}); });
+  // murs : tracé en plan = arête du mur située au niveau Z
+  const walls=[]; const WG=grp('WALL OBJECT CONNECTIVITY');
+  Object.keys(WG).forEach(id=>{ const pl=polyOf(WG[id]); if(pl.length<3) return; const zs=pl.map(q=>q[2]), zlo=Math.min(...zs), zhi=Math.max(...zs); if(zhi-zlo<0.05) return;
+    let ed=pl.filter(q=>Math.abs(q[2]-Z)<0.001), side='';
+    if(ed.length>=2) side=Math.abs(zhi-Z)<0.001?'sous le niveau':'au-dessus du niveau'; else return;
+    const u=[]; ed.forEach(q=>{ if(!u.some(v=>Math.hypot(v[0]-q[0],v[1]-q[1])<0.002)) u.push(q); }); if(u.length<2) return;
+    let a=u[0], b=u[0], md=0; u.forEach(q=>u.forEach(v=>{ const d=Math.hypot(q[0]-v[0],q[1]-v[1]); if(d>md){ md=d; a=q; b=v; } }));
+    const sc=secP[id]||{}, wp=wlP[sc.sec]||{};
+    walls.push({id,sec:sc.sec||'',t:wp.t!==null&&wp.t!==undefined?wp.t/1000:null,mat:wp.mat||'',fc:fcM[wp.mat]||null,a:[a[0],a[1]],b:[b[0],b[1]],h:zhi-zlo,zlo,zhi,side}); });
   // bandes
   const ovT={}; (T['CONCRETE SLAB DESIGN OVERWRITES - STRIP BASED']||[]).forEach(r=>{ ovT[r['Strip Name']]=r['Strip Design Type']; });
   const strips=[]; let multi=0;
@@ -1217,18 +1252,20 @@ function buildDataset(T){
     strips.push({id:r.Name,layer:ly,typ,kind:typ==='Middle Strip'?'fm':'fc',axis,lo,hi,w1,w2}); });
   const r3=v=>Math.round(v*1000)/1000;
   const zl={}; Object.values(P).forEach(q=>{ const z=Math.round(q[2]*1000); zl[z]=(zl[z]||0)+1; }); const levels=Object.keys(zl).filter(z=>zl[z]>=10).map(Number).sort((a,b)=>a-b);
-  return {Z,levels,maxPt,gx,gy,cols,floors,openings,strips,skipped,multi,n:{pts:Object.keys(P).length}};
+  return {Z,levels,maxPt,gx,gy,cols,walls,floors,openings,strips,skipped,multi,n:{pts:Object.keys(P).length}};
 }
 function sigLabel(ld){ return ld.length?ld.map(l=>l[0]+' '+(Math.abs(l[1])<10?l[1].toFixed(2):l[1].toFixed(1))+' kPa').join(' · '):'Sans charge uniforme'; }
 function polyArea(p){ let a=0; for(let i=0;i<p.length;i++){ const q=p[(i+1)%p.length]; a+=p[i][0]*q[1]-q[0]*p[i][1]; } return Math.abs(a)/2; }
 function datasetToD(ds,base,OX,OY){
   const d=JSON.parse(JSON.stringify(base)), cv=p=>[+(p[0]-OX).toFixed(3),+(p[1]-OY).toFixed(3)];
   const hadPdf=base.cols.length>0;
-  if(!hadPdf){ d.gx=ds.gx.map(g=>({l:g.l,m:g.m-OX})); d.gy=ds.gy.map(g=>({l:g.l,m:g.m-OY})); d.cols=ds.cols.map(c=>({x:c.x-OX,y:c.y-OY,w:c.w,h:c.h})); }
+  if(!hadPdf){ d.gx=ds.gx.map(g=>({l:g.l,m:g.m-OX})); d.gy=ds.gy.map(g=>({l:g.l,m:g.m-OY})); d.cols=ds.cols.map(c=>({x:c.x-OX,y:c.y-OY,w:c.w,h:c.h,id:c.id,sec:c.sec,mat:c.mat,fc:c.fc,len:c.len})); }
+  d.cinfo=ds.cols.map(c=>({x:+(c.x-OX).toFixed(3),y:+(c.y-OY).toFixed(3),w:c.w,h:c.h,id:c.id,sec:c.sec,mat:c.mat,fc:c.fc,len:c.len}));
+  d.walls=(ds.walls||[]).map(w=>({...w,a:[+(w.a[0]-OX).toFixed(3),+(w.a[1]-OY).toFixed(3)],b:[+(w.b[0]-OX).toFixed(3),+(w.b[1]-OY).toFixed(3)]}));
   // signatures de charge
   const sigs=[], sigIdx={};
   d.slabs=ds.floors.map(f=>{ const lab=sigLabel(f.loads); if(!(lab in sigIdx)){ sigIdx[lab]=sigs.length; sigs.push({label:lab,color:PAL[sigs.length%PAL.length],area:0,n:0}); }
-    const s=sigs[sigIdx[lab]], p=f.p.map(cv); s.area+=polyArea(p); s.n++; return {id:f.id,p,sec:f.sec,sig:sigIdx[lab]}; });
+    const s=sigs[sigIdx[lab]], p=f.p.map(cv); s.area+=polyArea(p); s.n++; return {id:f.id,p,sec:f.sec,sig:sigIdx[lab],t:f.t,mat:f.mat,fc:f.fc,ptype:f.ptype,loads:f.loads}; });
   d.sigs=sigs.map(s=>({...s,area:Math.round(s.area*10)/10}));
   d.open=ds.openings.map(o=>({id:o.id,p:o.p.map(cv)}));
   d.f2k=ds.strips.map(s=>({id:s.id,layer:s.layer,typ:s.typ,kind:s.kind,axis:+(s.axis-(s.layer==='A'?OX:OY)).toFixed(4),lo:+(s.lo-(s.layer==='A'?OY:OX)).toFixed(4),hi:+(s.hi-(s.layer==='A'?OY:OX)).toFixed(4),w1:+s.w1.toFixed(4),w2:+s.w2.toFixed(4)}));
@@ -1241,21 +1278,21 @@ function datasetToD(ds,base,OX,OY){
   }
   return d;
 }
-const EMPTY_BASE={gx:[],gy:[],cols:[],strips:[],mids:[],foot:[],detail:[],fill:[[[[0,0],[1,0],[1,1],[0,1],[0,0]]]],f2k:[],recon:[],lines:[],open:[],slabs:[],sigs:[]};
+const EMPTY_BASE={walls:[],cinfo:[],gx:[],gy:[],cols:[],strips:[],mids:[],foot:[],detail:[],fill:[[[[0,0],[1,0],[1,1],[0,1],[0,0]]]],f2k:[],recon:[],lines:[],open:[],slabs:[],sigs:[]};
 /* ---------- projet courant ---------- */
 const SEED_NAME='Exemple · L2C01240223A niveau 7';
 const PJ={id:'exemple',name:SEED_NAME,hasF2k:false,fname:'',Z:47.244,maxPt:847,OXm0:-25.83035,OYm0:-26.03733};
 const ST={ok:false,id:null,col:null,dcol:null,timer:null,chain:Promise.resolve(),loading:false,list:[]};
 PJ.levels=[44450,47244,50038]; setZUI();
 function pjMsg(s){ const e=$('#pj-msg'); if(e) e.textContent=s||''; }
-function resetShow(sl){ Object.assign(show,{A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,mk:true}); }
+function resetShow(sl){ Object.assign(show,{A:true,B:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,wl:true,mk:true}); }
 function setZUI(){ const z=$('#x-z'); if(!z) return; z.value=Math.round(PJ.zsel||PJ.Z*1000);
   $('#x-zl').innerHTML=(PJ.levels||[]).map(v=>`<option value="${v}">${v}</option>`).join('');
   $('#x-zh').textContent=`Niveau des dalles du modèle : Z = ${Math.round(PJ.Z*1000)} mm.`+((PJ.levels||[]).length>1?` Autres niveaux détectés (colonnes, étages) : ${PJ.levels.filter(v=>v!==Math.round(PJ.Z*1000)).join(', ')} mm.`:''); }
 function applyProject(d,meta,state){
   ST.loading=true;
   D=d; OXm=meta.OXm; OYm=meta.OYm; PJ.id=meta.id; PJ.name=meta.name; PJ.hasF2k=!!meta.hasF2k; PJ.fname=meta.fname||''; PJ.Z=meta.id==='exemple'?47.244:(meta.Z||47.244); PJ.maxPt=meta.maxPt||847; PJ.levels=meta.levels&&meta.levels.length?meta.levels:(meta.id==='exemple'?[44450,47244,50038]:[Math.round(PJ.Z*1000)]); PJ.zsel=meta.zsel||null; PJ.hasPdf=!!meta.hasPdf; PJ.pm=meta.pm||null; PJ.ds=meta.ds||null; PJ.px=meta.px||null; setZUI();
-  D.slabs=D.slabs||[]; D.sigs=D.sigs||[]; D.open=D.open||[];
+  D.slabs=D.slabs||[]; D.sigs=D.sigs||[]; D.open=D.open||[]; D.walls=D.walls||[]; D.cinfo=D.cinfo||[]; selObj=null;
   const orig=JSON.stringify(D.lines), n0=D.lines.length;
   if(state&&state.lines&&state.lines.length) D.lines=state.lines;
   deriveAll(); deriveLim(); N0=n0; LIM0=orig;
