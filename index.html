@@ -259,6 +259,20 @@ header{display:block;padding:10px 16px 8px}
 .srow{display:grid;grid-template-columns:1fr 130px 44px;gap:8px;align-items:center;font-size:12.5px}
 .srow output{font:12px var(--font-mono);text-align:right;color:var(--muted)}
 .srow input[type=range]{width:100%;accent-color:var(--brand)}
+.fpbox{position:absolute;left:12px;top:12px;z-index:4;background:var(--panel);border:1.5px solid #16a34a;border-radius:8px;padding:9px 11px;font-size:12.5px;width:340px;max-height:calc(100% - 70px);overflow:auto;box-shadow:0 2px 8px #0002}
+.fpbox[hidden]{display:none}.fpbox p{margin:4px 0 6px;color:var(--muted);line-height:1.4}
+.fpmode{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.fpmode label{display:flex;gap:6px;align-items:center}
+.fpl{display:flex;flex-direction:column;gap:1px;margin-bottom:8px}
+.fpr{display:grid;grid-template-columns:18px 54px 1fr auto;gap:8px;align-items:center;padding:3px 4px;border-radius:5px;cursor:pointer}
+.fpr:hover,.fpr.hov{background:color-mix(in srgb,#f59e0b 22%,transparent)}
+.fpr svg{width:54px;height:12px}.fpr em{font-style:normal;color:var(--muted);font:11px var(--font-mono)}
+.fpr small{color:var(--muted);font-size:11.5px}
+.fpmin{display:flex;flex-direction:column;gap:3px;color:var(--muted);margin-bottom:8px}.fpmin input{font:12.5px var(--font-mono);width:90px;padding:4px 6px;border:1px solid var(--line);border-radius:5px}
+.fpc{stroke:#9ca3af;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.55}
+.fpe{stroke:#16a34a;stroke-width:2.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.fpx{stroke:#e11d48;stroke-width:1.6;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
+.fph{stroke:#f59e0b;stroke-width:3.5;vector-effect:non-scaling-stroke;pointer-events:none}
+.fphit{stroke:transparent;stroke-width:12;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}
 </style>
 </head>
 <body>
@@ -286,7 +300,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -300,6 +314,12 @@ header{display:block;padding:10px 16px 8px}
       <p class="edhint" id="edhint"></p>
     </div>
     <details class="layers" id="layers"><summary>Calques</summary><div id="toggles" role="group" aria-label="Calques"></div></details>
+<div class="fpbox" id="fpbox" hidden><b>Empreinte du bâtiment (PDF)</b>
+<p id="fpmsg"></p>
+<div class="fpmode"><label><input type="radio" name="fpm" value="style" checked> Clic sur le plan : basculer le style</label><label><input type="radio" name="fpm" value="trait"> Clic sur le plan : exclure / ajouter un trait</label></div>
+<div id="fpl" class="fpl"></div>
+<label class="fpmin">Longueur minimale (pt du PDF)<input id="fp-min" type="number" min="0" step="0.5" value="4"></label>
+<div class="acts"><button class="btn" id="fp-auto" type="button">Réinitialiser (auto)</button><button class="btn pri" id="fp-done" type="button">Terminer</button></div></div>
 <div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
@@ -493,6 +513,11 @@ function planSVG(){
     if(v.t==='add') r.push(seg(v.l,'rv add'+on));
     else if(v.t==='mod'){ r.push(seg(v.o,'rvog'),seg(v.l,'rv mod'+on)); }
     else { r.push(seg(v.o,'rvdel'+on)); } });
+  if(fpOn&&PJ.px&&PJ.px.styles&&D.pmap){ const M=D.pmap, pm=PJ.pm||{}, X=v=>+(M.xa*v+M.xb).toFixed(3), Y=v=>+(-(M.ya*v+M.yb)).toFixed(3), hov=fpHov;
+    PJ.px.styles.forEach((g,i)=>{ if(isRedGrid(g.c)) return; const en=(pm.fs||fpAuto(PJ.px)).includes(g.k);
+      g.segs.forEach((q,j)=>{ const ret=fpRetained(PJ.px,pm,i,j), cls=g.k===hov?'fph':ret?'fpe':en?'fpx':'fpc';
+        r.push(`<line class="${cls}" x1="${X(q[0])}" y1="${Y(q[1])}" x2="${X(q[2])}" y2="${Y(q[3])}"/>`);
+        r.push(`<line class="fphit" data-fp="${i}:${j}" x1="${X(q[0])}" y1="${Y(q[1])}" x2="${X(q[2])}" y2="${Y(q[3])}"/>`); }); }); }
   if(l4&&l4.g){ const ya=-(by1+PAD), yb=-(by0-PAD), xa=bx0-PAD, xb=bx1+PAD;
     l4.g.forEach((v,k)=>{ const q=(k===0||k===4)?'':' q', t=k===0||k===4?'':k+'/4';
       if(l4.o==='V') r.push(`<line class="l4g${q}" x1="${v}" y1="${ya}" x2="${v}" y2="${yb}"/>`+(t?`<text class="l4t" x="${v}" y="${ya-0.3}">${t}</text>`:''));
@@ -676,7 +701,8 @@ svg.addEventListener('pointerup',e=>{
   if(hdrag){ hdrag=null; moved=false; draw(); touch(); return; }
   const wasMoved=moved; drag=null; svg.classList.remove('drag');
   if(wasMoved) return;
-  const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le]');
+  const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp]');
+  if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
   if(l4on){ l4Click(e); return; }
   if(edLim&&edAdd){ addPoint(e); return; }
   if(el&&el.dataset.le!==undefined){ edSel=+el.dataset.le; updEd(); draw(); return; }
@@ -878,6 +904,27 @@ function snapPt(X,Y,excl){
   let bx=null,by=null; xs.forEach(p=>{ const d=Math.abs(p[0]-X); if(d<tol&&(!bx||d<Math.abs(bx[0]-X))) bx=p; }); ys.forEach(p=>{ const d=Math.abs(p[0]-Y); if(d<tol&&(!by||d<Math.abs(by[0]-Y))) by=p; });
   return {x:bx?bx[0]:X,y:by?by[0]:Y,k:[bx&&'x · '+bx[1],by&&'y · '+by[1]].filter(Boolean).join(', ')};
 }
+let fpOn=false, fpHov=null;
+function fpRows(){ const px=PJ.px, pm=PJ.pm||{}, en=pm.fs||fpAuto(px), S=D.pmap?D.pmap.xa:0.03387;
+  $('#fpl').innerHTML=px.styles.filter(g=>!isRedGrid(g.c)).map(g=>{ const col=`rgb(${g.c.join(',')})`, sw=Math.max(1,Math.min(6,g.w*2.2));
+    return `<label class="fpr${g.k===fpHov?' hov':''}" data-k="${g.k}"><input type="checkbox" ${en.includes(g.k)?'checked':''}><svg viewBox="0 0 54 12"><line x1="2" y1="6" x2="52" y2="6" stroke="${col}" stroke-width="${sw}" ${g.d?'stroke-dasharray="6 4"':''}/></svg><span><small>${g.w} pt · ${g.d?'tirets':'plein'}</small></span><em>${g.n} · ${(g.len*S).toFixed(0)} m</em></label>`; }).join('');
+  let n=0; px.styles.forEach((g,i)=>g.segs.forEach((q,j)=>{ if(fpRetained(px,pm,i,j)) n++; })); const x=(pm.fx||[]).length;
+  $('#fpmsg').textContent=`${n} traits retenus${x?` · ${x} exclus à la main`:''}${(pm.fi||[]).length?` · ${pm.fi.length} ajoutés à la main`:''}. Vert = retenu, rouge pointillé = exclu, gris = non retenu.`; $('#fp-min').value=pm.fm!=null?pm.fm:4; }
+function fpApply(){ if(!PJ.px||!D.pmap) return; D.foot=mapFoot(PJ.px,PJ.pm||{},D.pmap); if(!PJ.hasF2k){ const fl=fillOf(D); if(fl) D.fill=fl; } deriveAll(); rebuildLIM(); ring=D.fill[0][0]; touch(); fpRows(); draw(); }
+function fpSet(k,v){ PJ.pm=Object.assign({},PJ.pm||{},{[k]:v}); }
+function fpToggle(on){ fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
+  if(fpOn){ if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); if(!(PJ.pm&&PJ.pm.fs)){ fpSet('fs',fpAuto(PJ.px)); if(PJ.hasF2k) fpApply(); } show.foot=true; syncToggle('foot'); fpRows(); } draw(); }
+function fpClick(id){ const [i,j]=id.split(':').map(Number), px=PJ.px, pm=PJ.pm||{}, g=px.styles[i], mode=document.querySelector('input[name=fpm]:checked').value;
+  if(mode==='style'){ const en=(pm.fs||fpAuto(px)).slice(), a=en.indexOf(g.k); if(a>=0) en.splice(a,1); else en.push(g.k); fpSet('fs',en); }
+  else { const ret=fpRetained(px,pm,i,j), en=(pm.fs||fpAuto(px)).includes(g.k), fx=(pm.fx||[]).slice(), fi=(pm.fi||[]).slice(), rm=(a,v)=>{ const k=a.indexOf(v); if(k>=0) a.splice(k,1); };
+    if(ret){ if(en){ fx.push(id); } rm(fi,id); } else { if(en) rm(fx,id); else fi.push(id); } fpSet('fx',fx); fpSet('fi',fi); }
+  fpApply(); }
+$('#fp').onclick=()=>fpToggle(!fpOn); $('#fp-done').onclick=()=>fpToggle(false);
+$('#fp-auto').onclick=()=>{ PJ.pm=Object.assign({},PJ.pm||{},{fs:fpAuto(PJ.px),fx:[],fi:[],fm:4}); fpApply(); };
+$('#fp-min').onchange=e=>{ fpSet('fm',Math.max(0,parseFloat(e.target.value)||0)); fpApply(); };
+$('#fpl').addEventListener('change',e=>{ const r=e.target.closest('.fpr'); if(!r) return; const k=r.dataset.k, en=((PJ.pm&&PJ.pm.fs)||fpAuto(PJ.px)).slice(), a=en.indexOf(k); if(e.target.checked){ if(a<0) en.push(k); } else if(a>=0) en.splice(a,1); fpSet('fs',en); fpApply(); });
+$('#fpl').addEventListener('pointerover',e=>{ const r=e.target.closest('.fpr'); const k=r?r.dataset.k:null; if(k!==fpHov){ fpHov=k; document.querySelectorAll('.fpr').forEach(x=>x.classList.toggle('hov',x.dataset.k===k)); draw(); } });
+$('#fpl').addEventListener('pointerleave',()=>{ if(fpHov){ fpHov=null; document.querySelectorAll('.fpr.hov').forEach(x=>x.classList.remove('hov')); draw(); } });
 let l4on=false, l4=null, l4p=null;
 function l4Msg(t){ $('#l4msg').innerHTML=t; $('#l4box').hidden=!(l4on||l4); }
 function l4Set(on){ l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
@@ -926,7 +973,8 @@ function delSel(){ const l=edSel!==null&&D.lines[edSel]; if(!l) return;
 $('#ed-add').onclick=()=>{ edAdd=!edAdd; edP1=null; updEd(); $('#edhint').textContent=edAdd?'Cliquez le 1er point. Accrochage actif selon les cases cochées.':''; draw(); };
 $('#ed-del').onclick=delSel;
 document.querySelectorAll('[data-sn]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sn]=c.checked; });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&fpOn){ fpToggle(false); return; }
+  if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
   if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
 $('#ed-lim').onclick=()=>{ edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
   if(edLim){ if(gen.mode){ const m=gen.mode; edLim=false; setMode(m); edLim=true; $('#ed-lim').setAttribute('aria-pressed','true'); $('#ed-reset').hidden=false; } show.lnV=show.lnH=true; syncToggle('lnV'); syncToggle('lnH'); msg('Édition des limites : glissez une extrémité (point bleu) pour étirer ou raccourcir la ligne.'); }
@@ -1212,7 +1260,7 @@ function applyProject(d,meta,state){
   if(state&&state.lines&&state.lines.length) D.lines=state.lines;
   deriveAll(); deriveLim(); N0=n0; LIM0=orig;
   gen.list=(state&&state.gen&&state.gen.list)||[]; gen.seq=(state&&state.gen&&state.gen.seq)||1; gen.mode=''; gen.first=null; gen.ln1=null; gen.axCol=null;
-  l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true;
+  l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true; fpOn=false; fpHov=null; $('#fp').setAttribute('aria-pressed','false'); $('#fpbox').hidden=true;
   edLim=false; edAdd=false; edP1=null; edSel=null; $('#ed-lim').setAttribute('aria-pressed','false'); $('#ed-reset').hidden=true; $('#edpanel').hidden=true;
   $('#g-man').setAttribute('aria-pressed','false'); $('#g-lim').setAttribute('aria-pressed','false');
   selId=null; resetShow(!(d.strips.length||d.lines.length)&&d.slabs.length);
@@ -1234,7 +1282,7 @@ function renderPj(){
 function renderSteps(){
   if(!$('#steps')||typeof D==='undefined') return;
   const nL=(D.lines||[]).filter(l=>!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0, nf=(D.f2k||[]).length;
-  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty;
+  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap);
   const d1=!!PJ.hasPdf||PJ.id==='exemple', d2=!!PJ.hasF2k, d3=nL>0||ng>0, d4=ng>0;
   const nowN=!d1&&!d2?1:(!d3?3:(!d4?3:4));
   const set=(i,done,sub)=>{ const e=$('#st'+i); e.classList.toggle('done',done); e.classList.toggle('now',nowN===i&&!done); $('#st'+i+'s').textContent=sub; };
@@ -1290,19 +1338,31 @@ function fitAxes(px,ds,S){
 function pdfLimits(px,fx,fy,OX,OY){ // fx,fy : pdf -> plan (m)
   return px.limits.map(l=>l.o==='V'?{o:'V',pos:+fx(l.pos).toFixed(3),a:+fy(l.a).toFixed(3),b:+fy(l.b).toFixed(3)}:{o:'H',pos:+fy(l.pos).toFixed(3),a:+fx(l.a).toFixed(3),b:+fx(l.b).toFixed(3)});
 }
+/* ---- empreinte du PDF : styles de traits choisis ---- */
+const isGray=c=>Math.abs(c[0]-171)<=25&&Math.abs(c[1]-171)<=25&&Math.abs(c[2]-171)<=25;
+const isRedGrid=c=>c[0]>=140&&c[1]<=30&&c[2]<=30;
+function fpAuto(px){ return (px.styles||[]).filter(g=>!g.d&&isGray(g.c)).map(g=>g.k); }
+function fpRetained(px,pm,i,j){ const g=px.styles[i], en=(pm&&pm.fs)?pm.fs:fpAuto(px), id=i+':'+j, sg=g.segs[j], min=(pm&&pm.fm!=null)?pm.fm:4;
+  if(pm&&pm.fi&&pm.fi.includes(id)) return true;
+  if(!en.includes(g.k)) return false; if(pm&&pm.fx&&pm.fx.includes(id)) return false; return Math.hypot(sg[2]-sg[0],sg[3]-sg[1])>=min; }
+function mapFoot(px,pm,M){ const T=q=>[+(M.xa*q[0]+M.xb).toFixed(3),+(M.ya*q[1]+M.yb).toFixed(3),+(M.xa*q[2]+M.xb).toFixed(3),+(M.ya*q[3]+M.yb).toFixed(3)];
+  if(!px.styles) return (px.foot||[]).map(T);
+  const o=[]; px.styles.forEach((g,i)=>g.segs.forEach((q,j)=>{ if(fpRetained(px,pm,i,j)) o.push(T(q)); })); return o; }
+function fillOf(d){ const xs=d.foot.flatMap(q=>[q[0],q[2]]).concat(d.gx.map(g=>g.m)), ys=d.foot.flatMap(q=>[q[1],q[3]]).concat(d.gy.map(g=>g.m));
+  return xs.length&&ys.length?[[[[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)],[Math.min(...xs),Math.max(...ys)],[Math.min(...xs),Math.min(...ys)]]]]:null; }
 function buildD(id,ds,px,pm,OX,OY){
   const base=id==='exemple'?JSON.parse(SEED_JSON):JSON.parse(JSON.stringify(EMPTY_BASE));
   if(ds){ const d=datasetToD(ds,base,OX,OY);
-    if(px){ const f=fitAxes(px,ds,pm&&pm.S); d.lines=pdfLimits(px,v=>f.x.a*v+f.x.b-OX,v=>f.y.a*v+f.y.b-OY,OX,OY); d.pdfFit={nx:f.x.n,ny:f.y.n,res:Math.max(f.x.res,f.y.res),a:f.x.a}; }
+    if(px){ const f=fitAxes(px,ds,pm&&pm.S); d.lines=pdfLimits(px,v=>f.x.a*v+f.x.b-OX,v=>f.y.a*v+f.y.b-OY,OX,OY); d.pdfFit={nx:f.x.n,ny:f.y.n,res:Math.max(f.x.res,f.y.res),a:f.x.a};
+      d.pmap={xa:f.x.a,xb:f.x.b-OX,ya:f.y.a,yb:f.y.b-OY}; if(pm&&pm.fs&&px.styles) d.foot=mapFoot(px,pm,d.pmap); }
     return d; }
   if(px){ const S=(pm&&pm.S)||0.03387, d=base, gx=px.grid.x, gy=px.grid.y;
     const x0=gx.length?Math.min(...gx.map(g=>g.pos)):0, y0=gy.length?Math.min(...gy.map(g=>g.pos)):0, fx=v=>(v-x0)*S, fy=v=>(v-y0)*S;
     d.gx=gx.map(g=>({l:g.l,m:+fx(g.pos).toFixed(4)})); d.gy=gy.map(g=>({l:g.l,m:+fy(g.pos).toFixed(4)}));
     d.cols=px.cols.map(c=>({x:+fx(c.x).toFixed(4),y:+fy(c.y).toFixed(4),w:+(c.w*S).toFixed(4),h:+(c.h*S).toFixed(4)}));
-    d.foot=px.foot.map(q=>[+fx(q[0]).toFixed(3),+fy(q[1]).toFixed(3),+fx(q[2]).toFixed(3),+fy(q[3]).toFixed(3)]);
+    d.pmap={xa:S,xb:-x0*S,ya:S,yb:-y0*S}; d.foot=mapFoot(px,pm,d.pmap);
     d.lines=pdfLimits(px,fx,fy,OX,OY);
-    const xs=d.foot.flatMap(q=>[q[0],q[2]]).concat(d.gx.map(g=>g.m)), ys=d.foot.flatMap(q=>[q[1],q[3]]).concat(d.gy.map(g=>g.m));
-    if(xs.length&&ys.length){ const X0=Math.min(...xs),X1=Math.max(...xs),Y0=Math.min(...ys),Y1=Math.max(...ys); d.fill=[[[[X0,Y0],[X1,Y0],[X1,Y1],[X0,Y1],[X0,Y0]]]]; }
+    const fl=fillOf(d); if(fl) d.fill=fl;
     return d; }
   return base;
 }

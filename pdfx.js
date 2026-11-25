@@ -55,6 +55,10 @@ export async function extractPdf(pdfjs,data,pageNo=1){
   // empreinte : traits gris pleins orthogonaux
   segs.forEach(s=>{ if(s.d||!(near(s.c,171,171,171,25))) return; const len=Math.hypot(s.x2-s.x1,s.y2-s.y1); if(len<4) return;
     out.foot.push([+s.x1.toFixed(2),+s.y1.toFixed(2),+s.x2.toFixed(2),+s.y2.toFixed(2)]); }); // orthogonaux et obliques (les limites SAFE n'utilisent que les orthogonaux)
+  // styles de traits (couleur, épaisseur, pointillé) : sert à choisir l'empreinte dans l'outil
+  const SM={}; segs.forEach(q=>{ const len=Math.hypot(q.x2-q.x1,q.y2-q.y1); if(len<1) return; const c=q.c.map(Math.round), w=+q.w.toFixed(2), k=c.join(',')+'|'+w+'|'+(q.d?'d':'p');
+    const g=SM[k]||(SM[k]={k,c,w,d:!!q.d,n:0,len:0,segs:[]}); g.n++; g.len+=len; if(g.segs.length<4000) g.segs.push([+q.x1.toFixed(2),+q.y1.toFixed(2),+q.x2.toFixed(2),+q.y2.toFixed(2)]); });
+  out.styles=Object.values(SM).filter(g=>g.len>=30).sort((p,q)=>q.len-p.len);
   // colonnes : rectangles remplis de taille plausible
   const seen=new Set();
   fills.forEach(r=>{ if(!near(r.c,170,170,170,25)) return; if(r.w<6||r.h<6||r.w>45||r.h>45) return;
