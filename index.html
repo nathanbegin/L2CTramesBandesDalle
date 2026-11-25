@@ -243,6 +243,11 @@ header{display:block;padding:10px 16px 8px}
 .card:hover{border-color:var(--brand)}.card b{font-size:14px}.card span{font-size:12.5px;color:var(--muted);line-height:1.5}.card u{text-decoration:none;color:var(--ink);font-weight:500}
 .lnk{border:0;background:none;color:var(--brand);font:inherit;text-decoration:underline;cursor:pointer}
 @media (max-width:860px){.steps{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr}}
+.l4box{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:3;background:var(--panel);border:1.5px solid #7c4dff;border-radius:8px;padding:8px 12px;font-size:12.5px;max-width:420px;box-shadow:0 2px 8px #0002}
+.l4box[hidden]{display:none}.l4box p{margin:4px 0 6px;color:var(--ink);line-height:1.4}.l4box .btn{padding:3px 9px;font-size:12px}
+.l4g{stroke:#7c4dff;stroke-width:1.2;stroke-dasharray:2 4;vector-effect:non-scaling-stroke;pointer-events:none}
+.l4g.q{stroke-width:1.8;stroke-dasharray:7 3}
+.l4t{font:500 .5px var(--font-mono);fill:#7c4dff;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--paper);stroke-width:.14px}
 </style>
 </head>
 <body>
@@ -269,7 +274,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -283,6 +288,7 @@ header{display:block;padding:10px 16px 8px}
       <p class="edhint" id="edhint"></p>
     </div>
     <details class="layers" id="layers" open><summary>Calques</summary><div id="toggles" role="group" aria-label="Calques"></div></details>
+<div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
 <div class="cards"><button type="button" class="card" id="es-pdf"><b>PDF du plan</b><span><u>Trame seule</u> : axes, empreinte et colonnes sont lus, vous tracez les limites dans l’outil.<br><u>Trame + limites pointillées</u> : les lignes bleues/violettes de Bluebeam sont reprises comme limites.</span></button>
@@ -457,6 +463,10 @@ function planSVG(){
     if(v.t==='add') r.push(seg(v.l,'rv add'+on));
     else if(v.t==='mod'){ r.push(seg(v.o,'rvog'),seg(v.l,'rv mod'+on)); }
     else { r.push(seg(v.o,'rvdel'+on)); } });
+  if(l4&&l4.g){ const ya=-(by1+PAD), yb=-(by0-PAD), xa=bx0-PAD, xb=bx1+PAD;
+    l4.g.forEach((v,k)=>{ const q=(k===0||k===4)?'':' q', t=k===0||k===4?'':k+'/4';
+      if(l4.o==='V') r.push(`<line class="l4g${q}" x1="${v}" y1="${ya}" x2="${v}" y2="${yb}"/>`+(t?`<text class="l4t" x="${v}" y="${ya-0.3}">${t}</text>`:''));
+      else r.push(`<line class="l4g${q}" x1="${xa}" y1="${-v}" x2="${xb}" y2="${-v}"/>`+(t?`<text class="l4t" x="${xa-0.6}" y="${-v}">${t}</text>`:'')); }); }
   if(edLim&&!edAdd) D.lines.forEach((l,i)=>{ if(l.del||!(l.o==='V'?show.lnV:show.lnH)) return;
     [['a',l.a],['b',l.b]].forEach(([e,v])=>{ const w=e==='a'?v+0.001:v-0.001, [x1,y1,x2,y2]=l.o==='V'?[l.pos,-v,l.pos,-w]:[v,-l.pos,w,-l.pos];
       r.push(`<line class="lh${hdrag&&hdrag.i===i&&hdrag.e===e?' on':''}" data-h="${i}" data-e="${e}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`); }); });
@@ -624,6 +634,7 @@ svg.addEventListener('pointermove',e=>{
     const sp=snapPt(X,Y,hdrag.i), sv=l.o==='V'?sp.y:sp.x; let v=Math.round(sv*1000)/1000;
     if(hdrag.e==='a') v=Math.min(v,l.b-0.3); else v=Math.max(v,l.a+0.3);
     l[hdrag.e]=v; msg(`Limite ${l.o==='V'?'x':'y'} = ${(l.pos+(l.o==='V'?OXm:OYm)).toFixed(2)} m : de ${(l.a+(l.o==='V'?OYm:OXm)).toFixed(2)} à ${(l.b+(l.o==='V'?OYm:OXm)).toFixed(2)} m`); draw(); return; }
+  if(l4on&&!drag){ l4Preview(e); return; }
   if(edLim&&edAdd&&!drag){ preview(e); return; }
   if(!drag) return;
   const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>3){ moved=true; svg.classList.add('drag'); }
@@ -634,6 +645,7 @@ svg.addEventListener('pointerup',e=>{
   const wasMoved=moved; drag=null; svg.classList.remove('drag');
   if(wasMoved) return;
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le]');
+  if(l4on){ l4Click(e); return; }
   if(edLim&&edAdd){ addPoint(e); return; }
   if(el&&el.dataset.le!==undefined){ edSel=+el.dataset.le; updEd(); draw(); return; }
   if(el&&el.dataset.ln!==undefined) linePick(+el.dataset.ln); else if(el&&el.dataset.col!==undefined) manualPick(+el.dataset.col); else if(el) select(el.dataset.id); else if(selId) select(selId);
@@ -827,11 +839,37 @@ function snapPt(X,Y,excl){
     [-1,0,1].forEach(i=>{ xs.push([c.x+i*c.w/2,'colonne']); ys.push([c.y+i*c.h/2,'colonne']); }); });
   if(SNAP.foot) LIM.forEach(l=>{ if(!l.f) return; if(l.o==='V'){ xs.push([l.pos,'empreinte']); pts.push([l.pos,l.a,'empreinte'],[l.pos,l.b,'empreinte']); } else { ys.push([l.pos,'empreinte']); pts.push([l.a,l.pos,'empreinte'],[l.b,l.pos,'empreinte']); } });
   if(SNAP.lim) D.lines.forEach((l,i)=>{ if(i===excl||l.del) return; if(l.o==='V'){ xs.push([l.pos,'limite']); pts.push([l.pos,l.a,'limite'],[l.pos,l.b,'limite']); } else { ys.push([l.pos,'limite']); pts.push([l.a,l.pos,'limite'],[l.b,l.pos,'limite']); } });
+  if(l4&&l4.g) l4.g.forEach(v=>(l4.o==='V'?xs:ys).push([v,'repère L/4']));
   let best=null,bd=tol; pts.forEach(p=>{ const d=Math.hypot(p[0]-X,p[1]-Y); if(d<bd){bd=d;best=p;} });
   if(best) return {x:best[0],y:best[1],k:'point · '+best[2]};
   let bx=null,by=null; xs.forEach(p=>{ const d=Math.abs(p[0]-X); if(d<tol&&(!bx||d<Math.abs(bx[0]-X))) bx=p; }); ys.forEach(p=>{ const d=Math.abs(p[0]-Y); if(d<tol&&(!by||d<Math.abs(by[0]-Y))) by=p; });
   return {x:bx?bx[0]:X,y:by?by[0]:Y,k:[bx&&'x · '+bx[1],by&&'y · '+by[1]].filter(Boolean).join(', ')};
 }
+let l4on=false, l4=null, l4p=null;
+function l4Msg(t){ $('#l4msg').innerHTML=t; $('#l4box').hidden=!(l4on||l4); }
+function l4Set(on){ l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
+  if(l4on){ if(edLim&&edAdd){ edAdd=false; updEd(); } l4Msg(l4?l4txt():'Cliquez une <b>paroi</b> (face de colonne, mur, axe), puis la <b>paroi opposée</b>. Échap pour annuler.'); } else l4Msg(l4?l4txt():''); $('#l4-copy').hidden=!l4; }
+function l4txt(){ const P=l4.o==='V'?OXm:OYm, f=v=>(v+P).toFixed(3), g=l4.g;
+  return `Portée <b>L = ${l4.L.toFixed(3)} m</b> (${l4.o==='V'?'x':'y'} de ${f(g[0])} à ${f(g[4])} SAFE) · <b>L/4 = ${(l4.L/4*1000).toFixed(0)} mm</b>.<br>Repères à ${g.slice(1,4).map(f).join(' · ')} m. Ils servent d’accrochage pour tracer les limites (« Éditer les limites » → « + Nouvelle ligne »).`; }
+function l4Click(e){
+  const [X,Y]=toModel(e), s=snapPt(X,Y,-1);
+  if(!l4p){ l4p={x:s.x,y:s.y}; l4Msg('Première paroi : <b>'+(s.k||'libre')+'</b>. Cliquez la paroi opposée.'); return; }
+  const dx=Math.abs(s.x-l4p.x), dy=Math.abs(s.y-l4p.y), V=dx>=dy, a=V?l4p.x:l4p.y, b=V?s.x:s.y, L=Math.abs(b-a);
+  l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove();
+  if(L<0.3){ l4Msg('Portée trop courte (< 30 cm). Cliquez deux parois différentes.'); return; }
+  l4={o:V?'V':'H',L,g:[0,1,2,3,4].map(k=>Math.round((a+(b-a)*k/4)*1000)/1000)};
+  l4Set(false); $('#l4-copy').hidden=false; draw();
+}
+function l4Preview(e){
+  const [X,Y]=toModel(e), s=snapPt(X,Y,-1), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
+  let h=`<circle cx="${s.x}" cy="${-s.y}" r="${6*u}" fill="none" stroke="#7c4dff" stroke-width="2" vector-effect="non-scaling-stroke"/>`, t=l4p?'2e paroi : ':'1re paroi : ';
+  if(l4p){ const V=Math.abs(s.x-l4p.x)>=Math.abs(s.y-l4p.y), L=V?Math.abs(s.x-l4p.x):Math.abs(s.y-l4p.y);
+    h+=`<line x1="${l4p.x}" y1="${-l4p.y}" x2="${V?s.x:l4p.x}" y2="${V?-l4p.y:-s.y}" stroke="#7c4dff" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`; t+=`L = ${L.toFixed(3)} m · L/4 = ${(L/4*1000).toFixed(0)} mm · `; }
+  svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); l4Msg(t+(s.k||'libre'));
+}
+$('#l4').onclick=()=>l4Set(!l4on);
+$('#l4-clr').onclick=()=>{ l4=null; l4p=null; l4Set(false); $('#l4box').hidden=true; $('#l4-copy').hidden=true; draw(); };
+$('#l4-copy').onclick=async()=>{ if(!l4) return; const P=l4.o==='V'?OXm:OYm, tx=`L = ${l4.L.toFixed(3)} m\nL/4 = ${(l4.L/4*1000).toFixed(0)} mm\n${l4.o==='V'?'x':'y'} (SAFE, m) : ${l4.g.map(v=>(v+P).toFixed(3)).join(' ; ')}`; try{ await navigator.clipboard.writeText(tx); pjMsg('Valeurs L/4 copiées.'); }catch(e){ pjMsg('Copie impossible.'); } };
 function preview(e){
   const [X,Y]=toModel(e), s=snapPt(X,Y,-1), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
   let h=`<circle cx="${s.x}" cy="${-s.y}" r="${6*u}" fill="none" stroke="var(--sel)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
@@ -855,7 +893,8 @@ function delSel(){ const l=edSel!==null&&D.lines[edSel]; if(!l) return;
 $('#ed-add').onclick=()=>{ edAdd=!edAdd; edP1=null; updEd(); $('#edhint').textContent=edAdd?'Cliquez le 1er point. Accrochage actif selon les cases cochées.':''; draw(); };
 $('#ed-del').onclick=delSel;
 document.querySelectorAll('[data-sn]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sn]=c.checked; });
-document.addEventListener('keydown',e=>{ if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
+  if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
 $('#ed-lim').onclick=()=>{ edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
   if(edLim){ if(gen.mode){ const m=gen.mode; edLim=false; setMode(m); edLim=true; $('#ed-lim').setAttribute('aria-pressed','true'); $('#ed-reset').hidden=false; } show.lnV=show.lnH=true; syncToggle('lnV'); syncToggle('lnH'); msg('Édition des limites : glissez une extrémité (point bleu) pour étirer ou raccourcir la ligne.'); }
   draw(); };
@@ -1140,6 +1179,7 @@ function applyProject(d,meta,state){
   if(state&&state.lines&&state.lines.length) D.lines=state.lines;
   deriveAll(); deriveLim(); N0=n0; LIM0=orig;
   gen.list=(state&&state.gen&&state.gen.list)||[]; gen.seq=(state&&state.gen&&state.gen.seq)||1; gen.mode=''; gen.first=null; gen.ln1=null; gen.axCol=null;
+  l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true;
   edLim=false; edAdd=false; edP1=null; edSel=null; $('#ed-lim').setAttribute('aria-pressed','false'); $('#ed-reset').hidden=true; $('#edpanel').hidden=true;
   $('#g-man').setAttribute('aria-pressed','false'); $('#g-lim').setAttribute('aria-pressed','false');
   selId=null; resetShow(!(d.strips.length||d.lines.length)&&d.slabs.length);
