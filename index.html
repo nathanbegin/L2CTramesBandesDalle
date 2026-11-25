@@ -869,6 +869,7 @@ function snapPt(X,Y,excl){
   if(SNAP.grid){ D.gx.forEach(g=>xs.push([g.m,'trame'])); D.gy.forEach(g=>ys.push([g.m,'trame'])); }
   if(SNAP.col) D.cols.forEach(c=>{ [-1,0,1].forEach(i=>[-1,0,1].forEach(j=>pts.push([c.x+i*c.w/2,c.y+j*c.h/2,'colonne'])));
     [-1,0,1].forEach(i=>{ xs.push([c.x+i*c.w/2,'colonne']); ys.push([c.y+i*c.h/2,'colonne']); }); });
+  if(SNAP.foot) (D.foot||[]).forEach(f=>{ if(Math.abs(f[0]-f[2])>=0.005&&Math.abs(f[1]-f[3])>=0.005) pts.push([f[0],f[1],'empreinte (oblique)'],[f[2],f[3],'empreinte (oblique)']); });
   if(SNAP.foot) LIM.forEach(l=>{ if(!l.f) return; if(l.o==='V'){ xs.push([l.pos,'empreinte']); pts.push([l.pos,l.a,'empreinte'],[l.pos,l.b,'empreinte']); } else { ys.push([l.pos,'empreinte']); pts.push([l.a,l.pos,'empreinte'],[l.b,l.pos,'empreinte']); } });
   if(SNAP.lim) D.lines.forEach((l,i)=>{ if(i===excl||l.del) return; if(l.o==='V'){ xs.push([l.pos,'limite']); pts.push([l.pos,l.a,'limite'],[l.pos,l.b,'limite']); } else { ys.push([l.pos,'limite']); pts.push([l.a,l.pos,'limite'],[l.b,l.pos,'limite']); } });
   if(l4&&l4.g) l4.g.forEach(v=>(l4.o==='V'?xs:ys).push([v,'repère L/4']));

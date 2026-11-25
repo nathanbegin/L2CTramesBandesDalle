@@ -54,7 +54,7 @@ export async function extractPdf(pdfjs,data,pageNo=1){
     else if(Math.abs(s.y1-s.y2)<1.5) out.limits.push({o:'H',pos:(s.y1+s.y2)/2,a:Math.min(s.x1,s.x2),b:Math.max(s.x1,s.x2),c:'b'}); });
   // empreinte : traits gris pleins orthogonaux
   segs.forEach(s=>{ if(s.d||!(near(s.c,171,171,171,25))) return; const len=Math.hypot(s.x2-s.x1,s.y2-s.y1); if(len<4) return;
-    if(Math.abs(s.x1-s.x2)<0.3||Math.abs(s.y1-s.y2)<0.3) out.foot.push([+s.x1.toFixed(2),+s.y1.toFixed(2),+s.x2.toFixed(2),+s.y2.toFixed(2)]); });
+    out.foot.push([+s.x1.toFixed(2),+s.y1.toFixed(2),+s.x2.toFixed(2),+s.y2.toFixed(2)]); }); // orthogonaux et obliques (les limites SAFE n'utilisent que les orthogonaux)
   // colonnes : rectangles remplis de taille plausible
   const seen=new Set();
   fills.forEach(r=>{ if(!near(r.c,170,170,170,25)) return; if(r.w<6||r.h<6||r.w>45||r.h>45) return;
