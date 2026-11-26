@@ -317,7 +317,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="sb" type="button" hidden title="Masquer ou afficher toutes les bandes">Masquer les bandes</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="sb" type="button" title="Masquer ou afficher toutes les bandes">Masquer les bandes</button><button class="btn" id="vm" type="button" aria-haspopup="menu" aria-expanded="false" title="Menu Affichage : réafficher les bandes masquées">Affichage ▾</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -353,6 +353,7 @@ header{display:block;padding:10px 16px 8px}
 <div class="acts"><button class="btn" id="cal-pick" type="button">Choisir 2 points (PDF → modèle)</button></div>
 <div class="acts"><button class="btn pri" id="cal-ok" type="button">Appliquer</button><button class="btn" id="cal-rst" type="button">Réinitialiser</button><button class="btn" id="cal-done" type="button">Terminer</button></div></div>
 <div class="ctxm" id="ctxm" hidden role="menu"></div>
+<div class="ctxm" id="vmm" hidden role="menu" style="max-height:60vh;overflow:auto"></div>
 <div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
@@ -459,7 +460,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
   <details><summary>Puis-je importer des bandes depuis un DXF ?</summary><p>Oui : onglet « Créer » → « Importer un DXF… ». Les contours rectangulaires deviennent des bandes colonnes dans une nouvelle variante (calque contenant A ou B pour la couche, sinon selon l’orientation). Les bandes milieu se déduisent des bandes colonnes.</p></details>
-  <details><summary>Comment masquer ou supprimer une bande ?</summary><p>Clic droit sur une bande : « Masquer cette bande » ou « Supprimer » (bandes colonnes de la variante active seulement). Le bouton « Masquer les bandes » / « Afficher toutes les bandes », en bas du plan, masque ou réaffiche tout, y compris les bandes masquées une à une. Une bande masquée reste dans les exports.</p></details>
+  <details><summary>Comment masquer ou supprimer une bande ?</summary><p>Clic droit sur une bande : « Masquer cette bande » ou « Supprimer » (bandes colonnes de la variante active seulement). Le bouton « Masquer les bandes » / « Afficher toutes les bandes », en bas du plan, masque ou réaffiche tout, y compris les bandes masquées une à une. Le menu « Affichage ▾ » liste les bandes masquées et permet de les réafficher une à une ou toutes ensemble. Une bande masquée reste dans les exports.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -780,7 +781,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.11.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.12.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1303,10 +1304,22 @@ function hidSet(a){ PJ.pm=Object.assign({},PJ.pm||{},{hid:a}); touch(); }
 const STRIPK=['ms','cs','gc','gm','rc','rm','fc','fm'];
 function stripCounts(){ return {ms:mids.length,cs:strips.length,gc:genObjs.filter(o=>o.kind==='gc').length,gm:genObjs.filter(o=>o.kind==='gm').length,rc:recon.filter(o=>o.kind==='rc').length,rm:recon.filter(o=>o.kind==='rm').length,fc:f2k.filter(o=>o.kind==='fc').length,fm:f2k.filter(o=>o.kind==='fm').length}; }
 function allShown(){ const c=stripCounts(); return STRIPK.every(k=>!c[k]||show[k])&&show.vx!==false&&show.A&&show.B&&show.O&&!HID().some(id=>byId[id]); }
-function updateSB(){ const b=$('#sb'); if(!b) return; const c=stripCounts(), tot=STRIPK.reduce((a,k)=>a+c[k],0)+(VARS.list.length>1?1:0); b.hidden=!tot; if(!tot) return; const all=allShown(); b.textContent=all?'Masquer les bandes':'Afficher toutes les bandes'; b.dataset.mode=all?'hide':'show'; }
+function updateSB(){ const b=$('#sb'); if(!b) return; const c=stripCounts(), tot=STRIPK.reduce((a,k)=>a+c[k],0)+(VARS.list.length>1?1:0); b.hidden=false; b.disabled=!tot; if(!tot){ b.textContent='Masquer les bandes'; b.dataset.mode='hide'; return; } const all=allShown(); b.textContent=all?'Masquer les bandes':'Afficher toutes les bandes'; b.dataset.mode=all?'hide':'show'; }
 $('#sb').onclick=()=>{ if($('#sb').dataset.mode==='hide'){ STRIPK.forEach(k=>show[k]=false); show.vx=false; } else { STRIPK.forEach(k=>show[k]=true); show.vx=true; show.A=show.B=show.O=true; if(HID().length) hidSet([]); VARS.list.forEach(v=>{ if(v.id!==VARS.act) v.show=true; }); }
   if(typeof buildToggles==='function') buildToggles(); draw(); };
-function ctxClose(){ const m=$('#ctxm'); if(m) m.hidden=true; }
+function ctxClose(){ const m=$('#ctxm'); if(m) m.hidden=true; vmClose(); }
+function vmClose(){ const m=$('#vmm'); if(m&&!m.hidden){ m.hidden=true; $('#vm').setAttribute('aria-expanded','false'); } }
+function vmOpen(){ const m=$('#vmm'), hid=HID().filter(id=>byId[id]);
+  m.innerHTML=`<div class="h">Bandes masquées : ${hid.length}</div><button type="button" data-v="restore" ${hid.length?'':'disabled'}>Réafficher les bandes masquées${hid.length?' ('+hid.length+')':''}</button>`
+   +hid.slice(0,40).map(id=>`<button type="button" data-v="one" data-id="${id}">↩ ${id}${byId[id]&&byId[id].layer?' · couche '+byId[id].layer:''}</button>`).join('')+(hid.length>40?`<div class="h">… ${hid.length-40} autres</div>`:'')
+   +'<hr style="border:0;border-top:1px solid var(--line);margin:4px 0"><button type="button" data-v="all">Afficher toutes les bandes</button><button type="button" data-v="none">Masquer toutes les bandes</button>';
+  m.hidden=false; $('#vm').setAttribute('aria-expanded','true'); const r=$('#vm').getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight; m.style.left=Math.min(r.left,innerWidth-w-6)+'px'; m.style.top=Math.max(6,r.top-h-6)+'px'; }
+$('#vm').onclick=e=>{ e.stopPropagation(); if(!$('#vmm').hidden){ vmClose(); return; } ctxClose(); vmOpen(); };
+$('#vmm').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b||b.disabled) return; const k=b.dataset.v;
+  if(k==='restore'){ hidSet([]); msg('Bandes masquées réaffichées.'); } else if(k==='one'){ hidSet(HID().filter(x=>x!==b.dataset.id)); msg('Bande '+b.dataset.id+' réaffichée.'); }
+  else if(k==='all'){ STRIPK.forEach(x=>show[x]=true); show.vx=true; show.A=show.B=show.O=true; if(HID().length) hidSet([]); VARS.list.forEach(v=>{ if(v.id!==VARS.act) v.show=true; }); if(typeof buildToggles==='function') buildToggles(); }
+  else if(k==='none'){ STRIPK.forEach(x=>show[x]=false); show.vx=false; if(typeof buildToggles==='function') buildToggles(); }
+  vmClose(); draw(); });
 svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.closest('[data-id]'); if(!t||!t.closest('#plan')) return; e.preventDefault(); if(l4on||fpOn||msOn||calOn) return;
   const id=t.dataset.id, o=byId[id]; if(!o) return; const canDel=gen.list.some(x=>x.id===id), m=$('#ctxm');
   m.innerHTML=`<div class="h">${id} · couche ${o.layer||''}</div><button type="button" data-a="hide">Masquer cette bande</button><button type="button" class="dg" data-a="del" ${canDel?'':'disabled title="Supprimable uniquement pour les bandes de la variante active (colonnes)."'}>Supprimer</button>`;
@@ -1314,7 +1327,7 @@ svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.close
 $('#ctxm').addEventListener('click',e=>{ const b=e.target.closest('button[data-a]'); if(!b||b.disabled) return; const id=$('#ctxm').dataset.id; ctxClose();
   if(b.dataset.a==='hide'){ hidSet([...new Set([...HID(),id])]); if(selId===id) selId=null; draw(); renderInfo(); msg(`Bande ${id} masquée. Bouton « Afficher toutes les bandes » pour la réafficher.`); }
   else if(b.dataset.a==='del'){ gen.list=gen.list.filter(x=>x.id!==id); if(selId===id) selId=null; hidSet(HID().filter(x=>x!==id)); updateGen(true); msg(`Bande ${id} supprimée.`); } });
-document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#ctxm')) ctxClose(); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') ctxClose(); }); window.addEventListener('blur',ctxClose); window.addEventListener('wheel',ctxClose,{passive:true});
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#ctxm')&&!e.target.closest('#vmm')&&e.target.id!=='vm') ctxClose(); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') ctxClose(); }); window.addEventListener('blur',ctxClose); window.addEventListener('wheel',ctxClose,{passive:true});
 /* ---------- Import DXF : contours rectangulaires → bandes (nouvelle variante) ---------- */
 function parseDXF(text){ const L=text.split(/\r?\n/); const pr=[]; for(let i=0;i+1<L.length;i+=2) pr.push([parseInt(L[i].trim()),L[i+1].trim()]);
   let i=pr.findIndex((q,k)=>q[0]===2&&q[1]==='ENTITIES'&&pr[k-1]&&pr[k-1][1]==='SECTION'); if(i<0) return {ents:[],err:'Section ENTITIES introuvable (DXF ASCII requis).'};
