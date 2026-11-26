@@ -285,6 +285,9 @@ header{display:block;padding:10px 16px 8px}
 .flowbox{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:14px 0 8px;font-size:13px}
 .flow{margin:6px 0 4px;padding-left:20px;line-height:1.55}.flow li{margin:2px 0}.why{margin:6px 0 0!important;color:var(--muted);font-size:12.5px}
 #faqdlg{max-width:640px;width:92vw;border:1px solid var(--line);border-radius:10px;padding:16px 20px;background:var(--panel);color:var(--ink)}#faqdlg h2{margin:0 0 6px}#faqdlg h3{margin:12px 0 4px;font-size:14px}#faqdlg details{border-top:1px solid var(--line);padding:6px 0;font-size:13px}#faqdlg summary{cursor:pointer;font-weight:600}#faqdlg details p{margin:6px 0 2px;color:var(--muted);line-height:1.5}#faqdlg .acts{margin-top:12px;text-align:right}
+.vlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}.vr{display:grid;grid-template-columns:18px 12px 1fr auto 34px 20px;gap:6px;align-items:center;padding:3px 4px;border-radius:6px;font-size:12.5px}.vr.on{background:color-mix(in srgb,var(--accent,#f97316) 12%,transparent)}
+.vr.f2{grid-template-columns:12px 1fr auto 34px;color:var(--muted)}.vsw{width:12px;height:12px;border-radius:3px;display:inline-block}.vn{font:inherit;border:1px solid transparent;background:transparent;color:var(--ink);padding:2px 4px;border-radius:4px;min-width:0}.vn:hover,.vn:focus{border-color:var(--line);background:var(--panel)}.vr small{color:var(--muted)}.vey{cursor:pointer;font-size:12px;display:flex;align-items:center;gap:2px}
+.gs.vx{fill:color-mix(in srgb,var(--vc) 14%,transparent);stroke:var(--vc);stroke-width:1.6;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;pointer-events:none}.gs.vx.gm{fill:color-mix(in srgb,var(--vc) 6%,transparent)}
 </style>
 </head>
 <body>
@@ -373,6 +376,10 @@ header{display:block;padding:10px 16px 8px}
       <div class="note">Limites bleues : lignes tracées dans le PDF Bluebeam ou ajoutées dans l’outil (mode « Éditer les limites »). Reconstruction v2 et bandes .f2k : voir les calques. Dalles du .f2k : colorées selon les charges uniformes qui leur sont assignées.</div>
     </div>
     <div class="pane gen" id="pane-g" role="tabpanel" aria-labelledby="tab-g" hidden>
+      <section class="sec"><h2>Variantes de bandes</h2>
+      <p>Chaque variante est un jeu de bandes indépendant. La variante <b>active</b> (bouton radio) est celle que vous modifiez et exportez ; les autres s’affichent en pointillé si l’œil est coché.</p>
+      <div id="var-list" class="vlist"></div>
+      <div class="acts"><button class="btn" id="var-new" type="button">+ Nouvelle</button><button class="btn" id="var-dup" type="button">Dupliquer</button><button class="btn" id="var-f2k" type="button">Copier le .f2k</button></div></section>
       <section class="sec"><h2>1 · Automatique : L/4 entre les colonnes</h2>
       <p>Chaque côté de l'axe de colonnes reçoit 0,25 × la plus petite des portées. La bande milieu est l'espace libre entre deux bandes colonnes.</p>
       <div class="acts"><button class="btn pri" id="g-auto" type="button">Générer automatiquement</button></div>
@@ -434,6 +441,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Le PDF et le modèle sont décalés de quelques centimètres.</summary><p>L’import fait un recalage automatique sur les colonnes communes. Au besoin, le bouton « Calage » permet un décalage manuel (ΔX, ΔY en mm, ou deux points : un du PDF, un du modèle).</p></details>
   <details><summary>Il manque des arêtes de l’empreinte du bâtiment.</summary><p>Le bouton « Empreinte » liste les styles de traits du PDF (couleur, épaisseur, plein ou tirets). Cochez ceux qui forment l’empreinte, ou excluez / ajoutez des traits un à un.</p></details>
   <details><summary>Comment déplacer ou mesurer ?</summary><p>« Mesurer / Déplacer » donne Δx, Δy, la distance et l’angle entre deux points, et déplace une bande par ΔX / ΔY ou par deux points. « Portée L/4 » sert à repérer les quarts de portée entre deux parois.</p></details>
+  <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -547,6 +555,7 @@ function planSVG(){
   });
   [['gm','gm'],['gc','gc']].forEach(([k,kind])=>{ if(show[k]) genObjs.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="gs ${kind} ${f.layer}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
+  varObjs().filter(o=>show[lk(o.layer)]).forEach(o=>{ const q=o.rect; r.push(`<rect class="gs vx ${o.kind}" style="--vc:${o.color}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"><title>${(VARS.list.find(v=>v.id===o.vid)||{}).name} · ${o.id||'milieu'}</title></rect>`); });
   if(show.ctr) genObjs.filter(f=>show[lk(f.layer)]).forEach(f=>{
     r.push(f.layer==='A'?`<line class="ax ctr" x1="${f.axis}" x2="${f.axis}" y1="${-f.lo}" y2="${-f.hi}"/>`:`<line class="ax ctr" x1="${f.lo}" x2="${f.hi}" y1="${-f.axis}" y2="${-f.axis}"/>`);
     (D.cols||[]).forEach(c=>{ const p=f.layer==='A'?c.x:c.y,q=f.layer==='A'?c.y:c.x; if(Math.abs(p-f.axis)<=(f.layer==='A'?c.w:c.h)/2+0.02&&q>=f.lo-.05&&q<=f.hi+.05) r.push(`<circle class="ctrd" cx="${c.x}" cy="${-c.y}" r="0.22"/>`); });
@@ -753,7 +762,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.7.2', APP_DATE='2026-11-25';
+const APP_VERSION='1.8.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -821,6 +830,34 @@ function rebuildLIM(){ LIM.length=0; D.lines.forEach(l=>LIM.push(l));
 rebuildLIM();
 let LIM0=JSON.stringify(D.lines); let edLim=false, hdrag=null, edAdd=false, edP1=null, edSel=null; const SNAP={grid:true,col:true,foot:true,lim:true};
 const gen = {list:[], seq:1, mode:'', first:null, ln1:null, axCol:null};
+/* ---- variantes de bandes : chaque variante = une liste de bandes ; gen.list = celle de la variante active ---- */
+const VCOL=['#0ea5e9','#d946ef','#f59e0b','#10b981','#ef4444','#6366f1'], VARS={list:[],act:null};
+const vAct=()=>VARS.list.find(v=>v.id===VARS.act);
+function vInit(st){ VARS.list=(st&&st.variants&&st.variants.length)?st.variants.map(v=>({...v})):[{id:'v1',name:'Variante 1',color:VCOL[0],show:true,list:(st&&st.list)||[]}];
+  VARS.act=(st&&st.va&&VARS.list.some(v=>v.id===st.va))?st.va:VARS.list[0].id; gen.list=vAct().list; }
+function vSync(){ const a=vAct(); if(a) a.list=gen.list; }
+function genState(){ vSync(); return {list:gen.list,seq:gen.seq,variants:VARS.list,va:VARS.act}; }
+function vNew(name,list){ vSync(); const id='v'+Date.now().toString(36)+VARS.list.length, col=VCOL[VARS.list.length%VCOL.length]; VARS.list.push({id,name:name||('Variante '+(VARS.list.length+1)),color:col,show:true,list:list||[]}); vActivate(id); }
+function vActivate(id){ vSync(); VARS.act=id; gen.list=vAct().list; gen.first=null; selId=null; updateGen(true); }
+function varObjs(){ const out=[]; VARS.list.forEach(v=>{ if(v.id===VARS.act||!v.show) return; const keep=gen.list; gen.list=v.list; let m=[]; try{ m=genMids(); }finally{ gen.list=keep; }
+    [...v.list.map(x=>({...x,kind:x.kind||'gc'})),...m].forEach(o=>out.push({...o,vid:v.id,color:v.color,rect:rectOf(o)})); }); return out; }
+function vRender(){ const el=$('#var-list'); if(!el) return; const f2n=(D.f2k||[]).filter(f=>f.kind==='fc').length;
+  el.innerHTML=(PJ.hasF2k?`<div class="vr f2"><span class="vsw" style="background:var(--f2kC)"></span><b>.f2k (importée)</b><small>${f2n} col. · lecture seule</small><label class="vey" title="Afficher"><input type="checkbox" data-vf2 ${show.fc?'checked':''}>👁</label></div>`:'')
+   +VARS.list.map(v=>{ const on=v.id===VARS.act, n=(on?gen.list:v.list).filter(x=>(x.kind||'gc')==='gc').length;
+    return `<div class="vr${on?' on':''}" data-v="${v.id}"><input type="radio" name="vact" value="${v.id}" ${on?'checked':''} title="Variante active (modifiable)"><span class="vsw" style="background:${v.color}"></span><input class="vn" data-vn value="${v.name.replace(/"/g,'&quot;')}"><small>${n} bandes</small><label class="vey" title="Afficher"><input type="checkbox" data-vs ${(on?(show.gc&&show.gm):v.show)?'checked':''}>👁</label><button class="x" type="button" data-vdel aria-label="Supprimer la variante">×</button></div>`; }).join(''); }
+$('#var-list').addEventListener('change',e=>{ const row=e.target.closest('.vr'); if(!row) return;
+  if(e.target.matches('[data-vf2]')){ show.fc=show.fm=e.target.checked; draw(); if(typeof buildToggles==='function') buildToggles(); return; }
+  const v=VARS.list.find(x=>x.id===row.dataset.v); if(!v) return;
+  if(e.target.matches('input[type=radio]')) vActivate(v.id);
+  else if(e.target.matches('[data-vn]')){ v.name=e.target.value.trim()||v.name; touch(); }
+  else if(e.target.matches('[data-vs]')){ if(v.id===VARS.act){ show.gc=show.gm=e.target.checked; if(typeof buildToggles==='function') buildToggles(); } else v.show=e.target.checked; touch(); draw(); } });
+$('#var-list').addEventListener('click',e=>{ const b=e.target.closest('[data-vdel]'); if(!b) return; const row=b.closest('.vr'), v=VARS.list.find(x=>x.id===row.dataset.v); if(!v) return;
+  if(VARS.list.length<2){ msg('Il faut garder au moins une variante.'); return; } if(!confirm('Supprimer la variante « '+v.name+' » et ses bandes ?')) return;
+  vSync(); VARS.list=VARS.list.filter(x=>x!==v); if(VARS.act===v.id){ VARS.act=VARS.list[0].id; gen.list=vAct().list; selId=null; } updateGen(true); });
+$('#var-new').onclick=()=>vNew();
+$('#var-dup').onclick=()=>{ vSync(); const a=vAct(); vNew(a.name+' (copie)',a.list.map(x=>({...x,id:'GC'+(gen.seq++),l1s:(x.l1s||[]).slice(),lWs:(x.lWs||[]).slice(),lEs:(x.lEs||[]).slice()}))); };
+$('#var-f2k').onclick=()=>{ const L=(D.f2k||[]).filter(f=>f.kind==='fc'); if(!L.length){ msg('Aucune bande colonne .f2k à copier.'); return; }
+  vNew('Copie du .f2k',L.map(f=>toStrip(f.layer,f.axis,f.lo,f.hi,f.layer==='A'?f.w1:f.w2,f.layer==='A'?f.w2:f.w1,{manual:true}))); };
 let ring = D.fill[0][0];
 function deriveLim(){ N0=D.lines.length; rebuildLIM(); LIM0=JSON.stringify(D.lines); ring=D.fill[0][0]; }
 const rectOf = o => o.layer==='A' ? {x:o.axis-o.w1, y:-o.hi, w:o.w1+o.w2, h:o.hi-o.lo} : {x:o.lo, y:-(o.axis+o.w1), w:o.hi-o.lo, h:o.w1+o.w2};
@@ -929,6 +966,7 @@ function updateGen(rebuild){ if(typeof touch==='function') touch();
   draw(); renderInfo(); if(rebuild) renderGenList();
 }
 function renderGenList(){
+  vRender();
   const el=$('#g-list');
   if(!gen.list.length){ el.innerHTML='<p>Aucune bande générée pour le moment.</p>'; return; }
   const [LA,RA]=['ouest','est'], [LB,RB]=['nord','sud'];
@@ -1235,7 +1273,7 @@ $('#g-f2k').onclick=async()=>{
   const out=$('#g-out'); out.value=txt; out.hidden=false;
   try{ navigator.clipboard.writeText(txt).catch(()=>{}); }catch(e){}
   out.select();
-  saveFile('bandes_'+(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+'.f2k',txt);
+  saveFile('bandes_'+(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+(VARS.list.length>1?'_'+vAct().name.replace(/[^\w\-]+/g,'_'):'')+'.f2k',txt);
   msg(`Fichier .f2k téléchargé : ${pr.length} points, ${rows.length} bandes (n° de point ${$('#x-pt').value||2000}…${pid-1}). Texte aussi copié.`);
 };
 
@@ -1435,7 +1473,7 @@ function applyProject(d,meta,state){
   const orig=JSON.stringify(D.lines), n0=D.lines.length;
   if(state&&state.lines&&state.lines.length) D.lines=state.lines;
   deriveAll(); deriveLim(); N0=n0; LIM0=orig;
-  gen.list=(state&&state.gen&&state.gen.list)||[]; gen.seq=(state&&state.gen&&state.gen.seq)||1; gen.mode=''; gen.first=null; gen.ln1=null; gen.axCol=null;
+  vInit(state&&state.gen); gen.seq=(state&&state.gen&&state.gen.seq)||1; gen.mode=''; gen.first=null; gen.ln1=null; gen.axCol=null;
   l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true; fpOn=false; fpHov=null; $('#fp').setAttribute('aria-pressed','false'); $('#fpbox').hidden=true; if(msOn) msToggle(false); if(calOn) calToggle(false); meas.length=0; mvHist.length=0;
   edLim=false; edAdd=false; edP1=null; edSel=null; $('#ed-lim').setAttribute('aria-pressed','false'); $('#ed-reset').hidden=true; $('#edpanel').hidden=true;
   $('#g-man').setAttribute('aria-pressed','false'); $('#g-lim').setAttribute('aria-pressed','false');
@@ -1487,7 +1525,7 @@ function renderLegend(){
 function touch(){ if(ST.loading) return; if(!ST.ok){ return; } clearTimeout(ST.timer); ST.timer=setTimeout(saveNow,1200); pjMsg('Modifications en attente…'); }
 function saveNow(){
   if(!ST.ok) return Promise.resolve();
-  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:{list:gen.list,seq:gen.seq}};
+  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState()};
   const id=PJ.id;
   ST.chain=ST.chain.then(()=>ST.col.doc(id).set(body)).then(()=>{ pjMsg('Enregistré.'); const p=ST.list.find(x=>x.id===id); if(p) p.name=PJ.name; else ST.list.push({id,name:PJ.name}); }).catch(e=>pjMsg('Échec de la sauvegarde ('+((e&&e.code)||'erreur')+').'));
   return ST.chain;
@@ -1560,7 +1598,7 @@ async function importF2K(file,asNew){
     OX=gx.length?Math.min(...gx):Math.min(...allx); OY=gy.length?Math.min(...gy):Math.min(...ally); }
   if(ST.ok){ try{ await ST.dcol.doc(id).set({ds}); }catch(e){ pjMsg('Sauvegarde du .f2k impossible ('+((e&&e.code)||'erreur')+').'); } }
   const d=buildD(id,ds,px,pm,OX,OY);
-  const keepLines=asNew?null:{lines:px?[]:D.lines,gen:{list:gen.list,seq:gen.seq}};
+  const keepLines=asNew?null:{lines:px?[]:D.lines,gen:genState()};
   applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:true,fname:file.name,Z:ds.Z,levels:ds.levels,maxPt:ds.maxPt,hasPdf:!!px,pm,ds,px},keepLines);
   if(asNew){ ST.list.push({id,name}); } else { const q=ST.list.find(x=>x.id===id); if(q) q.name=name; }
   renderPj(); await saveNow();
@@ -1604,7 +1642,7 @@ async function applyPdf(){
   const pm={S,OX,OY,fname,page:px.page.no||1};
   if(ST.ok){ try{ await ST.pcol.doc(id).set({px}); }catch(e){ pjMsg('Sauvegarde du PDF impossible ('+((e&&e.code)||'erreur')+').'); } }
   const d=buildD(id,ds,px,pm,OX,OY);
-  applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:!!ds,fname:ds?PJ.fname:'',Z:ds?ds.Z:47.244,levels:ds?ds.levels:null,maxPt:ds?ds.maxPt:847,hasPdf:true,pm,ds,px},asNew?null:{lines:[],gen:{list:gen.list,seq:gen.seq}});
+  applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:!!ds,fname:ds?PJ.fname:'',Z:ds?ds.Z:47.244,levels:ds?ds.levels:null,maxPt:ds?ds.maxPt:847,hasPdf:true,pm,ds,px},asNew?null:{lines:[],gen:genState()});
   if(asNew){ ST.list.push({id,name}); } else { const q=ST.list.find(x=>x.id===id); if(q) q.name=name; }
   renderPj(); await saveNow();
   pjMsg((px.limits.length?'PDF avec limites : ':'PDF avec trame seule (aucune limite pointillée détectée) : ')+`${px.limits.length} limites, ${d.cols.length} colonnes, ${d.gx.length+d.gy.length} axes.`+(ds&&d.pdfFit?` Calé sur ${Math.min(d.pdfFit.nx,d.pdfFit.ny)} axes communs avec le .f2k (écart max ${(d.pdfFit.res*1000).toFixed(0)} mm).`:''));
