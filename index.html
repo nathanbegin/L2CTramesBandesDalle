@@ -416,6 +416,13 @@ header{display:block;padding:10px 16px 8px}
       <p id="x-cnt" class="mut"></p>
       <div id="g-tsvout" style="display:flex;flex-direction:column;gap:10px"></div>
       <textarea id="g-out" rows="5" hidden readonly aria-label="Tableau des bandes générées"></textarea></section>
+      <section class="sec"><h2>Export DXF : bords de bande</h2>
+      <p>Dessin des bords de chaque bande (contour fermé) pour AutoCAD, Bluebeam ou Revit. Un calque par variante, couche (A/B) et type (colonne / milieu).</p>
+      <div class="frm" style="grid-template-columns:1fr"><label class="ck"><input id="dx-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="dx-oth" type="checkbox">Autres variantes de l’outil</label><label class="ck"><input id="dx-f2k" type="checkbox">Bandes du .f2k importé</label>
+      <label class="ck"><input id="dx-lab" type="checkbox" checked>Étiquettes (noms de bandes)</label><label class="ck"><input id="dx-axe" type="checkbox">Axes des bandes (calque *_AXE)</label>
+      <label>Unités du dessin<select id="dx-u"><option value="1000">mm</option><option value="1">m</option></select></label>
+      <label>Origine<select id="dx-o"><option value="safe">Coordonnées SAFE</option><option value="loc">Locales de l’outil (origine = 1er axe)</option></select></label></div>
+      <div class="acts"><button class="btn pri" id="g-dxf" type="button">Télécharger le DXF</button></div></section>
       <section class="sec"><h2>Vérification</h2>
       <p>Compare les bandes créées à celles déjà présentes dans le .f2k du modèle.</p>
       <div class="acts"><button class="btn" id="g-cmp" type="button">Comparer au .f2k</button></div>
@@ -442,6 +449,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Il manque des arêtes de l’empreinte du bâtiment.</summary><p>Le bouton « Empreinte » liste les styles de traits du PDF (couleur, épaisseur, plein ou tirets). Cochez ceux qui forment l’empreinte, ou excluez / ajoutez des traits un à un.</p></details>
   <details><summary>Comment déplacer ou mesurer ?</summary><p>« Mesurer / Déplacer » donne Δx, Δy, la distance et l’angle entre deux points, et déplace une bande par ΔX / ΔY ou par deux points. « Portée L/4 » sert à repérer les quarts de portée entre deux parois.</p></details>
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
+  <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -762,7 +770,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.8.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.9.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1277,6 +1285,30 @@ $('#g-f2k').onclick=async()=>{
   msg(`Fichier .f2k téléchargé : ${pr.length} points, ${rows.length} bandes (n° de point ${$('#x-pt').value||2000}…${pid-1}). Texte aussi copié.`);
 };
 
+/* ---------- Export DXF des bords de bande (R12, ASCII) ---------- */
+function variantObjs(v){ const keep=gen.list; gen.list=(v.id===VARS.act)?gen.list:v.list; let m=[]; try{ m=genMids(); }finally{ gen.list=keep; }
+  const L=(v.id===VARS.act?gen.list:v.list); return [...L.map(x=>({...x,kind:x.kind||'gc'})),...m]; }
+$('#g-dxf').onclick=()=>{
+  const san=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'X';
+  const sets=[]; vSync();
+  if($('#dx-act').checked&&vAct()) sets.push({pre:'BANDE_'+san(vAct().name),objs:variantObjs(vAct())});
+  if($('#dx-oth').checked) VARS.list.filter(v=>v.id!==VARS.act).forEach(v=>sets.push({pre:'BANDE_'+san(v.name),objs:variantObjs(v)}));
+  if($('#dx-f2k').checked) sets.push({pre:'F2K',objs:(D.f2k||[]).map(f=>({...f,kind:f.kind==='fm'?'gm':'gc'}))});
+  const n=sets.reduce((a,t)=>a+t.objs.length,0); if(!n){ msg('Aucune bande à exporter : cochez une source contenant des bandes.'); return; }
+  const U=parseFloat($('#dx-u').value)||1000, loc=$('#dx-o').value==='loc', ox=loc?0:OXm, oy=loc?0:OYm, f=v=>(Math.round(v*U*1000)/1000), th=0.25*U;
+  const col={A:{gc:5,gm:4},B:{gc:1,gm:6}}, layers=new Map(), E=[];
+  const lay=(name,c)=>{ if(!layers.has(name)) layers.set(name,c); return name; };
+  const pl=(ly,pts)=>{ E.push('0','POLYLINE','8',ly,'66','1','70','1','10','0','20','0','30','0'); pts.forEach(q=>E.push('0','VERTEX','8',ly,'10',f(q[0]+ox),'20',f(q[1]+oy),'30','0')); E.push('0','SEQEND','8',ly); };
+  const ln=(ly,a,b)=>E.push('0','LINE','8',ly,'10',f(a[0]+ox),'20',f(a[1]+oy),'30','0','11',f(b[0]+ox),'21',f(b[1]+oy),'31','0');
+  sets.forEach(S=>S.objs.forEach(o=>{ const q=rectOf(o), x0=q.x, x1=q.x+q.w, y0=-(q.y+q.h), y1=-q.y, k=o.kind==='gm'?'gm':'gc', ly=lay(`${S.pre}_${o.layer==='A'?'A':'B'}_${k==='gc'?'COL':'MIL'}`,(col[o.layer==='A'?'A':'B']||col.B)[k]);
+    pl(ly,[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]);
+    if($('#dx-axe').checked){ const al=lay(ly+'_AXE',8); if(o.layer==='A') ln(al,[o.axis,o.lo],[o.axis,o.hi]); else ln(al,[o.lo,o.axis],[o.hi,o.axis]); }
+    if($('#dx-lab').checked){ const tl=lay(ly+'_TXT',7), nm=o.id||(o.between?o.between.join('-'):'M'), cx=(x0+x1)/2+ox, cy=(y0+y1)/2+oy; E.push('0','TEXT','8',tl,'10',f(cx),'20',f(cy),'30','0','40',th,'1',nm,'72','1','73','2','11',f(cx),'21',f(cy),'31','0'); } }));
+  const H=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','9','$INSBASE','10','0','20','0','30','0','0','ENDSEC','0','SECTION','2','TABLES','0','TABLE','2','LTYPE','70','1','0','LTYPE','2','CONTINUOUS','70','0','3','Solid line','72','65','73','0','40','0','0','ENDTAB','0','TABLE','2','LAYER','70',String(layers.size+1),'0','LAYER','2','0','70','0','62','7','6','CONTINUOUS'];
+  layers.forEach((c,nm)=>H.push('0','LAYER','2',nm,'70','0','62',String(c),'6','CONTINUOUS')); H.push('0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES');
+  const txt=[...H,...E,'0','ENDSEC','0','EOF',''].join('\r\n');
+  saveFile('bords_bandes_'+(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+'.dxf',txt,'application/dxf');
+  msg(`DXF téléchargé : ${n} bandes, ${layers.size} calques, unités ${U===1000?'mm':'m'}, ${loc?'coordonnées locales':'coordonnées SAFE'}.`); };
 /* ---------- Tableaux à coller (Interactive Database Editing) ---------- */
 $('#x-z').addEventListener('change',()=>{ const v=parseFloat($('#x-z').value); PJ.zsel=(v&&Math.round(v)!==Math.round(PJ.Z*1000))?v:null; touch(); });
 $('#g-tsv').onclick=()=>{
