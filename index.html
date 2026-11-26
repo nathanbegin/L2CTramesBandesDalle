@@ -379,7 +379,12 @@ header{display:block;padding:10px 16px 8px}
       <section class="sec"><h2>Variantes de bandes</h2>
       <p>Chaque variante est un jeu de bandes indépendant. La variante <b>active</b> (bouton radio) est celle que vous modifiez et exportez ; les autres s’affichent en pointillé si l’œil est coché.</p>
       <div id="var-list" class="vlist"></div>
-      <div class="acts"><button class="btn" id="var-new" type="button">+ Nouvelle</button><button class="btn" id="var-dup" type="button">Dupliquer</button><button class="btn" id="var-f2k" type="button">Copier le .f2k</button></div></section>
+      <div class="acts"><button class="btn" id="var-new" type="button">+ Nouvelle</button><button class="btn" id="var-dup" type="button">Dupliquer</button><button class="btn" id="var-f2k" type="button">Copier le .f2k</button></div>
+      <div class="acts"><button class="btn" id="var-dxf" type="button">Importer un DXF…</button><input type="file" id="var-dxf-in" accept=".dxf" hidden></div>
+      <details class="prm"><summary>Options d’import DXF</summary><div class="frm" style="grid-template-columns:1fr"><p>Les contours rectangulaires (polylignes fermées, ou 4 sommets à angles droits) deviennent des bandes colonnes dans une <b>nouvelle variante</b>. Les calques contenant « MIL » (bandes milieu) sont ignorés : elles se déduisent des bandes colonnes.</p>
+      <label>Unités du DXF<select id="di-u"><option value="auto">Automatique</option><option value="1000">mm</option><option value="1">m</option></select></label>
+      <label>Origine<select id="di-o"><option value="safe">Coordonnées SAFE</option><option value="loc">Locales de l’outil</option></select></label>
+      <label>Calques contenant (optionnel)<input id="di-f" type="text" placeholder="ex. BANDE"></label></div></details></section>
       <section class="sec"><h2>1 · Automatique : L/4 entre les colonnes</h2>
       <p>Chaque côté de l'axe de colonnes reçoit 0,25 × la plus petite des portées. La bande milieu est l'espace libre entre deux bandes colonnes.</p>
       <div class="acts"><button class="btn pri" id="g-auto" type="button">Générer automatiquement</button></div>
@@ -450,6 +455,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Comment déplacer ou mesurer ?</summary><p>« Mesurer / Déplacer » donne Δx, Δy, la distance et l’angle entre deux points, et déplace une bande par ΔX / ΔY ou par deux points. « Portée L/4 » sert à repérer les quarts de portée entre deux parois.</p></details>
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
+  <details><summary>Puis-je importer des bandes depuis un DXF ?</summary><p>Oui : onglet « Créer » → « Importer un DXF… ». Les contours rectangulaires deviennent des bandes colonnes dans une nouvelle variante (calque contenant A ou B pour la couche, sinon selon l’orientation). Les bandes milieu se déduisent des bandes colonnes.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -770,7 +776,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.9.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.10.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1285,6 +1291,36 @@ $('#g-f2k').onclick=async()=>{
   msg(`Fichier .f2k téléchargé : ${pr.length} points, ${rows.length} bandes (n° de point ${$('#x-pt').value||2000}…${pid-1}). Texte aussi copié.`);
 };
 
+/* ---------- Import DXF : contours rectangulaires → bandes (nouvelle variante) ---------- */
+function parseDXF(text){ const L=text.split(/\r?\n/); const pr=[]; for(let i=0;i+1<L.length;i+=2) pr.push([parseInt(L[i].trim()),L[i+1].trim()]);
+  let i=pr.findIndex((q,k)=>q[0]===2&&q[1]==='ENTITIES'&&pr[k-1]&&pr[k-1][1]==='SECTION'); if(i<0) return {ents:[],err:'Section ENTITIES introuvable (DXF ASCII requis).'};
+  const ents=[]; let ins=0, units=null; const ui=pr.findIndex((q,k)=>q[1]==='$INSUNITS'); if(ui>=0&&pr[ui+1]) units=parseInt(pr[ui+1][1]);
+  for(i++;i<pr.length;i++){ if(pr[i][0]===0&&pr[i][1]==='ENDSEC') break; if(pr[i][0]!==0) continue; const t=pr[i][1];
+    if(t==='LWPOLYLINE'){ let j=i+1, layer='0', closed=false, pts=[], cx=null; for(;j<pr.length&&pr[j][0]!==0;j++){ const [c,v]=pr[j]; if(c===8) layer=v; else if(c===70) closed=(parseInt(v)&1)===1; else if(c===10){ cx=parseFloat(v); } else if(c===20&&cx!==null){ pts.push([cx,parseFloat(v)]); cx=null; } } ents.push({t:'poly',layer,pts,closed}); i=j-1; }
+    else if(t==='POLYLINE'){ let j=i+1, layer='0', closed=false, pts=[]; for(;j<pr.length&&pr[j][0]!==0;j++){ if(pr[j][0]===8) layer=pr[j][1]; else if(pr[j][0]===70) closed=(parseInt(pr[j][1])&1)===1; }
+      while(j<pr.length&&!(pr[j][0]===0&&pr[j][1]==='SEQEND')){ if(pr[j][0]===0&&pr[j][1]==='VERTEX'){ let x=null,y=null,k=j+1; for(;k<pr.length&&pr[k][0]!==0;k++){ if(pr[k][0]===10) x=parseFloat(pr[k][1]); else if(pr[k][0]===20) y=parseFloat(pr[k][1]); } if(x!==null&&y!==null) pts.push([x,y]); j=k; } else j++; }
+      ents.push({t:'poly',layer,pts,closed}); i=j; }
+    else ents.push({t,layer:''}); }
+  return {ents,units}; }
+function dxfToStrips(ents,U,ox,oy,filt){ const out=[], stat={rect:0,mil:0,other:0,filtre:0}; 
+  ents.forEach(e=>{ if(e.t!=='poly'){ stat.other++; return; } if(filt&&!e.layer.toUpperCase().includes(filt)){ stat.filtre++; return; }
+    let p=e.pts.slice(); if(p.length>1&&Math.hypot(p[0][0]-p[p.length-1][0],p[0][1]-p[p.length-1][1])<1e-6) p.pop();
+    if(p.length!==4){ stat.other++; return; } const tol=0.005*U; let ok=true; for(let i=0;i<4;i++){ const a=p[i], b=p[(i+1)%4]; if(Math.abs(a[0]-b[0])>tol&&Math.abs(a[1]-b[1])>tol) ok=false; } if(!ok){ stat.other++; return; }
+    const xs=p.map(q=>q[0]), ys=p.map(q=>q[1]), x0=Math.min(...xs)/U-ox, x1=Math.max(...xs)/U-ox, y0=Math.min(...ys)/U-oy, y1=Math.max(...ys)/U-oy, w=x1-x0, h=y1-y0; if(w<0.05||h<0.05){ stat.other++; return; }
+    const ln=e.layer.toUpperCase(); if(/MIL/.test(ln)){ stat.mil++; return; }
+    const lay=/(^|_)A(_|$)/.test(ln)&&!/(^|_)B(_|$)/.test(ln)?'A':/(^|_)B(_|$)/.test(ln)&&!/(^|_)A(_|$)/.test(ln)?'B':(h>=w?'A':'B'); stat.rect++;
+    out.push(lay==='A'?{layer:'A',axis:(x0+x1)/2,lo:y0,hi:y1,w:w/2}:{layer:'B',axis:(y0+y1)/2,lo:x0,hi:x1,w:h/2}); });
+  return {out,stat}; }
+$('#var-dxf').onclick=()=>$('#var-dxf-in').click();
+$('#var-dxf-in').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  let txt; try{ txt=await f.text(); }catch(_){ msg('Lecture du DXF impossible.'); return; }
+  const P=parseDXF(txt); if(P.err){ msg(P.err); return; }
+  let U=$('#di-u').value; if(U==='auto'){ const all=P.ents.flatMap(x=>x.pts||[]).flat().map(Math.abs); const mx=all.length?Math.max(...all):0; U=(P.units===4||mx>2000)?1000:1; } else U=parseFloat(U);
+  const loc=$('#di-o').value==='loc', {out,stat}=dxfToStrips(P.ents,U,loc?0:OXm,loc?0:OYm,($('#di-f').value||'').trim().toUpperCase());
+  if(!out.length){ msg(`Aucune bande rectangulaire trouvée (${stat.other} autre(s) entité(s), ${stat.mil} bande(s) milieu ignorée(s), ${stat.filtre} filtrée(s)).`); return; }
+  const list=out.map(o=>toStrip(o.layer,o.axis,o.lo,o.hi,o.w,o.w,{manual:true}));
+  vNew(f.name.replace(/\.[^.]+$/,''),list);
+  msg(`DXF importé : ${list.length} bandes colonnes dans la variante « ${vAct().name} » (unités ${U===1000?'mm':'m'}, ${loc?'coordonnées locales':'coordonnées SAFE'})`+(stat.mil?`, ${stat.mil} bande(s) milieu ignorée(s)`:'')+(stat.other?`, ${stat.other} entité(s) non rectangulaire(s) ignorée(s)`:'')+'.'); };
 /* ---------- Export DXF des bords de bande (R12, ASCII) ---------- */
 function variantObjs(v){ const keep=gen.list; gen.list=(v.id===VARS.act)?gen.list:v.list; let m=[]; try{ m=genMids(); }finally{ gen.list=keep; }
   const L=(v.id===VARS.act?gen.list:v.list); return [...L.map(x=>({...x,kind:x.kind||'gc'})),...m]; }
