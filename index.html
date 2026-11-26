@@ -460,7 +460,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
   <details><summary>Puis-je importer des bandes depuis un DXF ?</summary><p>Oui : onglet « Créer » → « Importer un DXF… ». Les contours rectangulaires deviennent des bandes colonnes dans une nouvelle variante (calque contenant A ou B pour la couche, sinon selon l’orientation). Les bandes milieu se déduisent des bandes colonnes.</p></details>
-  <details><summary>Comment masquer ou supprimer une bande ?</summary><p>Clic droit sur une bande : « Masquer cette bande » ou « Supprimer » (bandes colonnes de la variante active seulement). Le bouton « Masquer les bandes » / « Afficher toutes les bandes », en bas du plan, masque ou réaffiche tout, y compris les bandes masquées une à une. Le menu « Affichage ▾ » liste les bandes masquées et permet de les réafficher une à une ou toutes ensemble. Une bande masquée reste dans les exports.</p></details>
+  <details><summary>Comment masquer ou supprimer une bande ?</summary><p>Clic droit sur une bande : « Masquer cette bande » ou « Supprimer » (bandes colonnes de la variante active seulement). Le bouton « Masquer les bandes » / « Afficher toutes les bandes », en bas du plan, masque ou réaffiche tout, y compris les bandes masquées une à une. Le menu « Affichage ▾ » liste les bandes masquées une à une et permet de les réafficher individuellement ou toutes ensemble. Une bande masquée reste dans les exports.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -781,7 +781,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.12.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.12.1', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1311,14 +1311,11 @@ function ctxClose(){ const m=$('#ctxm'); if(m) m.hidden=true; vmClose(); }
 function vmClose(){ const m=$('#vmm'); if(m&&!m.hidden){ m.hidden=true; $('#vm').setAttribute('aria-expanded','false'); } }
 function vmOpen(){ const m=$('#vmm'), hid=HID().filter(id=>byId[id]);
   m.innerHTML=`<div class="h">Bandes masquées : ${hid.length}</div><button type="button" data-v="restore" ${hid.length?'':'disabled'}>Réafficher les bandes masquées${hid.length?' ('+hid.length+')':''}</button>`
-   +hid.slice(0,40).map(id=>`<button type="button" data-v="one" data-id="${id}">↩ ${id}${byId[id]&&byId[id].layer?' · couche '+byId[id].layer:''}</button>`).join('')+(hid.length>40?`<div class="h">… ${hid.length-40} autres</div>`:'')
-   +'<hr style="border:0;border-top:1px solid var(--line);margin:4px 0"><button type="button" data-v="all">Afficher toutes les bandes</button><button type="button" data-v="none">Masquer toutes les bandes</button>';
+   +hid.slice(0,40).map(id=>`<button type="button" data-v="one" data-id="${id}">↩ ${id}${byId[id]&&byId[id].layer?' · couche '+byId[id].layer:''}</button>`).join('')+(hid.length>40?`<div class="h">… ${hid.length-40} autres</div>`:'');
   m.hidden=false; $('#vm').setAttribute('aria-expanded','true'); const r=$('#vm').getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight; m.style.left=Math.min(r.left,innerWidth-w-6)+'px'; m.style.top=Math.max(6,r.top-h-6)+'px'; }
 $('#vm').onclick=e=>{ e.stopPropagation(); if(!$('#vmm').hidden){ vmClose(); return; } ctxClose(); vmOpen(); };
 $('#vmm').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b||b.disabled) return; const k=b.dataset.v;
   if(k==='restore'){ hidSet([]); msg('Bandes masquées réaffichées.'); } else if(k==='one'){ hidSet(HID().filter(x=>x!==b.dataset.id)); msg('Bande '+b.dataset.id+' réaffichée.'); }
-  else if(k==='all'){ STRIPK.forEach(x=>show[x]=true); show.vx=true; show.A=show.B=show.O=true; if(HID().length) hidSet([]); VARS.list.forEach(v=>{ if(v.id!==VARS.act) v.show=true; }); if(typeof buildToggles==='function') buildToggles(); }
-  else if(k==='none'){ STRIPK.forEach(x=>show[x]=false); show.vx=false; if(typeof buildToggles==='function') buildToggles(); }
   vmClose(); draw(); });
 svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.closest('[data-id]'); if(!t||!t.closest('#plan')) return; e.preventDefault(); if(l4on||fpOn||msOn||calOn) return;
   const id=t.dataset.id, o=byId[id]; if(!o) return; const canDel=gen.list.some(x=>x.id===id), m=$('#ctxm');
