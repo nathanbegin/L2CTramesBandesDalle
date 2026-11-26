@@ -289,7 +289,8 @@ header{display:block;padding:10px 16px 8px}
 .vr.f2{grid-template-columns:12px 1fr auto 34px;color:var(--muted)}.vsw{width:12px;height:12px;border-radius:3px;display:inline-block}.vn{font:inherit;border:1px solid transparent;background:transparent;color:var(--ink);padding:2px 4px;border-radius:4px;min-width:0}.vn:hover,.vn:focus{border-color:var(--line);background:var(--panel)}.vr small{color:var(--muted)}.vey{cursor:pointer;font-size:12px;display:flex;align-items:center;gap:2px}
 .gs.vx{fill:color-mix(in srgb,var(--vc) 14%,transparent);stroke:var(--vc);stroke-width:1.6;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;pointer-events:none}.gs.vx.gm{fill:color-mix(in srgb,var(--vc) 6%,transparent)}
 .ctxm{position:fixed;z-index:50;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px #0003;padding:4px;font-size:13px}.ctxm[hidden]{display:none}
-.ctxm .h{padding:4px 10px;color:var(--muted);font:11.5px var(--font-mono)}.ctxm button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:6px 10px;border-radius:5px;cursor:pointer;font:inherit}.ctxm button:hover:not(:disabled){background:color-mix(in srgb,var(--accent,#f97316) 16%,transparent)}.ctxm button:disabled{color:var(--muted);cursor:not-allowed}.ctxm .dg{color:#c0262d}
+.ctxm .h{padding:4px 10px;color:var(--muted);font:11.5px var(--font-mono)}.ctxm>button,#vm-hid>button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:6px 10px;border-radius:5px;cursor:pointer;font:inherit}.ctxm>button:hover:not(:disabled),#vm-hid>button:hover:not(:disabled){background:color-mix(in srgb,var(--accent,#f97316) 16%,transparent)}.ctxm>button:disabled,#vm-hid>button:disabled{color:var(--muted);cursor:not-allowed}.ctxm .dg{color:#c0262d}
+.vsec{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px 3px;border-top:1px solid var(--line);margin-top:4px}#vmm .grr{padding:0 10px 8px}
 </style>
 </head>
 <body>
@@ -330,7 +331,6 @@ header{display:block;padding:10px 16px 8px}
         <label><input type="checkbox" data-sn="lim" checked> Autres limites</label></div>
       <p class="edhint" id="edhint"></p>
     </div>
-    <details class="layers" id="layers"><summary>Calques</summary><div id="toggles" role="group" aria-label="Calques"></div><div class="grr" id="grr"></div></details>
 <div class="fpbox" id="fpbox" hidden><b>Empreinte du bâtiment (PDF)</b>
 <p id="fpmsg"></p>
 <div class="fpmode"><label><input type="radio" name="fpm" value="style" checked> Clic sur le plan : basculer le style</label><label><input type="radio" name="fpm" value="trait"> Clic sur le plan : exclure / ajouter un trait</label></div>
@@ -356,7 +356,11 @@ header{display:block;padding:10px 16px 8px}
 <div class="fpbox msbox" id="vdlg" hidden role="dialog" aria-label="Affichage des bandes par variante"><b>Affichage des bandes par variante</b>
 <p>Cochez les jeux de bandes à afficher, ou cliquez « Isoler » pour n’afficher que celui-ci.</p><div id="vd-list" class="vlist"></div>
 <div class="acts"><button class="btn" id="vd-all" type="button">Tout afficher</button><button class="btn pri" id="vd-done" type="button">Fermer</button></div></div>
-<div class="ctxm" id="vmm" hidden role="menu" style="max-height:60vh;overflow:auto"></div>
+<div class="ctxm" id="vmm" hidden role="menu" style="width:310px;max-height:70vh;overflow:auto"><div id="vm-hid"></div>
+<button type="button" data-v="var">Afficher par variante…</button>
+<div class="vsec">Calques</div><div id="toggles" role="group" aria-label="Calques"></div>
+<div class="vsec">Trame</div><div class="grr" id="grr"></div>
+<div class="vsec">Traits et étiquettes</div><button type="button" data-v="set">Épaisseur des lignes, taille des étiquettes…</button></div>
 <div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
@@ -784,7 +788,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.13.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.14.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1326,13 +1330,13 @@ $('#vd-all').onclick=()=>{ vdRows().forEach(r=>r.set(true)); vdApply(); };
 $('#vd-done').onclick=()=>{ $('#vdlg').hidden=true; };
 function vmClose(){ const m=$('#vmm'); if(m&&!m.hidden){ m.hidden=true; $('#vm').setAttribute('aria-expanded','false'); } }
 function vmOpen(){ const m=$('#vmm'), hid=HID().filter(id=>byId[id]);
-  m.innerHTML=`<div class="h">Bandes masquées : ${hid.length}</div><button type="button" data-v="restore" ${hid.length?'':'disabled'}>Réafficher les bandes masquées${hid.length?' ('+hid.length+')':''}</button>`
+  $('#vm-hid').innerHTML=`<div class="h">Bandes masquées : ${hid.length}</div><button type="button" data-v="restore" ${hid.length?'':'disabled'}>Réafficher les bandes masquées${hid.length?' ('+hid.length+')':''}</button>`
    +hid.slice(0,40).map(id=>`<button type="button" data-v="one" data-id="${id}">↩ ${id}${byId[id]&&byId[id].layer?' · couche '+byId[id].layer:''}</button>`).join('')+(hid.length>40?`<div class="h">… ${hid.length-40} autres</div>`:'');
-  m.insertAdjacentHTML('beforeend','<hr style="border:0;border-top:1px solid var(--line);margin:4px 0"><button type="button" data-v="var">Afficher par variante…</button>');
   m.hidden=false; $('#vm').setAttribute('aria-expanded','true'); const r=$('#vm').getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight; m.style.left=Math.min(r.left,innerWidth-w-6)+'px'; m.style.top=Math.max(6,r.top-h-6)+'px'; }
 $('#vm').onclick=e=>{ e.stopPropagation(); if(!$('#vmm').hidden){ vmClose(); return; } ctxClose(); vmOpen(); };
 $('#vmm').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b||b.disabled) return; const k=b.dataset.v;
   if(k==='var'){ vmClose(); vdRender(); $('#vdlg').hidden=false; return; }
+  if(k==='set'){ vmClose(); $('#pj-set').click(); return; }
   if(k==='restore'){ hidSet([]); msg('Bandes masquées réaffichées.'); } else if(k==='one'){ hidSet(HID().filter(x=>x!==b.dataset.id)); msg('Bande '+b.dataset.id+' réaffichée.'); }
   vmClose(); draw(); });
 svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.closest('[data-id]'); if(!t||!t.closest('#plan')) return; e.preventDefault(); if(l4on||fpOn||msOn||calOn) return;
@@ -1342,7 +1346,7 @@ svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.close
 $('#ctxm').addEventListener('click',e=>{ const b=e.target.closest('button[data-a]'); if(!b||b.disabled) return; const id=$('#ctxm').dataset.id; ctxClose();
   if(b.dataset.a==='hide'){ hidSet([...new Set([...HID(),id])]); if(selId===id) selId=null; draw(); renderInfo(); msg(`Bande ${id} masquée. Bouton « Afficher toutes les bandes » pour la réafficher.`); }
   else if(b.dataset.a==='del'){ gen.list=gen.list.filter(x=>x.id!==id); if(selId===id) selId=null; hidSet(HID().filter(x=>x!==id)); updateGen(true); msg(`Bande ${id} supprimée.`); } });
-document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#ctxm')&&!e.target.closest('#vmm')&&e.target.id!=='vm') ctxClose(); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') ctxClose(); }); window.addEventListener('blur',ctxClose); window.addEventListener('wheel',ctxClose,{passive:true});
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#ctxm')&&!e.target.closest('#vmm')&&e.target.id!=='vm') ctxClose(); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') ctxClose(); }); window.addEventListener('blur',ctxClose); window.addEventListener('wheel',e=>{ if(!e.target.closest||!e.target.closest('#vmm')) ctxClose(); },{passive:true});
 /* ---------- Import DXF : contours rectangulaires → bandes (nouvelle variante) ---------- */
 function parseDXF(text){ const L=text.split(/\r?\n/); const pr=[]; for(let i=0;i+1<L.length;i+=2) pr.push([parseInt(L[i].trim()),L[i+1].trim()]);
   let i=pr.findIndex((q,k)=>q[0]===2&&q[1]==='ENTITIES'&&pr[k-1]&&pr[k-1][1]==='SECTION'); if(i<0) return {ents:[],err:'Section ENTITIES introuvable (DXF ASCII requis).'};
@@ -1616,7 +1620,7 @@ function renderPj(){
 function renderSteps(){
   if(!$('#steps')||typeof D==='undefined') return;
   const nL=(D.lines||[]).filter(l=>!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0, nf=(D.f2k||[]).length;
-  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap); $('#cal').hidden=!(PJ.px&&PJ.hasF2k&&D.pmap);
+  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#vm').disabled=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap); $('#cal').hidden=!(PJ.px&&PJ.hasF2k&&D.pmap);
   const d1=!!PJ.hasPdf||PJ.id==='exemple', d2=!!PJ.hasF2k, d3=nL>0||ng>0, d4=ng>0;
   const nowN=!d1&&!d2?1:(!d3?3:(!d4?3:4));
   const set=(i,done,sub)=>{ const e=$('#st'+i); e.classList.toggle('done',done); e.classList.toggle('now',nowN===i&&!done); $('#st'+i+'s').textContent=sub; };
