@@ -288,6 +288,8 @@ header{display:block;padding:10px 16px 8px}
 .vlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}.vr{display:grid;grid-template-columns:18px 12px 1fr auto 34px 20px;gap:6px;align-items:center;padding:3px 4px;border-radius:6px;font-size:12.5px}.vr.on{background:color-mix(in srgb,var(--accent,#f97316) 12%,transparent)}
 .vr.f2{grid-template-columns:12px 1fr auto 34px;color:var(--muted)}.vsw{width:12px;height:12px;border-radius:3px;display:inline-block}.vn{font:inherit;border:1px solid transparent;background:transparent;color:var(--ink);padding:2px 4px;border-radius:4px;min-width:0}.vn:hover,.vn:focus{border-color:var(--line);background:var(--panel)}.vr small{color:var(--muted)}.vey{cursor:pointer;font-size:12px;display:flex;align-items:center;gap:2px}
 .gs.vx{fill:color-mix(in srgb,var(--vc) 14%,transparent);stroke:var(--vc);stroke-width:1.6;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;pointer-events:none}.gs.vx.gm{fill:color-mix(in srgb,var(--vc) 6%,transparent)}
+.ctxm{position:fixed;z-index:50;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px #0003;padding:4px;font-size:13px}.ctxm[hidden]{display:none}
+.ctxm .h{padding:4px 10px;color:var(--muted);font:11.5px var(--font-mono)}.ctxm button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:6px 10px;border-radius:5px;cursor:pointer;font:inherit}.ctxm button:hover:not(:disabled){background:color-mix(in srgb,var(--accent,#f97316) 16%,transparent)}.ctxm button:disabled{color:var(--muted);cursor:not-allowed}.ctxm .dg{color:#c0262d}
 </style>
 </head>
 <body>
@@ -315,7 +317,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="sb" type="button" hidden title="Masquer ou afficher toutes les bandes">Masquer les bandes</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -350,6 +352,7 @@ header{display:block;padding:10px 16px 8px}
 <div class="msd"><label>Δ X PDF<input id="cal-dx" type="number" step="1" value="0"><span>mm</span></label><label>Δ Y PDF<input id="cal-dy" type="number" step="1" value="0"><span>mm</span></label></div>
 <div class="acts"><button class="btn" id="cal-pick" type="button">Choisir 2 points (PDF → modèle)</button></div>
 <div class="acts"><button class="btn pri" id="cal-ok" type="button">Appliquer</button><button class="btn" id="cal-rst" type="button">Réinitialiser</button><button class="btn" id="cal-done" type="button">Terminer</button></div></div>
+<div class="ctxm" id="ctxm" hidden role="menu"></div>
 <div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
@@ -456,6 +459,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
   <details><summary>Puis-je importer des bandes depuis un DXF ?</summary><p>Oui : onglet « Créer » → « Importer un DXF… ». Les contours rectangulaires deviennent des bandes colonnes dans une nouvelle variante (calque contenant A ou B pour la couche, sinon selon l’orientation). Les bandes milieu se déduisent des bandes colonnes.</p></details>
+  <details><summary>Comment masquer ou supprimer une bande ?</summary><p>Clic droit sur une bande : « Masquer cette bande » ou « Supprimer » (bandes colonnes de la variante active seulement). Le bouton « Masquer les bandes » / « Afficher toutes les bandes », en bas du plan, masque ou réaffiche tout, y compris les bandes masquées une à une. Une bande masquée reste dans les exports.</p></details>
   <details><summary>Quelle élévation Z pour l’export ?</summary><p>Celle du niveau lu dans le .f2k (réglable dans l’onglet Export). Les bandes exportées sont ainsi au même niveau que les dalles du modèle.</p></details>
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
@@ -559,24 +563,24 @@ function planSVG(){
   if(show.sl) (D.slabs||[]).forEach(s=>{ const g=(D.sigs||[])[s.sig]||{color:'#999',label:''}; r.push(`<polygon class="slb${selObj&&selObj.t==='s'&&D.slabs[selObj.i]===s?' on':''}" data-obj="s:${D.slabs.indexOf(s)}" style="--c:${g.color}" points="${s.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Dalle ${s.id} · ${g.label}</title></polygon>`); });
   if(show.op) D.open.forEach(o=>r.push(`<polygon class="opn" points="${o.p.map(q=>q[0]+','+(-q[1])).join(' ')}"><title>Ouverture .f2k ${o.id}</title></polygon>`));
   if(show.det) D.detail.forEach(s=>r.push(`<line class="dl" x1="${s[0]}" y1="${-s[1]}" x2="${s[2]}" y2="${-s[3]}"/>`));
-  if(show.ms) mids.filter(m=>show[lk(m.layer)]).forEach(m=>{
+  if(show.ms) mids.filter(m=>show[lk(m.layer)]&&!isHid(m.id)).forEach(m=>{
     const q=m.rect; r.push(`<rect class="ms${m.id===selId?' sel':''}" data-id="${m.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`);
   });
-  if(show.cs) strips.filter(s=>show[lk(s.layer)]).forEach(s=>{
+  if(show.cs) strips.filter(s=>show[lk(s.layer)]&&!isHid(s.id)).forEach(s=>{
     const q=s.rect; r.push(`<rect class="cs ${s.layer}${s.id===selId?' sel':''}" data-id="${s.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`);
     if(s.layer==='A') r.push(`<line class="cl A" x1="${s.axis}" x2="${s.axis}" y1="${-s.a}" y2="${-s.b}"/>`);
     else r.push(`<line class="cl B" x1="${s.a}" x2="${s.b}" y1="${-s.axis}" y2="${-s.axis}"/>`);
   });
-  [['gm','gm'],['gc','gc']].forEach(([k,kind])=>{ if(show[k]) genObjs.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  [['gm','gm'],['gc','gc']].forEach(([k,kind])=>{ if(show[k]) genObjs.filter(f=>f.kind===kind&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="gs ${kind} ${f.layer}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
-  varObjs().filter(o=>show[lk(o.layer)]).forEach(o=>{ const q=o.rect; r.push(`<rect class="gs vx ${o.kind}" style="--vc:${o.color}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"><title>${(VARS.list.find(v=>v.id===o.vid)||{}).name} · ${o.id||'milieu'}</title></rect>`); });
-  if(show.ctr) genObjs.filter(f=>show[lk(f.layer)]).forEach(f=>{
+  if(show.vx!==false) varObjs().filter(o=>show[lk(o.layer)]).forEach(o=>{ const q=o.rect; r.push(`<rect class="gs vx ${o.kind}" style="--vc:${o.color}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"><title>${(VARS.list.find(v=>v.id===o.vid)||{}).name} · ${o.id||'milieu'}</title></rect>`); });
+  if(show.ctr) genObjs.filter(f=>show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{
     r.push(f.layer==='A'?`<line class="ax ctr" x1="${f.axis}" x2="${f.axis}" y1="${-f.lo}" y2="${-f.hi}"/>`:`<line class="ax ctr" x1="${f.lo}" x2="${f.hi}" y1="${-f.axis}" y2="${-f.axis}"/>`);
     (D.cols||[]).forEach(c=>{ const p=f.layer==='A'?c.x:c.y,q=f.layer==='A'?c.y:c.x; if(Math.abs(p-f.axis)<=(f.layer==='A'?c.w:c.h)/2+0.02&&q>=f.lo-.05&&q<=f.hi+.05) r.push(`<circle class="ctrd" cx="${c.x}" cy="${-c.y}" r="0.22"/>`); });
   });
-  [['rm','rm'],['rc','rc']].forEach(([k,kind])=>{ if(show[k]) recon.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  [['rm','rm'],['rc','rc']].forEach(([k,kind])=>{ if(show[k]) recon.filter(f=>f.kind===kind&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="rs ${kind}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
-  [['fm','fm'],['fc','fc']].forEach(([k,kind])=>{ if(show[k]) f2k.filter(f=>f.kind===kind&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  [['fm','fm'],['fc','fc']].forEach(([k,kind])=>{ if(show[k]) f2k.filter(f=>f.kind===kind&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<rect class="fs ${kind}${f.id===selId?' sel':''}" data-id="${f.id}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); }); });
   LIM.forEach((l,i)=>{
     if(l.del) return;
@@ -618,16 +622,16 @@ function planSVG(){
     r.push(`<polygon class="wl${selObj&&selObj.t==='w'&&selObj.i===i?' on':''}" data-obj="w:${i}" points="${[[w.a[0]+nx,w.a[1]+ny],[w.b[0]+nx,w.b[1]+ny],[w.b[0]-nx,w.b[1]-ny],[w.a[0]-nx,w.a[1]-ny]].map(q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3)).join(' ')}"/>`); });
   if(show.col) D.cols.forEach((c,i)=>r.push(`<rect class="col${selObj&&selObj.t==='c'&&selObj.i===i?' on':''}" data-obj="c:${i}" x="${c.x-c.w/2}" y="${-c.y-c.h/2}" width="${c.w}" height="${c.h}"/>`));
   if(gen.mode==='cols'||gen.mode==='lines') D.cols.forEach((c,i)=>r.push(`<rect class="chit${(gen.mode==='cols'?gen.first:gen.axCol)===i?' on':''}" data-col="${i}" x="${c.x-.6}" y="${-c.y-.6}" width="1.2" height="1.2"/>`));
-  ['gc','gm'].forEach(k=>{ if(show[k]) genObjs.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  ['gc','gm'].forEach(k=>{ if(show[k]) genObjs.filter(f=>f.kind===k&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='gc'?'GC':'GM'}" x="${q.x+.15}" y="${q.y+.65}">${f.id}</text>`); }); });
-  ['rc','rm'].forEach(k=>{ if(show[k]) recon.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  ['rc','rm'].forEach(k=>{ if(show[k]) recon.filter(f=>f.kind===k&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='rc'?'RC':'RM'}" x="${q.x+.15}" y="${q.y+q.h-.2}">${f.id}</text>`); }); });
-  ['fc','fm'].forEach(k=>{ if(show[k]) f2k.filter(f=>f.kind===k&&show[lk(f.layer)]).forEach(f=>{ const q=f.rect;
+  ['fc','fm'].forEach(k=>{ if(show[k]) f2k.filter(f=>f.kind===k&&show[lk(f.layer)]&&!isHid(f.id)).forEach(f=>{ const q=f.rect;
     r.push(`<text class="lbl ${k==='fc'?'FC':'FM'}" x="${q.x+q.w-.15}" y="${q.y+q.h-.2}">${f.id}</text>`); }); });
-  if(show.cs) strips.filter(s=>show[lk(s.layer)]).forEach(s=>{
+  if(show.cs) strips.filter(s=>show[lk(s.layer)]&&!isHid(s.id)).forEach(s=>{
     const q=s.rect; r.push(`<text class="lbl ${s.layer}" x="${q.x+.15}" y="${q.y+.65}">${s.id}</text>`);
   });
-  if(show.ms) mids.filter(m=>show[lk(m.layer)]).forEach(m=>{
+  if(show.ms) mids.filter(m=>show[lk(m.layer)]&&!isHid(m.id)).forEach(m=>{
     const q=m.rect; r.push(`<text class="lbl M" x="${q.x+.15}" y="${q.y+q.h-.2}">${m.id}</text>`);
   });
   const s = byId[selId];
@@ -658,7 +662,7 @@ function applyVB(){
   const nice=[0.5,1,2,5,10,20,50].find(n=>n>=target)||50;
   $('#scale').innerHTML = `<span>Unités : mètres${scaleOrg?' · origine : axe '+scaleOrg:''}</span><span>${nice} m ≈ ${Math.round(nice/mpp)} px</span>`;
 }
-function draw(){ $('#plan').innerHTML = planSVG(); if(typeof renderSteps==='function') renderSteps(); if(typeof renderLegend==='function') renderLegend(); if(typeof renderRev==='function') renderRev(); }
+function draw(){ $('#plan').innerHTML = planSVG(); if(typeof updateSB==='function') updateSB(); if(typeof renderSteps==='function') renderSteps(); if(typeof renderLegend==='function') renderLegend(); if(typeof renderRev==='function') renderRev(); }
 
 /* ---------- calques ---------- */
 const TG = [
@@ -776,7 +780,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.10.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.11.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -798,6 +802,7 @@ function zoom(k,cx,cy){
 svg.addEventListener('wheel',e=>{ e.preventDefault(); const r=svg.getBoundingClientRect(); zoom(e.deltaY>0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top); },{passive:false});
 let drag=null, moved=false;
 svg.addEventListener('pointerdown',e=>{
+  if(e.button===2) return;
   const h=edLim&&e.target.closest&&e.target.closest('[data-h]');
   if(h){ hdrag={i:+h.dataset.h,e:h.dataset.e}; moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} draw(); return; }
   drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y}; moved=false; svg.setPointerCapture(e.pointerId); });
@@ -816,6 +821,7 @@ svg.addEventListener('pointermove',e=>{
   if(moved){ vb.x=drag.vx-dx*vb.w/svg.clientWidth; vb.y=drag.vy-dy*vb.h/svg.clientHeight; applyVB(); }
 });
 svg.addEventListener('pointerup',e=>{
+  if(e.button===2) return;
   if(hdrag){ hdrag=null; moved=false; draw(); touch(); return; }
   const wasMoved=moved; drag=null; svg.classList.remove('drag');
   if(wasMoved) return;
@@ -1291,6 +1297,24 @@ $('#g-f2k').onclick=async()=>{
   msg(`Fichier .f2k téléchargé : ${pr.length} points, ${rows.length} bandes (n° de point ${$('#x-pt').value||2000}…${pid-1}). Texte aussi copié.`);
 };
 
+/* ---------- Menu contextuel des bandes + tout masquer / tout afficher ---------- */
+const HID=()=>(PJ.pm&&PJ.pm.hid)||[]; const isHid=id=>id!==undefined&&HID().includes(id);
+function hidSet(a){ PJ.pm=Object.assign({},PJ.pm||{},{hid:a}); touch(); }
+const STRIPK=['ms','cs','gc','gm','rc','rm','fc','fm'];
+function stripCounts(){ return {ms:mids.length,cs:strips.length,gc:genObjs.filter(o=>o.kind==='gc').length,gm:genObjs.filter(o=>o.kind==='gm').length,rc:recon.filter(o=>o.kind==='rc').length,rm:recon.filter(o=>o.kind==='rm').length,fc:f2k.filter(o=>o.kind==='fc').length,fm:f2k.filter(o=>o.kind==='fm').length}; }
+function allShown(){ const c=stripCounts(); return STRIPK.every(k=>!c[k]||show[k])&&show.vx!==false&&show.A&&show.B&&show.O&&!HID().some(id=>byId[id]); }
+function updateSB(){ const b=$('#sb'); if(!b) return; const c=stripCounts(), tot=STRIPK.reduce((a,k)=>a+c[k],0)+(VARS.list.length>1?1:0); b.hidden=!tot; if(!tot) return; const all=allShown(); b.textContent=all?'Masquer les bandes':'Afficher toutes les bandes'; b.dataset.mode=all?'hide':'show'; }
+$('#sb').onclick=()=>{ if($('#sb').dataset.mode==='hide'){ STRIPK.forEach(k=>show[k]=false); show.vx=false; } else { STRIPK.forEach(k=>show[k]=true); show.vx=true; show.A=show.B=show.O=true; if(HID().length) hidSet([]); VARS.list.forEach(v=>{ if(v.id!==VARS.act) v.show=true; }); }
+  if(typeof buildToggles==='function') buildToggles(); draw(); };
+function ctxClose(){ const m=$('#ctxm'); if(m) m.hidden=true; }
+svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.closest('[data-id]'); if(!t||!t.closest('#plan')) return; e.preventDefault(); if(l4on||fpOn||msOn||calOn) return;
+  const id=t.dataset.id, o=byId[id]; if(!o) return; const canDel=gen.list.some(x=>x.id===id), m=$('#ctxm');
+  m.innerHTML=`<div class="h">${id} · couche ${o.layer||''}</div><button type="button" data-a="hide">Masquer cette bande</button><button type="button" class="dg" data-a="del" ${canDel?'':'disabled title="Supprimable uniquement pour les bandes de la variante active (colonnes)."'}>Supprimer</button>`;
+  m.dataset.id=id; m.hidden=false; const w=m.offsetWidth, h=m.offsetHeight; m.style.left=Math.min(e.clientX,innerWidth-w-6)+'px'; m.style.top=Math.min(e.clientY,innerHeight-h-6)+'px'; });
+$('#ctxm').addEventListener('click',e=>{ const b=e.target.closest('button[data-a]'); if(!b||b.disabled) return; const id=$('#ctxm').dataset.id; ctxClose();
+  if(b.dataset.a==='hide'){ hidSet([...new Set([...HID(),id])]); if(selId===id) selId=null; draw(); renderInfo(); msg(`Bande ${id} masquée. Bouton « Afficher toutes les bandes » pour la réafficher.`); }
+  else if(b.dataset.a==='del'){ gen.list=gen.list.filter(x=>x.id!==id); if(selId===id) selId=null; hidSet(HID().filter(x=>x!==id)); updateGen(true); msg(`Bande ${id} supprimée.`); } });
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#ctxm')) ctxClose(); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') ctxClose(); }); window.addEventListener('blur',ctxClose); window.addEventListener('wheel',ctxClose,{passive:true});
 /* ---------- Import DXF : contours rectangulaires → bandes (nouvelle variante) ---------- */
 function parseDXF(text){ const L=text.split(/\r?\n/); const pr=[]; for(let i=0;i+1<L.length;i+=2) pr.push([parseInt(L[i].trim()),L[i+1].trim()]);
   let i=pr.findIndex((q,k)=>q[0]===2&&q[1]==='ENTITIES'&&pr[k-1]&&pr[k-1][1]==='SECTION'); if(i<0) return {ents:[],err:'Section ENTITIES introuvable (DXF ASCII requis).'};
