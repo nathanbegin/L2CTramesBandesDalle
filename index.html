@@ -309,7 +309,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -337,6 +337,13 @@ header{display:block;padding:10px 16px 8px}
 <div class="acts"><button class="btn" id="ms-pick" type="button">Choisir 2 points sur le plan</button></div>
 <div class="acts"><button class="btn pri" id="ms-ok" type="button">Appliquer</button><button class="btn" id="ms-undo" type="button">Annuler le dernier</button></div></div>
 <div class="acts"><button class="btn" id="ms-done" type="button">Terminer</button></div></div>
+<div class="fpbox msbox" id="calbox" hidden><b>Calage des sources</b>
+<p id="cal-msg"></p>
+<div id="cal-st" class="fpl"></div>
+<label class="fpr" style="grid-template-columns:18px 1fr"><input type="checkbox" id="cal-auto"><span><small>Recalage automatique sur les colonnes</small></span></label>
+<div class="msd"><label>Δ X PDF<input id="cal-dx" type="number" step="1" value="0"><span>mm</span></label><label>Δ Y PDF<input id="cal-dy" type="number" step="1" value="0"><span>mm</span></label></div>
+<div class="acts"><button class="btn" id="cal-pick" type="button">Choisir 2 points (PDF → modèle)</button></div>
+<div class="acts"><button class="btn pri" id="cal-ok" type="button">Appliquer</button><button class="btn" id="cal-rst" type="button">Réinitialiser</button><button class="btn" id="cal-done" type="button">Terminer</button></div></div>
 <div class="l4box" id="l4box" hidden><b>Portée L/4</b><p id="l4msg"></p><div class="acts"><button class="btn" id="l4-copy" type="button" hidden>Copier</button><button class="btn" id="l4-clr" type="button">Effacer les repères</button></div></div>
 <div class="legend" id="legend" hidden></div>
 <div class="empty" id="empty" hidden><div class="emptyin"><h2>Nouveau projet</h2><p>Importez d’abord un plan. Vous pourrez ajouter les autres éléments ensuite, dans n’importe quel ordre.</p>
@@ -720,7 +727,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.6.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.7.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -751,6 +758,7 @@ svg.addEventListener('pointermove',e=>{
     const sp=snapPt(X,Y,hdrag.i), sv=l.o==='V'?sp.y:sp.x; let v=Math.round(sv*1000)/1000;
     if(hdrag.e==='a') v=Math.min(v,l.b-0.3); else v=Math.max(v,l.a+0.3);
     l[hdrag.e]=v; msg(`Limite ${l.o==='V'?'x':'y'} = ${(l.pos+(l.o==='V'?OXm:OYm)).toFixed(2)} m : de ${(l.a+(l.o==='V'?OYm:OXm)).toFixed(2)} à ${(l.b+(l.o==='V'?OYm:OXm)).toFixed(2)} m`); draw(); return; }
+  if(calOn&&calPick&&!drag){ calPreview(e); return; }
   if(msOn&&!drag&&(msMode==='meas'||mvPick)){ msPreview(e); return; }
   if(l4on&&!drag){ l4Preview(e); return; }
   if(edLim&&edAdd&&!drag){ preview(e); return; }
@@ -764,6 +772,7 @@ svg.addEventListener('pointerup',e=>{
   if(wasMoved) return;
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
+  if(calOn&&calPick){ calClick(e); return; }
   if(msOn&&(msMode==='meas'||mvPick)){ msClick(e); return; }
   if(l4on){ l4Click(e); return; }
   if(edLim&&edAdd){ addPoint(e); return; }
@@ -975,7 +984,7 @@ function fpRows(){ const px=PJ.px, pm=PJ.pm||{}, en=pm.fs||fpAuto(px), S=D.pmap?
 function fpApply(){ if(!PJ.px||!D.pmap) return; D.foot=mapFoot(PJ.px,PJ.pm||{},D.pmap); if(!PJ.hasF2k){ const fl=fillOf(D); if(fl) D.fill=fl; } deriveAll(); rebuildLIM(); ring=D.fill[0][0]; touch(); fpRows(); draw(); }
 function fpSet(k,v){ PJ.pm=Object.assign({},PJ.pm||{},{[k]:v}); }
 function fpToggle(on){ fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
-  if(fpOn){ if(msOn) msToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); if(!(PJ.pm&&PJ.pm.fs)){ fpSet('fs',fpAuto(PJ.px)); if(PJ.hasF2k) fpApply(); } show.foot=true; syncToggle('foot'); fpRows(); } draw(); }
+  if(fpOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); if(!(PJ.pm&&PJ.pm.fs)){ fpSet('fs',fpAuto(PJ.px)); if(PJ.hasF2k) fpApply(); } show.foot=true; syncToggle('foot'); fpRows(); } draw(); }
 function fpClick(id){ const [i,j]=id.split(':').map(Number), px=PJ.px, pm=PJ.pm||{}, g=px.styles[i], mode=document.querySelector('input[name=fpm]:checked').value;
   if(mode==='style'){ const en=(pm.fs||fpAuto(px)).slice(), a=en.indexOf(g.k); if(a>=0) en.splice(a,1); else en.push(g.k); fpSet('fs',en); }
   else { const ret=fpRetained(px,pm,i,j), en=(pm.fs||fpAuto(px)).includes(g.k), fx=(pm.fx||[]).slice(), fi=(pm.fi||[]).slice(), rm=(a,v)=>{ const k=a.indexOf(v); if(k>=0) a.splice(k,1); };
@@ -987,6 +996,33 @@ $('#fp-min').onchange=e=>{ fpSet('fm',Math.max(0,parseFloat(e.target.value)||0))
 $('#fpl').addEventListener('change',e=>{ const r=e.target.closest('.fpr'); if(!r) return; const k=r.dataset.k, en=((PJ.pm&&PJ.pm.fs)||fpAuto(PJ.px)).slice(), a=en.indexOf(k); if(e.target.checked){ if(a<0) en.push(k); } else if(a>=0) en.splice(a,1); fpSet('fs',en); fpApply(); });
 $('#fpl').addEventListener('pointerover',e=>{ const r=e.target.closest('.fpr'); const k=r?r.dataset.k:null; if(k!==fpHov){ fpHov=k; document.querySelectorAll('.fpr').forEach(x=>x.classList.toggle('hov',x.dataset.k===k)); draw(); } });
 $('#fpl').addEventListener('pointerleave',()=>{ if(fpHov){ fpHov=null; document.querySelectorAll('.fpr.hov').forEach(x=>x.classList.remove('hov')); draw(); } });
+/* ---------- Calage manuel des sources (PDF sur modèle .f2k) ---------- */
+let calOn=false, calPick=0, calP1=null;
+const calTot=()=>{ const c=(PJ.pm&&PJ.pm.cal)||{dx:0,dy:0}; return c; };
+function calRows(){ const cs=D.pdfFit&&D.pdfFit.cs, c=calTot(), auto=!(PJ.pm&&PJ.pm.calAuto===false), mm=v=>Math.round(v*1000);
+  $('#cal-auto').checked=auto; $('#cal-auto').disabled=!cs;
+  $('#cal-st').innerHTML=`<div><b>Modèle .f2k</b> : référence (fixe)</div><div><b>PDF</b> (limites, empreinte) : ${cs?`recalage colonnes ${auto?'actif':'désactivé'} ΔX ${mm(cs.dx)} · ΔY ${mm(cs.dy)} mm (${cs.n} col.)`:'pas de recalage auto (colonnes non appariées)'}<br>calage manuel cumulé : ΔX ${mm(c.dx)} · ΔY ${mm(c.dy)} mm</div>`; }
+function calMove(ddx,ddy){ if(!ddx&&!ddy) return; const sh=(l)=>{ if(l.o==='V'){ l.pos+=ddx; l.a+=ddy; l.b+=ddy; } else { l.pos+=ddy; l.a+=ddx; l.b+=ddx; } };
+  for(let i=0;i<Math.min(N0,D.lines.length);i++) sh(D.lines[i]);
+  try{ const o=JSON.parse(LIM0); o.forEach(sh); LIM0=JSON.stringify(o); }catch(e){}
+  if(D.pmap){ D.pmap.xb+=ddx; D.pmap.yb+=ddy; if(PJ.pm&&PJ.pm.fs&&PJ.px&&PJ.px.styles) D.foot=mapFoot(PJ.px,PJ.pm,D.pmap); }
+  rebuildLIM(); touch(); calRows(); draw(); }
+function calSetPm(o){ PJ.pm=Object.assign({},PJ.pm||{},o); }
+function calToggle(on){ calOn=!!on; $('#cal').setAttribute('aria-pressed',String(calOn)); $('#calbox').hidden=!calOn; calPick=0; calP1=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  if(calOn){ if(msOn) msToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); $('#cal-msg').innerHTML='Décale le <b>PDF</b> (limites, empreinte) par rapport au modèle. Entrez ΔX / ΔY ou choisissez un point du PDF puis le point correspondant du modèle.'; calRows(); } draw(); }
+function calClick(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1), ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  if(!calP1){ calP1={x:sp.x,y:sp.y}; $('#cal-msg').innerHTML='Point du PDF : <b>'+(sp.k||'libre')+'</b>. Cliquez le point correspondant du modèle.'; return; }
+  $('#cal-dx').value=Math.round((sp.x-calP1.x)*1000); $('#cal-dy').value=Math.round((sp.y-calP1.y)*1000); calPick=0; calP1=null; $('#cal-pick').setAttribute('aria-pressed','false'); $('#cal-msg').innerHTML='Delta repris des 2 points : vérifiez puis « Appliquer ».'; }
+function calPreview(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
+  let h=`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#0ea5e9" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  if(calP1) h+=`<line x1="${calP1.x}" y1="${-calP1.y}" x2="${sp.x}" y2="${-sp.y}" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
+  svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#cal-msg').innerHTML=(calP1?'Point du modèle : ':'Point du PDF : ')+(sp.k||'libre'); }
+$('#cal').onclick=()=>calToggle(!calOn); $('#cal-done').onclick=()=>calToggle(false);
+$('#cal-pick').onclick=()=>{ calPick=1; calP1=null; $('#cal-pick').setAttribute('aria-pressed','true'); $('#cal-msg').textContent='Cliquez un point du PDF (limite, trait d’empreinte).'; };
+$('#cal-ok').onclick=()=>{ const ddx=(parseFloat($('#cal-dx').value)||0)/1000, ddy=(parseFloat($('#cal-dy').value)||0)/1000, c=calTot(); if(!ddx&&!ddy){ $('#cal-msg').textContent='Delta nul.'; return; }
+  calSetPm({cal:{dx:+(c.dx+ddx).toFixed(4),dy:+(c.dy+ddy).toFixed(4)}}); calMove(ddx,ddy); $('#cal-dx').value='0'; $('#cal-dy').value='0'; $('#cal-msg').textContent='PDF décalé.'; };
+$('#cal-rst').onclick=()=>{ const c=calTot(); calSetPm({cal:null}); calMove(-c.dx,-c.dy); $('#cal-msg').textContent='Calage manuel réinitialisé.'; };
+$('#cal-auto').onchange=e=>{ const cs=D.pdfFit&&D.pdfFit.cs; if(!cs) return; const on=e.target.checked; calSetPm({calAuto:on}); calMove(on?cs.dx:-cs.dx,on?cs.dy:-cs.dy); };
 /* ---------- Mesure et déplacement de bande ---------- */
 let msKeep=false, msOn=false, msMode='meas', msP1=null, mvPick=0, mvP1=null; const meas=[], mvHist=[];
 const msDelta=()=>[parseFloat($('#ms-dx').value)||0, parseFloat($('#ms-dy').value)||0];
@@ -995,7 +1031,7 @@ function msRows(){ $('#ms-res').innerHTML=meas.slice(-5).reverse().map(m=>`<div>
 function msSet(){ const mv=msMode==='move'; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b> (accrochage aux axes, colonnes, empreinte, limites). Échap pour quitter.'; msRows(); }
   else { mvPick=0; mvP1=null; const t=msTarget(); $('#ms-msg').innerHTML=t?`Bande <b>${(t.s||t.f).id}</b> (couche ${(t.s||t.f).layer})${t.copy?' du .f2k : « Appliquer » crée une <b>copie</b> générée déplacée.':'.'} Entrez ΔX, ΔY ou choisissez 2 points.`:'Sélectionnez une <b>bande colonne</b> sur le plan ou dans la liste (générée ou du .f2k).'; } draw(); }
-function msToggle(on){ msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
+function msToggle(on){ if(on&&calOn) calToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(msOn){ if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); msSet(); } else { mvPick=0; mvP1=null; msP1=null; draw(); } }
 function msPoint(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1); return sp; }
 function msClick(e){ const sp=msPoint(e), o=svg.querySelector('#ov'); if(o) o.remove();
@@ -1025,7 +1061,7 @@ $('#ms-ok').onclick=msApply; $('#ms-undo').onclick=msUndo;
 ['#ms-dx','#ms-dy'].forEach(q=>$(q).addEventListener('input',()=>draw()));
 let l4on=false, l4=null, l4p=null;
 function l4Msg(t){ $('#l4msg').innerHTML=t; $('#l4box').hidden=!(l4on||l4); }
-function l4Set(on){ if(on&&msOn) msToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
+function l4Set(on){ if(on&&msOn) msToggle(false); if(on&&calOn) calToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
   if(l4on){ if(edLim&&edAdd){ edAdd=false; updEd(); } l4Msg(l4?l4txt():'Cliquez une <b>paroi</b> (face de colonne, mur, axe), puis la <b>paroi opposée</b>. Échap pour annuler.'); } else l4Msg(l4?l4txt():''); $('#l4-copy').hidden=!l4; }
 function l4txt(){ const P=l4.o==='V'?OXm:OYm, f=v=>(v+P).toFixed(3), g=l4.g;
   return `Portée <b>L = ${l4.L.toFixed(3)} m</b> (${l4.o==='V'?'x':'y'} de ${f(g[0])} à ${f(g[4])} SAFE) · <b>L/4 = ${(l4.L/4*1000).toFixed(0)} mm</b>.<br>Repères à ${g.slice(1,4).map(f).join(' · ')} m. Ils servent d’accrochage pour tracer les limites (« Éditer les limites » → « + Nouvelle ligne »).`; }
@@ -1071,7 +1107,8 @@ function delSel(){ const l=edSel!==null&&D.lines[edSel]; if(!l) return;
 $('#ed-add').onclick=()=>{ edAdd=!edAdd; edP1=null; updEd(); $('#edhint').textContent=edAdd?'Cliquez le 1er point. Accrochage actif selon les cases cochées.':''; draw(); };
 $('#ed-del').onclick=delSel;
 document.querySelectorAll('[data-sn]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sn]=c.checked; });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&msOn){ if(msP1||mvP1||mvPick){ msP1=null; mvP1=null; mvPick=0; $('#ms-pick').setAttribute('aria-pressed','false'); const o=svg.querySelector('#ov'); if(o) o.remove(); } else msToggle(false); return; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&calOn){ if(calP1||calPick){ calP1=null; calPick=0; $('#cal-pick').setAttribute('aria-pressed','false'); const o=svg.querySelector('#ov'); if(o) o.remove(); } else calToggle(false); return; }
+  if(e.key==='Escape'&&msOn){ if(msP1||mvP1||mvPick){ msP1=null; mvP1=null; mvPick=0; $('#ms-pick').setAttribute('aria-pressed','false'); const o=svg.querySelector('#ov'); if(o) o.remove(); } else msToggle(false); return; }
   if(e.key==='Escape'&&fpOn){ fpToggle(false); return; }
   if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
   if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
@@ -1373,7 +1410,7 @@ function applyProject(d,meta,state){
   if(state&&state.lines&&state.lines.length) D.lines=state.lines;
   deriveAll(); deriveLim(); N0=n0; LIM0=orig;
   gen.list=(state&&state.gen&&state.gen.list)||[]; gen.seq=(state&&state.gen&&state.gen.seq)||1; gen.mode=''; gen.first=null; gen.ln1=null; gen.axCol=null;
-  l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true; fpOn=false; fpHov=null; $('#fp').setAttribute('aria-pressed','false'); $('#fpbox').hidden=true; if(msOn) msToggle(false); meas.length=0; mvHist.length=0;
+  l4=null; l4p=null; l4on=false; $('#l4').setAttribute('aria-pressed','false'); $('#l4box').hidden=true; fpOn=false; fpHov=null; $('#fp').setAttribute('aria-pressed','false'); $('#fpbox').hidden=true; if(msOn) msToggle(false); if(calOn) calToggle(false); meas.length=0; mvHist.length=0;
   edLim=false; edAdd=false; edP1=null; edSel=null; $('#ed-lim').setAttribute('aria-pressed','false'); $('#ed-reset').hidden=true; $('#edpanel').hidden=true;
   $('#g-man').setAttribute('aria-pressed','false'); $('#g-lim').setAttribute('aria-pressed','false');
   selId=null; resetShow(!(d.strips.length||d.lines.length)&&d.slabs.length);
@@ -1395,7 +1432,7 @@ function renderPj(){
 function renderSteps(){
   if(!$('#steps')||typeof D==='undefined') return;
   const nL=(D.lines||[]).filter(l=>!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0, nf=(D.f2k||[]).length;
-  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap);
+  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap); $('#cal').hidden=!(PJ.px&&PJ.hasF2k&&D.pmap);
   const d1=!!PJ.hasPdf||PJ.id==='exemple', d2=!!PJ.hasF2k, d3=nL>0||ng>0, d4=ng>0;
   const nowN=!d1&&!d2?1:(!d3?3:(!d4?3:4));
   const set=(i,done,sub)=>{ const e=$('#st'+i); e.classList.toggle('done',done); e.classList.toggle('now',nowN===i&&!done); $('#st'+i+'s').textContent=sub; };
@@ -1463,10 +1500,13 @@ function mapFoot(px,pm,M){ const T=q=>[+(M.xa*q[0]+M.xb).toFixed(3),+(M.ya*q[1]+
   const o=[]; px.styles.forEach((g,i)=>g.segs.forEach((q,j)=>{ if(fpRetained(px,pm,i,j)) o.push(T(q)); })); return o; }
 function fillOf(d){ const xs=d.foot.flatMap(q=>[q[0],q[2]]).concat(d.gx.map(g=>g.m)), ys=d.foot.flatMap(q=>[q[1],q[3]]).concat(d.gy.map(g=>g.m));
   return xs.length&&ys.length?[[[[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)],[Math.min(...xs),Math.max(...ys)],[Math.min(...xs),Math.min(...ys)]]]]:null; }
+/* calage fin : les colonnes du PDF sont recalées sur celles du .f2k (translation médiane) */
+function refineByCols(px,ds,f,apply){ const mx=[], my=[]; (px.cols||[]).forEach(c=>{ const x=f.x.a*c.x+f.x.b, y=f.y.a*c.y+f.y.b; let b=null, bd=0.25; (ds.cols||[]).forEach(q=>{ const d=Math.hypot(q.x-x,q.y-y); if(d<bd){ bd=d; b=q; } }); if(b){ mx.push(b.x-x); my.push(b.y-y); } });
+  if(mx.length<4) return null; const med=a=>{ a=a.slice().sort((p,q)=>p-q); return a[a.length>>1]; }, dx=med(mx), dy=med(my); if(apply){ f.x.b+=dx; f.y.b+=dy; } return {n:mx.length,dx:+dx.toFixed(4),dy:+dy.toFixed(4)}; }
 function buildD(id,ds,px,pm,OX,OY){
   const base=id==='exemple'?JSON.parse(SEED_JSON):JSON.parse(JSON.stringify(EMPTY_BASE));
   if(ds){ const d=datasetToD(ds,base,OX,OY);
-    if(px){ const f=fitAxes(px,ds,pm&&pm.S); d.lines=pdfLimits(px,v=>f.x.a*v+f.x.b-OX,v=>f.y.a*v+f.y.b-OY,OX,OY); d.pdfFit={nx:f.x.n,ny:f.y.n,res:Math.max(f.x.res,f.y.res),a:f.x.a};
+    if(px){ const f=fitAxes(px,ds,pm&&pm.S), cs=refineByCols(px,ds,f,!(pm&&pm.calAuto===false)); if(pm&&pm.cal){ f.x.b+=pm.cal.dx; f.y.b+=pm.cal.dy; } d.lines=pdfLimits(px,v=>f.x.a*v+f.x.b-OX,v=>f.y.a*v+f.y.b-OY,OX,OY); d.pdfFit={nx:f.x.n,ny:f.y.n,res:Math.max(f.x.res,f.y.res),a:f.x.a,cs};
       d.pmap={xa:f.x.a,xb:f.x.b-OX,ya:f.y.a,yb:f.y.b-OY}; if(pm&&pm.fs&&px.styles) d.foot=mapFoot(px,pm,d.pmap); }
     return d; }
   if(px){ const S=(pm&&pm.S)||0.03387, d=base, gx=px.grid.x, gy=px.grid.y;
@@ -1498,7 +1538,7 @@ async function importF2K(file,asNew){
   applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:true,fname:file.name,Z:ds.Z,levels:ds.levels,maxPt:ds.maxPt,hasPdf:!!px,pm,ds,px},keepLines);
   if(asNew){ ST.list.push({id,name}); } else { const q=ST.list.find(x=>x.id===id); if(q) q.name=name; }
   renderPj(); await saveNow();
-  pjMsg(`.f2k lu : ${ds.floors.length} dalles, ${ds.openings.length} ouvertures, ${ds.cols.length} colonnes, ${ds.strips.length} bandes.`+(px&&d.pdfFit?` PDF calé sur ${Math.min(d.pdfFit.nx,d.pdfFit.ny)} axes communs (écart max ${(d.pdfFit.res*1000).toFixed(0)} mm).`:'')+(ds.multi?` ${ds.multi} bande(s) à plusieurs segments ignorée(s).`:''));
+  pjMsg(`.f2k lu : ${ds.floors.length} dalles, ${ds.openings.length} ouvertures, ${ds.cols.length} colonnes, ${ds.strips.length} bandes.`+(px&&d.pdfFit?` PDF calé sur ${Math.min(d.pdfFit.nx,d.pdfFit.ny)} axes communs (écart max ${(d.pdfFit.res*1000).toFixed(0)} mm)`+(d.pdfFit.cs?`, puis recalé sur ${d.pdfFit.cs.n} colonnes (ΔX ${(d.pdfFit.cs.dx*1000).toFixed(0)} mm, ΔY ${(d.pdfFit.cs.dy*1000).toFixed(0)} mm).`:'.'):'')+(ds.multi?` ${ds.multi} bande(s) à plusieurs segments ignorée(s).`:''));
   if(asNew) try{ await ST.col.doc('_pref').set({last:id}); }catch(e){}
 }
 /* ---- import PDF ---- */
