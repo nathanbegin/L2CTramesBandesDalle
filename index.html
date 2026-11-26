@@ -353,7 +353,7 @@ header{display:block;padding:10px 16px 8px}
 <div class="cards"><button type="button" class="card" id="es-pdf"><b>PDF du plan</b><span><u>Trame seule</u> : axes, empreinte et colonnes sont lus, vous tracez les limites dans l’outil.<br><u>Trame + limites pointillées</u> : les lignes bleues/violettes de Bluebeam sont reprises comme limites.</span></button>
 <button type="button" class="card" id="es-f2k"><b>Fichier .f2k de SAFE</b><span>Dalles, colonnes, trame et bandes existantes du modèle. Permet de caler le PDF et d’exporter avec la bonne élévation.</span></button></div>
 <div class="flowbox"><b>Flux de travail recommandé</b><ol class="flow"><li><b>Revit</b> → <b>Dynamo</b> : extraire les données initiales.</li>
-<li><b>REV2MODEL</b> : générer le modèle <b>SAFE</b>.</li>
+<li><b>REV2MODEL</b> (application interne L2C) : générer le modèle <b>SAFE</b>.</li>
 <li><b>Dans SAFE</b> : nettoyer le modèle et vérifier que tout est bien aligné (trame, colonnes, dalles, murs).</li>
 <li><b>Exporter en .f2k</b> depuis SAFE (unités N, mm).</li>
 <li><b>Importer ce .f2k dans l’outil</b> : il devient la référence unique. Le PDF (Bluebeam) sert seulement de guide pour les limites et se cale sur le modèle.</li>
@@ -424,7 +424,7 @@ header{display:block;padding:10px 16px 8px}
 <dialog id="faqdlg"><form method="dialog" id="faqform">
   <h2>Premiers pas et FAQ</h2>
   <h3>Flux de travail recommandé</h3><ol class="flow"><li><b>Revit</b> → <b>Dynamo</b> : extraire les données initiales.</li>
-<li><b>REV2MODEL</b> : générer le modèle <b>SAFE</b>.</li>
+<li><b>REV2MODEL</b> (application interne L2C) : générer le modèle <b>SAFE</b>.</li>
 <li><b>Dans SAFE</b> : nettoyer le modèle et vérifier que tout est bien aligné (trame, colonnes, dalles, murs).</li>
 <li><b>Exporter en .f2k</b> depuis SAFE (unités N, mm).</li>
 <li><b>Importer ce .f2k dans l’outil</b> : il devient la référence unique. Le PDF (Bluebeam) sert seulement de guide pour les limites et se cale sur le modèle.</li>
@@ -753,7 +753,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.7.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.7.2', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
