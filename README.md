@@ -2,6 +2,7 @@
 
 Application web (sans serveur) pour définir les bandes de dalle SAFE 23 (post-tension) à partir d'un plan PDF :
 
+- **Armature** : barres (métrique 10M–55M, impérial #3–#18), repères, chevauchements 1,3ℓd (indicatif), exports PDF/DXF/CSV.
 - import d'un PDF : axes, empreinte, colonnes et limites bleues/violettes extraites du vectoriel, avec calage d'échelle
 - création / édition des limites, générateur L/4
 - import d'un .f2k SAFE, export .f2k des bandes (Z réglable)
