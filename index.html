@@ -291,6 +291,7 @@ header{display:block;padding:10px 16px 8px}
 .ctxm{position:fixed;z-index:50;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px #0003;padding:4px;font-size:13px}.ctxm[hidden]{display:none}
 .ctxm .h{padding:4px 10px;color:var(--muted);font:11.5px var(--font-mono)}.ctxm>button,#vm-hid>button,#vmm #sb{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:6px 10px;border-radius:5px;cursor:pointer;font:inherit}.ctxm>button:hover:not(:disabled),#vm-hid>button:hover:not(:disabled),#vmm #sb:hover:not(:disabled){background:color-mix(in srgb,var(--accent,#f97316) 16%,transparent)}.ctxm>button:disabled,#vm-hid>button:disabled,#vmm #sb:disabled{color:var(--muted);cursor:not-allowed}.ctxm .dg{color:#c0262d}
 .msk{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.msk label{display:flex;flex-direction:column;gap:2px;font-size:12px}.msk input,.msk select{font:inherit}
+.srcsw{display:flex;gap:4px;padding:2px 6px 6px}.srcsw button{flex:1;font:inherit;font-size:11.5px;padding:4px 3px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer}.srcsw button:hover{border-color:var(--brand)}
 .vsec{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px 3px;border-top:1px solid var(--line);margin-top:4px}#vmm .grr{padding:0 10px 8px}
 </style>
 </head>
@@ -357,6 +358,12 @@ header{display:block;padding:10px 16px 8px}
 <div class="msd"><label>Δ X PDF<input id="cal-dx" type="number" step="1" value="0"><span>mm</span></label><label>Δ Y PDF<input id="cal-dy" type="number" step="1" value="0"><span>mm</span></label></div>
 <div class="acts"><button class="btn" id="cal-pick" type="button">Choisir 2 points (PDF → modèle)</button></div>
 <div class="acts"><button class="btn pri" id="cal-ok" type="button">Appliquer</button><button class="btn" id="cal-rst" type="button">Réinitialiser</button><button class="btn" id="cal-done" type="button">Terminer</button></div></div>
+<div class="fpbox msbox" id="exbox" hidden><b>Alignement PDF ↔ modèle (export)</b>
+<p id="ex-msg"></p>
+<div class="msd"><label>Δ X<input id="ex-dx" type="number" step="10" value="0"><span>mm</span></label><label>Δ Y<input id="ex-dy" type="number" step="10" value="0"><span>mm</span></label><label>Rotation<input id="ex-rot" type="number" step="0.01" value="0"><span>°</span></label><label>Échelle<input id="ex-k" type="number" step="0.01" value="100"><span>%</span></label><label>Opacité PDF<input id="ex-bgo" type="number" step="5" min="10" max="100" value="60"><span>%</span></label></div>
+<label class="fpr" style="grid-template-columns:18px 1fr"><input type="checkbox" id="ex-lock" checked><span><small>2 paires de points : garder l’échelle (rotation + translation)</small></span></label>
+<div class="acts"><button class="btn" id="ex-pick" type="button">Aligner par points…</button><button class="btn" id="ex-apply" type="button" hidden>Appliquer (translation)</button></div>
+<div class="acts"><button class="btn" id="ex-rst" type="button">Réinitialiser</button><button class="btn pri" id="ex-done" type="button">Terminer</button></div></div>
 <div class="ctxm" id="ctxm" hidden role="menu"></div>
 <div class="fpbox msbox" id="vdlg" hidden role="dialog" aria-label="Affichage des bandes par variante"><b>Affichage des bandes par variante</b>
 <p>Cochez les jeux de bandes à afficher, ou cliquez « Isoler » pour n’afficher que celui-ci.</p><div id="vd-list" class="vlist"></div>
@@ -459,7 +466,7 @@ header{display:block;padding:10px 16px 8px}
       <label class="ck" id="pf-grid-l"><input id="pf-grid" type="checkbox" checked>Trame (axes et bulles)</label><label class="ck" id="pf-col-l"><input id="pf-col" type="checkbox" checked>Colonnes et empreinte du bâtiment</label><label class="ck" id="pf-cart-l"><input id="pf-cart" type="checkbox" checked>Cartouche (projet, échelle, légende)</label>
       <label class="ck" id="pf-f2k-l"><input id="pf-f2k" type="checkbox" checked>Bandes du .f2k importé</label><label class="ck"><input id="pf-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="pf-oth" type="checkbox">Autres variantes de l’outil</label>
       <label id="pf-fmt-l">Format de page<select id="pf-fmt"></select></label><label id="pf-sc-l">Échelle<select id="pf-sc"></select></label></div>
-      <div class="acts"><button class="btn pri" id="g-pdf" type="button">Télécharger le PDF</button></div><p id="pf-msg" class="mut" role="status"></p></section>
+      <div class="acts"><button class="btn" id="g-ex" type="button">Aligner le modèle sur le PDF…</button><button class="btn pri" id="g-pdf" type="button">Télécharger le PDF</button></div><p class="mut" id="pf-exst"></p><p id="pf-msg" class="mut" role="status"></p></section>
       <section class="sec"><h2>Vérification</h2>
       <p>Compare les bandes créées à celles déjà présentes dans le .f2k du modèle.</p>
       <div class="acts"><button class="btn" id="g-cmp" type="button">Comparer au .f2k</button></div>
@@ -484,6 +491,9 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Dois-je importer le .f2k avant le PDF ?</summary><p>Oui, idéalement. Le .f2k nettoyé est la référence : le PDF est ensuite calé dessus (trame, puis colonnes). Si les deux sources ne concordent pas parfaitement, utilisez le bouton « Calage ».</p></details>
   <details><summary>Le PDF et le modèle sont décalés de quelques centimètres.</summary><p>L’import fait un recalage automatique sur les colonnes communes. Au besoin, le bouton « Calage » permet un décalage manuel (ΔX, ΔY en mm, ou deux points : un du PDF, un du modèle).</p></details>
   <details><summary>Il manque des arêtes de l’empreinte du bâtiment.</summary><p>Le bouton « Empreinte » liste les styles de traits du PDF (couleur, épaisseur, plein ou tirets). Cochez ceux qui forment l’empreinte, ou excluez / ajoutez des traits un à un.</p></details>
+  <details><summary>Quand j’importe un PDF et un modèle SAFE, lequel sert de repère fiable ?</summary><p>Le <b>modèle SAFE (.f2k)</b>. Toutes les coordonnées de l’outil (trame, colonnes, dalles, murs, bandes, export .f2k et DXF) sont celles de SAFE. Le PDF est <b>calé sur le modèle</b> : l’import apparie les axes de la trame par leur nom, puis recale sur les colonnes communes. Il ne fournit que les <b>limites pointillées</b> (et l’empreinte si vous l’activez). Si le PDF est légèrement décalé, vos bandes restent justes dans SAFE ; seules les limites tracées d’après le PDF peuvent l’être moins (corrigez-les avec « Calage »).</p></details>
+  <details><summary>Comment afficher seulement le modèle SAFE ou seulement le PDF ?</summary><p>Dans le panneau « Calques », « Source affichée » : <b>Modèle SAFE seul</b> (dalles, colonnes, murs, ouvertures), <b>PDF seul</b> (image du plan importé, limites et empreinte du PDF) ou <b>Les deux</b>. Le calque « Fond : plan PDF importé » affiche l’image du PDF sous le modèle (opacité réglable dans le module d’alignement). Construisez vos bandes sur le modèle SAFE : c’est la référence la plus fiable.</p></details>
+  <details><summary>Mes annotations ne tombent pas au bon endroit sur le PDF exporté.</summary><p>Onglet « Export » → « Export PDF » → « Par-dessus le PDF du plan » → <b>« Aligner le modèle sur le PDF… »</b>. Le PDF s’affiche en fond, sous le modèle. Corrigez ΔX / ΔY, la rotation et l’échelle, ou cliquez « Aligner par points » : un point du modèle, puis le point correspondant du PDF (1 paire = translation, 2 paires = translation + rotation). Ces réglages ne servent <b>qu’à l’export par-dessus le PDF</b> : le modèle, les limites et les exports .f2k / DXF ne changent pas. À ne pas confondre avec « Calage », qui déplace les limites et l’empreinte du PDF <i>dans le modèle</i>.</p></details>
   <details><summary>Comment déplacer ou mesurer ?</summary><p>« Mesurer / Déplacer » donne Δx, Δy, la distance et l’angle entre deux points, et déplace une bande par ΔX / ΔY ou par deux points. « Portée L/4 » sert à repérer les quarts de portée entre deux parois.</p></details>
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
@@ -513,7 +523,10 @@ const SEED_JSON = JSON.stringify(D);
 const $ = s => document.querySelector(s);
 const f2 = v => v.toFixed(2);
 const lk=l=>l==='A'||l==='B'?l:'O';
-const show = {A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
+let exOn=false, exPick=0, exPairs=[], exCur=null; const BG={key:null,url:null,w:0,h:0,s:1,vx0:0,vy1:0,busy:false};
+function exCentre(){ const gx=(D.gx||[]).map(g=>g.m), gy=(D.gy||[]).map(g=>g.m); return gx.length&&gy.length?[(Math.min(...gx)+Math.max(...gx))/2,(Math.min(...gy)+Math.max(...gy))/2]:[0,0]; }
+function exAB(){ const e=PJ.pm&&PJ.pm.ex; if(!e) return {ar:1,ai:0,br:0,bi:0}; const k=(e.k||100)/100, t=(e.rot||0)*Math.PI/180, ar=k*Math.cos(t), ai=k*Math.sin(t), cx=e.c[0], cy=e.c[1]; return {ar,ai,br:cx-(ar*cx-ai*cy)+(e.dx||0)/1000,bi:cy-(ai*cx+ar*cy)+(e.dy||0)/1000}; }
+const show = {pdfbg:false,A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
 let selId = null;
 
 /* ---------- géométrie : y du plan vers y écran (inversé) ---------- */
@@ -574,6 +587,8 @@ function axisRef(layer, v){
 function planSVG(){
   const r=[];
   r.push(`<defs><pattern id="hatch" width=".5" height=".5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2=".5" style="stroke:var(--mid);stroke-width:.07;opacity:.7"/></pattern></defs>`);
+  if(show.pdfbg&&BG.url&&D.pmap&&BG.key===bgKey()){ const M=D.pmap, E=exAB(), s=BG.s, p=M.xa/s, q=M.ya/s, X0=M.xa*BG.vx0+M.xb, Y0=M.ya*BG.vy1+M.yb, op=((PJ.pm&&PJ.pm.bgo)||60)/100;
+    r.push(`<image href="${BG.url}" width="${BG.w}" height="${BG.h}" preserveAspectRatio="none" opacity="${op}" style="pointer-events:none" transform="matrix(${E.ar*p} ${-E.ai*p} ${E.ai*q} ${E.ar*q} ${E.ar*X0-E.ai*Y0+E.br} ${-(E.ai*X0+E.ar*Y0+E.bi)})"/>`); }
   if(show.grid){
     const vg=gridVis(), ex=vg.gx.length?[Math.min(...vg.gx.map(g=>g.m)),Math.max(...vg.gx.map(g=>g.m))]:[bx0,bx1], ey=vg.gy.length?[Math.min(...vg.gy.map(g=>g.m)),Math.max(...vg.gy.map(g=>g.m))]:[by0,by1];
     vg.gx.forEach(g=>{
@@ -704,24 +719,33 @@ function draw(){ $('#plan').innerHTML = planSVG(); if(typeof updateSB==='functio
 /* ---------- calques ---------- */
 const TG = [
   ['A','Bandes · couche A (verticales)','A'],['B','Bandes · couche B (horizontales)','B'],['O','Bandes · autres couches','O'],
-  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G']
+  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G'],['pdfbg','Fond : plan PDF importé','F']
 ];
 function buildToggles(){
   const L=D.lines||[], nV=L.filter(l=>l.o==='V'&&!l.del).length, nH=L.filter(l=>l.o==='H'&&!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0;
   const nl=k=>[strips,mids,(typeof gen!=='undefined'?gen.list:[]),D.f2k||[],D.recon||[]].reduce((a,L)=>a+(L||[]).filter(x=>lk(x.layer)===k).length,0);
   const cnt={wl:(D.walls||[]).length,col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
-    A:nl('A'),B:nl('B'),O:nl('O'),
+    pdfbg:(PJ.px&&D.pmap)?1:0,A:nl('A'),B:nl('B'),O:nl('O'),
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
-  const G=[['Plan',['col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
+  const G=[['Plan',['pdfbg','col','grid','foot','det']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
   const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',O:'Autres couches',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
   grrBuild();
-  $('#toggles').innerHTML=G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&(cnt[k]>0||(k==='O'&&cnt.A+cnt.B>0))); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
+  $('#toggles').innerHTML=((PJ.px&&PJ.hasF2k&&D.pmap)?`<div class="lgt">Source affichée</div><div class="srcsw" role="group" aria-label="Source affichée"><button type="button" data-src="both">Les deux</button><button type="button" data-src="safe">Modèle SAFE seul</button><button type="button" data-src="pdf">PDF seul</button></div>`:'')+G.map(([g,ks])=>{ const on=ks.filter(k=>T[k]&&(cnt[k]>0||(k==='O'&&cnt.A+cnt.B>0))); return on.length?`<div class="lgt">${g}</div>`+on.map(k=>`<button class="tg" type="button" data-k="${k}" aria-pressed="${show[k]}" title="${k==='mk'?'Révisions vs PDF : vert = ajoutée, magenta = modifiée, rouge = supprimée':T[k][0]}"><i class="sw ${T[k][1]}"></i>${short[k]||T[k][0]}<em>${cnt[k]}</em></button>`).join(''):''; }).join('')||'<div class="lgt">Aucun élément pour l’instant</div>';
 }
 $('#toggles').addEventListener('click',e=>{
   const b=e.target.closest('.tg'); if(!b) return;
-  const k=b.dataset.k; show[k]=!show[k]; b.setAttribute('aria-pressed',show[k]); draw();
+  const k=b.dataset.k; show[k]=!show[k]; b.setAttribute('aria-pressed',show[k]);
+  if(k==='pdfbg'&&show[k]){ bgEnsure().then(ok=>{ if(!ok){ show.pdfbg=false; b.setAttribute('aria-pressed','false'); } draw(); }); return; }
+  draw();
 });
+$('#toggles').addEventListener('click',e=>{ const b=e.target.closest('[data-src]'); if(!b) return; srcView(b.dataset.src); });
+function srcView(m){ const set=(o)=>Object.keys(o).forEach(k=>show[k]=o[k]);
+  if(m==='safe') set({pdfbg:false,foot:false,lnV:false,lnH:false,col:true,wl:true,sl:true,op:true});
+  else if(m==='pdf') set({pdfbg:true,foot:true,lnV:true,lnH:true,col:!PJ.hasF2k,wl:false,sl:false,op:false,fc:false,fm:false,gc:false,gm:false,rc:false,rm:false,ctr:false});
+  else set({pdfbg:true,foot:false,lnV:true,lnH:true,col:true,wl:true,sl:false,op:false,gc:true,gm:true});
+  const go=()=>{ buildToggles(); draw(); };
+  if(show.pdfbg) bgEnsure().then(ok=>{ if(!ok) show.pdfbg=false; go(); }); else go(); }
 
 /* ---------- panneau et liste ---------- */
 function sideNames(layer){ return layer==='A' ? ['ouest','est'] : ['nord','sud']; }
@@ -817,7 +841,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.16.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.17.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -849,6 +873,7 @@ svg.addEventListener('pointermove',e=>{
     const sp=snapPt(X,Y,hdrag.i), sv=l.o==='V'?sp.y:sp.x; let v=Math.round(sv*1000)/1000;
     if(hdrag.e==='a') v=Math.min(v,l.b-0.3); else v=Math.max(v,l.a+0.3);
     l[hdrag.e]=v; msg(`Limite ${l.o==='V'?'x':'y'} = ${(l.pos+(l.o==='V'?OXm:OYm)).toFixed(2)} m : de ${(l.a+(l.o==='V'?OYm:OXm)).toFixed(2)} à ${(l.b+(l.o==='V'?OYm:OXm)).toFixed(2)} m`); draw(); return; }
+  if(exOn&&exPick&&!drag){ exPreview(e); return; }
   if(calOn&&calPick&&!drag){ calPreview(e); return; }
   if(msOn&&!drag&&(msMode==='meas'||mvPick)){ msPreview(e); return; }
   if(l4on&&!drag){ l4Preview(e); return; }
@@ -864,6 +889,7 @@ svg.addEventListener('pointerup',e=>{
   if(wasMoved) return;
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
+  if(exOn&&exPick){ exClick(e); return; }
   if(calOn&&calPick){ calClick(e); return; }
   { const mi=msOn&&msMode==='meas'&&!msP1&&!msCal&&t&&t.closest&&t.closest('[data-mi]'); if(mi){ msSelect(+mi.dataset.mi===msSel?null:+mi.dataset.mi); return; } }
   if(msOn&&(msMode==='meas'||mvPick)){ msClick(e); return; }
@@ -1111,7 +1137,7 @@ function fpRows(){ const px=PJ.px, pm=PJ.pm||{}, en=pm.fs||fpAuto(px), S=D.pmap?
   $('#fpmsg').textContent=`${n} traits retenus${x?` · ${x} exclus à la main`:''}${(pm.fi||[]).length?` · ${pm.fi.length} ajoutés à la main`:''}. Vert = retenu, rouge pointillé = exclu, gris = non retenu.`; $('#fp-min').value=pm.fm!=null?pm.fm:4; }
 function fpApply(){ if(!PJ.px||!D.pmap) return; D.foot=mapFoot(PJ.px,PJ.pm||{},D.pmap); if(!PJ.hasF2k){ const fl=fillOf(D); if(fl) D.fill=fl; } deriveAll(); rebuildLIM(); ring=D.fill[0][0]; touch(); fpRows(); draw(); }
 function fpSet(k,v){ PJ.pm=Object.assign({},PJ.pm||{},{[k]:v}); }
-function fpToggle(on){ fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
+function fpToggle(on){ if(on&&exOn) exToggle(false); fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
   if(fpOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); if(!(PJ.pm&&PJ.pm.fs)){ fpSet('fs',fpAuto(PJ.px)); if(PJ.hasF2k) fpApply(); } show.foot=true; syncToggle('foot'); fpRows(); } draw(); }
 function fpClick(id){ const [i,j]=id.split(':').map(Number), px=PJ.px, pm=PJ.pm||{}, g=px.styles[i], mode=document.querySelector('input[name=fpm]:checked').value;
   if(mode==='style'){ const en=(pm.fs||fpAuto(px)).slice(), a=en.indexOf(g.k); if(a>=0) en.splice(a,1); else en.push(g.k); fpSet('fs',en); }
@@ -1136,7 +1162,7 @@ function calMove(ddx,ddy){ if(!ddx&&!ddy) return; const sh=(l)=>{ if(l.o==='V'){
   if(D.pmap){ D.pmap.xb+=ddx; D.pmap.yb+=ddy; if(PJ.pm&&PJ.pm.fs&&PJ.px&&PJ.px.styles) D.foot=mapFoot(PJ.px,PJ.pm,D.pmap); }
   rebuildLIM(); touch(); calRows(); draw(); }
 function calSetPm(o){ PJ.pm=Object.assign({},PJ.pm||{},o); }
-function calToggle(on){ calOn=!!on; $('#cal').setAttribute('aria-pressed',String(calOn)); $('#calbox').hidden=!calOn; calPick=0; calP1=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+function calToggle(on){ if(on&&exOn) exToggle(false); calOn=!!on; $('#cal').setAttribute('aria-pressed',String(calOn)); $('#calbox').hidden=!calOn; calPick=0; calP1=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(calOn){ if(msOn) msToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); $('#cal-msg').innerHTML='Décale le <b>PDF</b> (limites, empreinte) par rapport au modèle. Entrez ΔX / ΔY ou choisissez un point du PDF puis le point correspondant du modèle.'; calRows(); } draw(); }
 function calClick(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1), ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(!calP1){ calP1={x:sp.x,y:sp.y}; $('#cal-msg').innerHTML='Point du PDF : <b>'+(sp.k||'libre')+'</b>. Cliquez le point correspondant du modèle.'; return; }
@@ -1165,7 +1191,7 @@ function msKset(k){ msK=k>0?k:1; msCal=0; $('#ms-kin').hidden=true; msRows(); dr
 function msSet(){ const mv=msMode==='move'; msScBuild(); msCal=0; $('#ms-kin').hidden=true; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b>. Cliquez une cote pour la sélectionner (accrochage aux axes, colonnes, empreinte, limites). <b>Shift</b> maintenu : bloque à l’horizontale ou à la verticale. Échap pour quitter.'; msRows(); }
   else { mvPick=0; mvP1=null; const t=msTarget(); $('#ms-msg').innerHTML=t?`Bande <b>${(t.s||t.f).id}</b> (couche ${(t.s||t.f).layer})${t.copy?' du .f2k : « Appliquer » crée une <b>copie</b> générée déplacée.':'.'} Entrez ΔX, ΔY ou choisissez 2 points.`:'Sélectionnez une <b>bande colonne</b> sur le plan ou dans la liste (générée ou du .f2k).'; } draw(); }
-function msToggle(on){ if(on&&calOn) calToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
+function msToggle(on){ if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(msOn){ if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); msSet(); } else { mvPick=0; mvP1=null; msP1=null; draw(); } }
 function msPoint(e){ const [X,Y]=toModel(e); let sp=snapPt(X,Y,-1); const a=msMode==='meas'?msP1:mvP1;
   if(e.shiftKey&&a){ if(Math.abs(sp.x-a.x)>=Math.abs(sp.y-a.y)) sp={x:sp.x,y:a.y,k:'horizontal (Shift)'}; else sp={x:a.x,y:sp.y,k:'vertical (Shift)'}; } return sp; }
@@ -1210,7 +1236,7 @@ $('#ms-ok').onclick=msApply; $('#ms-undo').onclick=msUndo;
 ['#ms-dx','#ms-dy'].forEach(q=>$(q).addEventListener('input',()=>draw()));
 let l4on=false, l4=null, l4p=null;
 function l4Msg(t){ $('#l4msg').innerHTML=t; $('#l4box').hidden=!(l4on||l4); }
-function l4Set(on){ if(on&&msOn) msToggle(false); if(on&&calOn) calToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
+function l4Set(on){ if(on&&msOn) msToggle(false); if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
   if(l4on){ if(edLim&&edAdd){ edAdd=false; updEd(); } l4Msg(l4?l4txt():'Cliquez une <b>paroi</b> (face de colonne, mur, axe), puis la <b>paroi opposée</b>. Échap pour annuler.'); } else l4Msg(l4?l4txt():''); $('#l4-copy').hidden=!l4; }
 function l4txt(){ const P=l4.o==='V'?OXm:OYm, f=v=>(v+P).toFixed(3), g=l4.g;
   return `Portée <b>L = ${l4.L.toFixed(3)} m</b> (${l4.o==='V'?'x':'y'} de ${f(g[0])} à ${f(g[4])} SAFE) · <b>L/4 = ${(l4.L/4*1000).toFixed(0)} mm</b>.<br>Repères à ${g.slice(1,4).map(f).join(' · ')} m. Ils servent d’accrochage pour tracer les limites (« Éditer les limites » → « + Nouvelle ligne »).`; }
@@ -1261,7 +1287,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&calOn){ if(calP1||
   if(e.key==='Escape'&&fpOn){ fpToggle(false); return; }
   if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
   if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
-$('#ed-lim').onclick=()=>{ edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
+$('#ed-lim').onclick=()=>{ if(!edLim&&exOn) exToggle(false); edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
   if(edLim){ if(gen.mode){ const m=gen.mode; edLim=false; setMode(m); edLim=true; $('#ed-lim').setAttribute('aria-pressed','true'); $('#ed-reset').hidden=false; } show.lnV=show.lnH=true; syncToggle('lnV'); syncToggle('lnH'); msg('Édition des limites : glissez une extrémité (point bleu) pour étirer ou raccourcir la ligne.'); }
   draw(); };
 $('#ed-reset').onclick=()=>{ touch(); D.lines.splice(N0); rebuildLIM(); edSel=null; updEd(); JSON.parse(LIM0).forEach((o,i)=>{ delete D.lines[i].del; Object.assign(D.lines[i],o); }); rebuildLIM(); msg('Limites PDF rétablies (révisions effacées).'); draw(); };
@@ -1914,7 +1940,7 @@ $('#pf-fmt').innerHTML=PDF_PAPER.map(([l],i)=>`<option value="${i}">${l}</option
 $('#pf-sc').innerHTML=PDF_SC.map(([l,v])=>`<option value="${v}">${l}</option>`).join(''); $('#pf-sc').value='100';
 function pdUi(){ const can=!!(PJ.px&&D.pmap), over=$('#pdm-over'); over.disabled=!can; if(!can&&over.checked) $('#pdm-solo').checked=true;
   const ov=over.checked; ['#pf-fmt-l','#pf-sc-l','#pf-cart-l'].forEach(q=>$(q).hidden=ov); if(ov){ if($('#pf-grid').dataset.t!=='o'){ $('#pf-grid').checked=false; $('#pf-col').checked=false; $('#pf-grid').dataset.t='o'; } } else if($('#pf-grid').dataset.t==='o'){ $('#pf-grid').checked=true; $('#pf-col').checked=true; $('#pf-grid').dataset.t=''; }
-  $('#pf-f2k-l').hidden=!PJ.hasF2k; $('#pdm-note').textContent=can?(ov?'Le PDF d’origine est repris tel quel; les annotations sont ajoutées par-dessus, dans la même page.':'Page blanche à l’échelle choisie, avec uniquement les annotations.'):'« Par-dessus le PDF » nécessite un PDF de plan importé dans ce projet.'; }
+  $('#pf-f2k-l').hidden=!PJ.hasF2k; $('#g-ex').hidden=!can; $('#pf-exst').hidden=!(can&&ov); $('#pdm-note').textContent=can?(ov?'Le PDF d’origine est repris tel quel; les annotations sont ajoutées par-dessus, dans la même page.':'Page blanche à l’échelle choisie, avec uniquement les annotations.'):'« Par-dessus le PDF » nécessite un PDF de plan importé dans ce projet.'; }
 document.querySelectorAll('input[name=pdm]').forEach(r=>r.onchange=pdUi); pdUi();
 async function pdfBufPut(id,buf){ try{ const db=await idbOpen(); await new Promise((res,rej)=>{ const q=db.transaction('pdfdata','readwrite').objectStore('pdfdata').put(buf,id+'#buf'); q.onsuccess=res; q.onerror=()=>rej(q.error); }); }catch(e){} }
 async function pdfBufGet(id){ try{ const db=await idbOpen(); return await new Promise((res,rej)=>{ const q=db.transaction('pdfdata').objectStore('pdfdata').get(id+'#buf'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>rej(q.error); }); }catch(e){ return null; } }
@@ -1935,7 +1961,7 @@ async function buildAnnotPdf(o,srcBuf){
   const gex=gx.length||gy.length?[Math.min(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m)),Math.max(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m))]:[0,0], gey=gx.length||gy.length?[Math.min(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m)),Math.max(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m))]:[0,0], E=PAD-1.2;
   let doc, page, T, sc, W, H, info={};
   if(o.over){ const M=D.pmap; doc=await PDFDocument.load(srcBuf,{ignoreEncryption:true}); const n=((PJ.px&&PJ.px.page&&PJ.px.page.no)||1)-1; if(n>=doc.getPageCount()) throw new Error('page '+(n+1)+' absente du PDF'); page=doc.getPage(n);
-    T=(X,Y)=>[(X-M.xb)/M.xa,(Y-M.yb)/M.ya]; sc=1/Math.abs(M.xa); }
+    const E=exAB(), dn=E.ar*E.ar+E.ai*E.ai; T=(X,Y)=>{ const zr=((X-E.br)*E.ar+(Y-E.bi)*E.ai)/dn, zi=((Y-E.bi)*E.ar-(X-E.br)*E.ai)/dn; return [(zr-M.xb)/M.xa,(zi-M.yb)/M.ya]; }; sc=1/(Math.abs(M.xa)*Math.sqrt(dn)); }
   else { let b=[1e9,1e9,-1e9,-1e9]; const add=(x,y)=>{ b[0]=Math.min(b[0],x); b[1]=Math.min(b[1],y); b[2]=Math.max(b[2],x); b[3]=Math.max(b[3],y); };
     strips.forEach(q=>{ add(q.x0,q.y0); add(q.x1,q.y1); }); lines.forEach(l=>{ if(l.o==='V'){ add(l.pos,l.a); add(l.pos,l.b); } else { add(l.a,l.pos); add(l.b,l.pos); } }); cols.forEach(c=>{ add(c.x-c.w/2,c.y-c.h/2); add(c.x+c.w/2,c.y+c.h/2); }); foot.forEach(f=>{ add(f[0],f[1]); add(f[2],f[3]); }); ms.forEach(m=>{ add(m.a[0],m.a[1]); add(m.b[0],m.b[1]); });
     if(o.grid&&(gx.length||gy.length)){ add(gex[0]-E,gey[0]-E); add(gex[1]+E,gey[1]+E); }
@@ -1980,6 +2006,55 @@ $('#g-pdf').onclick=async()=>{ const msgEl=$('#pf-msg'), over=$('#pdm-over').che
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([r.bytes],{type:'application/pdf'})); a.download=nm; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
     msgEl.textContent=`PDF téléchargé : ${r.n} bandes, ${r.nl} limites, ${r.nm} cotes`+(over?' ajoutées au PDF du plan.':` · page ${Math.round(r.info.W)}×${Math.round(r.info.H)} pt à ≈ 1:${Math.round(r.info.N)}.`)+(r.info.over?' Attention : le plan dépasse la page à cette échelle.':'');
   }catch(e){ msgEl.textContent='Export PDF impossible : '+(e&&e.message||e); } };
+
+/* ---------- Fond PDF + alignement modèle ↔ PDF (export par-dessus) ---------- */
+const bgKey=()=>PJ.id+':'+((PJ.px&&PJ.px.page&&PJ.px.page.no)||1);
+async function bgEnsure(){ if(!(PJ.px&&D.pmap)) return false; const key=bgKey(); if(BG.key===key&&BG.url) return true; if(BG.busy) return false; BG.busy=true;
+  try{ let buf=await pdfBufGet(PJ.id); if(!buf){ pjMsg('Le PDF d’origine n’est pas conservé dans ce projet : choisissez-le (il sera mémorisé).'); buf=await pdfPickFile(); if(!buf){ pjMsg('Fond PDF annulé.'); return false; } await pdfBufPut(PJ.id,buf); }
+    await pdfLoad(); const doc=await PDFJS.getDocument({data:new Uint8Array(buf.slice(0)),verbosity:0}).promise, pg=await doc.getPage(((PJ.px.page&&PJ.px.page.no)||1)), v=pg.view, w0=v[2]-v[0], h0=v[3]-v[1];
+    if(pg.rotate){ pjMsg('Page PDF pivotée ('+pg.rotate+'°) : fond non pris en charge.'); return false; }
+    const s=Math.min(4000/Math.max(w0,h0),4), vp=pg.getViewport({scale:s}), cv=document.createElement('canvas'); cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height); const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height);
+    await pg.render({canvasContext:cx,viewport:vp}).promise; const blob=await new Promise(r=>cv.toBlob(r,'image/png')); if(BG.url) URL.revokeObjectURL(BG.url);
+    Object.assign(BG,{key,url:URL.createObjectURL(blob),w:cv.width,h:cv.height,s,vx0:v[0],vy1:v[3]}); return true; }
+  catch(e){ pjMsg('Fond PDF impossible : '+(e&&e.message||e)); return false; } finally{ BG.busy=false; } }
+function exFields(){ const e=(PJ.pm&&PJ.pm.ex)||{}; $('#ex-dx').value=Math.round(e.dx||0); $('#ex-dy').value=Math.round(e.dy||0); $('#ex-rot').value=(e.rot||0).toFixed(3).replace(/\.?0+$/,'')||'0'; $('#ex-k').value=(e.k||100).toFixed(3).replace(/\.?0+$/,''); $('#ex-bgo').value=(PJ.pm&&PJ.pm.bgo)||60; }
+function exSet(o){ const e=Object.assign({k:100,rot:0,dx:0,dy:0,c:exCentre()},(PJ.pm&&PJ.pm.ex)||{},o); calSetPm({ex:e}); exFields(); exStatus(); touch(); draw(); }
+function exStatus(){ const e=PJ.pm&&PJ.pm.ex, t=e&&(e.dx||e.dy||e.rot||(e.k&&e.k!==100))?`Alignement d’export : ΔX ${Math.round(e.dx||0)} mm · ΔY ${Math.round(e.dy||0)} mm · rotation ${(e.rot||0).toFixed(3)}° · échelle ${(e.k||100).toFixed(3)} %.`:'Alignement d’export : aucun (le modèle est supposé bien calé sur le PDF).'; const el=$('#pf-exst'); if(el) el.textContent=t; }
+async function exToggle(on){ exOn=!!on; $('#exbox').hidden=!exOn; exPick=0; exCur=null; exPairs=[]; $('#ex-pick').setAttribute('aria-pressed','false'); $('#ex-apply').hidden=true; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  if(exOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); exFields();
+    $('#ex-msg').innerHTML='Le <b>PDF</b> (fond) se superpose au <b>modèle</b>. Le modèle ne bouge pas : ces réglages ne servent qu’à l’export par-dessus le PDF. Corrigez ΔX/ΔY, rotation, échelle, ou utilisez « Aligner par points ».';
+    if(!show.pdfbg){ const ok=await bgEnsure(); if(ok){ show.pdfbg=true; syncToggle('pdfbg'); } else { $('#ex-msg').innerHTML+=' <b>Le fond PDF n’est pas disponible.</b>'; } } }
+  draw(); }
+function exSnapPdf(X,Y){ // points du PDF (colonnes, intersections de trame) tels qu'affichés (avec alignement courant)
+  const M=D.pmap, E=exAB(), mp=(px,py)=>{ const x=M.xa*px+M.xb, y=M.ya*py+M.yb; return [E.ar*x-E.ai*y+E.br, E.ai*x+E.ar*y+E.bi]; }, c=[];
+  (PJ.px.cols||[]).forEach(q=>c.push([...mp(q.x,q.y),'colonne du PDF']));
+  (PJ.px.grid.x||[]).forEach(a=>(PJ.px.grid.y||[]).forEach(b=>c.push([...mp(a.pos,b.pos),'axe '+a.l+'/'+b.l+' (PDF)'])));
+  let b=null, bd=0.3*Math.max(1,vb.w/60); c.forEach(q=>{ const d=Math.hypot(q[0]-X,q[1]-Y); if(d<bd){ bd=d; b=q; } }); return b?{x:b[0],y:b[1],k:b[2]}:{x:X,y:Y,k:null}; }
+function exPt(e){ const [X,Y]=toModel(e); return (exPairs.length*2+(exCur?1:0))%2===0&&!exCur?snapPt(X,Y,-1):exSnapPdf(X,Y); }
+function exStepMsg(){ const n=exPairs.length; $('#ex-msg').innerHTML=exCur?`Paire ${n+1} : cliquez maintenant le point <b>correspondant du PDF</b> (fond).`:`Paire ${n+1} : cliquez un point du <b>modèle</b> (colonne, axe…).`+(n?' Ou « Appliquer (translation) ».':''); }
+function exClick(e){ const sp=exPt(e), ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  if(!exCur){ exCur={m:[sp.x,sp.y]}; exStepMsg(); draw(); return; }
+  exPairs.push({m:exCur.m,p:[sp.x,sp.y]}); exCur=null; $('#ex-apply').hidden=false;
+  if(exPairs.length>=2){ exSolve(); return; } exStepMsg(); draw(); }
+function exSolve(){ const P=exPairs.slice(), E=exAB(), c=exCentre(); let ar,ai,br,bi;
+  if(P.length===1){ ar=E.ar; ai=E.ai; br=E.br+(P[0].m[0]-P[0].p[0]); bi=E.bi+(P[0].m[1]-P[0].p[1]); }
+  else { const A=P[0].m, A2=P[0].p, dm=[P[1].m[0]-A[0],P[1].m[1]-A[1]], dp=[P[1].p[0]-A2[0],P[1].p[1]-A2[1]], dd=dp[0]*dp[0]+dp[1]*dp[1]; if(dd<1e-9){ $('#ex-msg').textContent='Les 2 points du PDF sont confondus.'; return; }
+    let a=[(dm[0]*dp[0]+dm[1]*dp[1])/dd,(dm[1]*dp[0]-dm[0]*dp[1])/dd]; if($('#ex-lock').checked){ const n=Math.hypot(a[0],a[1])||1; a=[a[0]/n,a[1]/n]; }
+    ar=a[0]*E.ar-a[1]*E.ai; ai=a[0]*E.ai+a[1]*E.ar; const zr=E.br-A2[0], zi=E.bi-A2[1]; br=a[0]*zr-a[1]*zi+A[0]; bi=a[0]*zi+a[1]*zr+A[1]; }
+  const k=Math.hypot(ar,ai), rot=Math.atan2(ai,ar)*180/Math.PI, dx=br-(c[0]-(ar*c[0]-ai*c[1])), dy=bi-(c[1]-(ai*c[0]+ar*c[1]));
+  exPick=0; exCur=null; exPairs=[]; $('#ex-pick').setAttribute('aria-pressed','false'); $('#ex-apply').hidden=true; exSet({k:k*100,rot,dx:dx*1000,dy:dy*1000,c}); $('#ex-msg').textContent='Alignement appliqué. Vérifiez la superposition, puis « Terminer ».'; }
+function exPreview(e){ const sp=exPt(e), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
+  let h=`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#e11d48" stroke-width="2" vector-effect="non-scaling-stroke"/>`; if(exCur) h+=`<circle cx="${exCur.m[0]}" cy="${-exCur.m[1]}" r="${5*u}" fill="#e11d48"/><line x1="${exCur.m[0]}" y1="${-exCur.m[1]}" x2="${sp.x}" y2="${-sp.y}" stroke="#e11d48" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`;
+  exPairs.forEach(q=>{ h+=`<circle cx="${q.m[0]}" cy="${-q.m[1]}" r="${4*u}" fill="#e11d48"/><circle cx="${q.p[0]}" cy="${-q.p[1]}" r="${4*u}" fill="#0ea5e9"/>`; });
+  svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#ex-msg').innerHTML=(exCur?'Point du PDF : ':'Point du modèle : ')+(sp.k||'libre'); }
+$('#g-ex').onclick=()=>{ if(!(PJ.px&&D.pmap)){ $('#pf-msg').textContent='L’alignement nécessite un PDF de plan importé.'; return; } exToggle(true); };
+$('#ex-done').onclick=()=>exToggle(false);
+$('#ex-pick').onclick=()=>{ exPick=1; exCur=null; exPairs=[]; $('#ex-pick').setAttribute('aria-pressed','true'); exStepMsg(); };
+$('#ex-apply').onclick=()=>{ if(exPairs.length) exSolve(); };
+$('#ex-rst').onclick=()=>{ const pm=Object.assign({},PJ.pm||{}); delete pm.ex; PJ.pm=pm; exFields(); exStatus(); touch(); draw(); };
+['#ex-dx','#ex-dy','#ex-rot','#ex-k'].forEach(q=>$(q).addEventListener('change',()=>exSet({dx:parseFloat($('#ex-dx').value)||0,dy:parseFloat($('#ex-dy').value)||0,rot:parseFloat($('#ex-rot').value)||0,k:parseFloat($('#ex-k').value)||100})));
+$('#ex-bgo').addEventListener('input',()=>{ calSetPm({bgo:Math.min(100,Math.max(10,parseFloat($('#ex-bgo').value)||60))}); draw(); });
+exStatus();
 </script>
 </body>
 </html>
