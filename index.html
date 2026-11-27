@@ -107,9 +107,9 @@ dt{color:var(--muted)} dd{margin:0;font-family:var(--font-mono);font-size:12.5px
 .gs.gc{fill:color-mix(in srgb,var(--gen) 16%,transparent)}
 .gs.gm{fill:color-mix(in srgb,var(--gen) 7%,transparent);stroke-dasharray:6 4}
 .gs.gc.A{--g:#e5484d}.gs.gm.A{--g:#e3a008}.gs.gc.B{--g:#3b82f6}.gs.gm.B{--g:#14b8a6}
-.gs.A,.gs.B{stroke:var(--g)}
-.gs.gc.A,.gs.gc.B{fill:color-mix(in srgb,var(--g) 20%,transparent)}
-.gs.gm.A,.gs.gm.B{fill:color-mix(in srgb,var(--g) 16%,transparent)}
+.gs.A,.gs.B{stroke:var(--c-gen,var(--g))}
+.gs.gc.A,.gs.gc.B{fill:color-mix(in srgb,var(--c-gen,var(--g)) 20%,transparent)}
+.gs.gm.A,.gs.gm.B{fill:color-mix(in srgb,var(--c-gen,var(--g)) 16%,transparent)}
 .gs:hover{stroke-width:calc(var(--w-gen,2)*1.5)}
 .lbl.GC,.lbl.GM{fill:var(--gen)}
 .chit{fill:transparent;stroke:none;cursor:crosshair;pointer-events:all}
@@ -129,7 +129,7 @@ table.cmp td:first-child,table.cmp th:first-child{text-align:left}
 table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .st-ok{color:#1c8a4d} .st-no{color:#b3261e} .st-md{color:#b26a00}
 [data-theme="dark"] .st-ok{color:#4cc88a} [data-theme="dark"] .st-no{color:#ff7a70} [data-theme="dark"] .st-md{color:#e0a63a}
-.ln{stroke:var(--lim);stroke-width:var(--w-lim,1.6);stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
+.ln{stroke:var(--c-lnp,var(--lim));stroke-width:var(--w-lim,1.6);stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
 .ln.on{stroke:var(--sel);stroke-width:calc(var(--w-lim,1.6)*2.2);stroke-dasharray:none}
 .lnhit{stroke:transparent;stroke-width:14;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:crosshair}
 .edpanel{position:absolute;left:12px;top:12px;background:var(--paper);border:1px solid var(--line,#ccc);border-radius:8px;padding:10px;font-size:12px;box-shadow:0 2px 8px #0002;max-width:230px;z-index:3}
@@ -138,7 +138,7 @@ table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:c
 .edsn{display:flex;flex-direction:column;gap:3px}
 .edsn label{display:flex;gap:6px;align-items:center}
 .edhint{margin:8px 0 0;color:var(--muted,#666);line-height:1.35}
-.ln.nw{stroke-width:calc(var(--w-lim,1.6)*1.4)}
+.ln.nw{stroke-width:calc(var(--w-lim,1.6)*1.4)}.ln.nw:not(.on){stroke:var(--c-lnn,var(--c-lnp,var(--lim)))}
 .rv{stroke-width:var(--w-rv,2.6);stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
 .rv.add{stroke:var(--rvA)}.rv.mod{stroke:var(--rvM)}.rv.del{stroke:var(--rvD)}
 .rv.on,.rvdel.on{stroke-width:calc(var(--w-rv,2.6)*1.7)}
@@ -159,14 +159,14 @@ table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:c
 .lnhit:hover{stroke:color-mix(in srgb,var(--lim) 30%,transparent)}
 .gi .w+.w{margin-top:2px}
 /* éléments du plan */
-.rs{stroke-width:var(--w-f2k,2);vector-effect:non-scaling-stroke;cursor:pointer;stroke:var(--rec)}
-.rs.rc{fill:color-mix(in srgb,var(--rec) 12%,transparent)}
-.rs.rm{fill:color-mix(in srgb,var(--rec) 8%,transparent);stroke-dasharray:7 4}
+.rs{stroke-width:var(--w-f2k,2);vector-effect:non-scaling-stroke;cursor:pointer;stroke:var(--c-rec,var(--rec))}
+.rs.rc{fill:color-mix(in srgb,var(--c-rec,var(--rec)) 12%,transparent)}
+.rs.rm{fill:color-mix(in srgb,var(--c-rec,var(--rec)) 8%,transparent);stroke-dasharray:7 4}
 .rs:hover{stroke-width:3}
 .lbl.RC,.lbl.RM{fill:var(--rec)}
 .fs{stroke-width:var(--w-f2k,2);vector-effect:non-scaling-stroke;cursor:pointer}
-.fs.fc{fill:color-mix(in srgb,var(--f2kC) 12%,transparent);stroke:var(--f2kC)}
-.fs.fm{fill:color-mix(in srgb,var(--f2kM) 10%,transparent);stroke:var(--f2kM);stroke-dasharray:7 4}
+.fs.fc{fill:color-mix(in srgb,var(--c-f2k,var(--f2kC)) 12%,transparent);stroke:var(--c-f2k,var(--f2kC))}
+.fs.fm{fill:color-mix(in srgb,var(--c-f2k,var(--f2kM)) 10%,transparent);stroke:var(--c-f2k,var(--f2kM));stroke-dasharray:7 4}
 .fs:hover{stroke-width:3}
 .lbl.FC{fill:var(--f2kC);text-anchor:end} .lbl.FM{fill:var(--f2kM);text-anchor:end}
 .fill{fill:var(--footfill);fill-opacity:.7;stroke:none;pointer-events:none}
@@ -465,6 +465,7 @@ header{display:block;padding:10px 16px 8px}
       <label class="ck"><input id="pf-lim" type="checkbox" checked>Limites pointillées</label><label class="ck"><input id="pf-mes" type="checkbox" checked>Cotes (mesures)</label>
       <label class="ck" id="pf-grid-l"><input id="pf-grid" type="checkbox" checked>Trame (axes et bulles)</label><label class="ck" id="pf-col-l"><input id="pf-col" type="checkbox" checked>Colonnes et empreinte du bâtiment</label><label class="ck" id="pf-cart-l"><input id="pf-cart" type="checkbox" checked>Cartouche (projet, échelle, légende)</label>
       <label class="ck" id="pf-f2k-l"><input id="pf-f2k" type="checkbox" checked>Bandes du .f2k importé</label><label class="ck"><input id="pf-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="pf-oth" type="checkbox">Autres variantes de l’outil</label>
+      <label id="pf-pg-l">Pages exportées<select id="pf-pg"><option value="one">Seulement la page du plan aligné</option><option value="all">Tout le jeu de plans</option></select></label>
       <label id="pf-fmt-l">Format de page<select id="pf-fmt"></select></label><label id="pf-sc-l">Échelle<select id="pf-sc"></select></label></div>
       <div class="acts"><button class="btn" id="g-ex" type="button">Aligner le modèle sur le PDF…</button><button class="btn pri" id="g-pdf" type="button">Télécharger le PDF</button></div><p class="mut" id="pf-exst"></p><p id="pf-msg" class="mut" role="status"></p></section>
       <section class="sec"><h2>Vérification</h2>
@@ -494,6 +495,9 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Quand j’importe un PDF et un modèle SAFE, lequel sert de repère fiable ?</summary><p>Le <b>modèle SAFE (.f2k)</b>. Toutes les coordonnées de l’outil (trame, colonnes, dalles, murs, bandes, export .f2k et DXF) sont celles de SAFE. Le PDF est <b>calé sur le modèle</b> : l’import apparie les axes de la trame par leur nom, puis recale sur les colonnes communes. Il ne fournit que les <b>limites pointillées</b> (et l’empreinte si vous l’activez). Si le PDF est légèrement décalé, vos bandes restent justes dans SAFE ; seules les limites tracées d’après le PDF peuvent l’être moins (corrigez-les avec « Calage »).</p></details>
   <details><summary>Comment afficher seulement le modèle SAFE ou seulement le PDF ?</summary><p>Dans le panneau « Calques », « Source affichée » : <b>Modèle SAFE seul</b> (dalles, colonnes, murs, ouvertures), <b>PDF seul</b> (image du plan importé, limites et empreinte du PDF) ou <b>Les deux</b>. Le calque « Fond : plan PDF importé » affiche l’image du PDF sous le modèle (opacité réglable dans le module d’alignement). Construisez vos bandes sur le modèle SAFE : c’est la référence la plus fiable.</p></details>
   <details><summary>Mes annotations ne tombent pas au bon endroit sur le PDF exporté.</summary><p>Onglet « Export » → « Export PDF » → « Par-dessus le PDF du plan » → <b>« Aligner le modèle sur le PDF… »</b>. Le PDF s’affiche en fond, sous le modèle. Corrigez ΔX / ΔY, la rotation et l’échelle, ou cliquez « Aligner par points » : un point du modèle, puis le point correspondant du PDF (1 paire = translation, 2 paires = translation + rotation). Ces réglages ne servent <b>qu’à l’export par-dessus le PDF</b> : le modèle, les limites et les exports .f2k / DXF ne changent pas. À ne pas confondre avec « Calage », qui déplace les limites et l’empreinte du PDF <i>dans le modèle</i>.</p></details>
+  <details><summary>Mon PDF compte plusieurs plans : puis-je exporter une seule page ?</summary><p>Oui. Dans « Export PDF » → « Par-dessus le PDF du plan », choisissez <b>« Seulement la page du plan aligné »</b> (la page utilisée à l’import, par ex. la page 47 pour l’étage 7) ou <b>« Tout le jeu de plans »</b>. Le fichier d’une page est nommé avec son numéro (…_p47_bandes_annotees.pdf).</p></details>
+  <details><summary>Comment quitter un mode (limites, mesure, calage…) ?</summary><p>Appuyez sur <b>Échap</b> : l’outil actif se ferme et vous revenez au mode normal (Échap ne ferme pas une fenêtre ou un menu ouvert; il les ferme d’abord).</p></details>
+  <details><summary>Puis-je changer les couleurs des bandes et des limites ?</summary><p>Oui : « Réglages » → <b>Couleurs</b>. Une couleur propre aux bandes importées du modèle SAFE, aux bandes reconstruites du PDF, aux bandes ajoutées ou modifiées dans l’outil, aux limites du PDF et aux limites ajoutées. Elles sont reprises dans l’export PDF. Le bouton « Défaut » rétablit chaque couleur.</p></details>
   <details><summary>Comment déplacer ou mesurer ?</summary><p>« Mesurer / Déplacer » donne Δx, Δy, la distance et l’angle entre deux points, et déplace une bande par ΔX / ΔY ou par deux points. « Portée L/4 » sert à repérer les quarts de portée entre deux parois.</p></details>
   <details><summary>À quoi servent les variantes de bandes ?</summary><p>Chaque variante est un jeu de bandes indépendant (onglet « Créer »). La variante « .f2k (importée) » est en lecture seule ; vous pouvez la copier, puis créer vos propres variantes. Une seule est active (modifiable et exportée), les autres s’affichent en pointillé selon l’œil coché.</p></details>
   <details><summary>Comment obtenir un DXF des bandes ?</summary><p>Onglet « Export » → « Export DXF : bords de bande ». Choisissez les variantes à inclure, les unités (mm ou m) et l’origine (coordonnées SAFE ou locales). Chaque bande est un contour fermé ; un calque est créé par variante, couche et type.</p></details>
@@ -841,7 +845,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.17.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.18.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1282,11 +1286,11 @@ function delSel(){ const l=edSel!==null&&D.lines[edSel]; if(!l) return;
 $('#ed-add').onclick=()=>{ edAdd=!edAdd; edP1=null; updEd(); $('#edhint').textContent=edAdd?'Cliquez le 1er point. Accrochage actif selon les cases cochées.':''; draw(); };
 $('#ed-del').onclick=delSel;
 document.querySelectorAll('[data-sn]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sn]=c.checked; });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&calOn){ if(calP1||calPick){ calP1=null; calPick=0; $('#cal-pick').setAttribute('aria-pressed','false'); const o=svg.querySelector('#ov'); if(o) o.remove(); } else calToggle(false); return; }
-  if(e.key==='Escape'&&msOn){ if(msP1||mvP1||mvPick){ msP1=null; mvP1=null; mvPick=0; $('#ms-pick').setAttribute('aria-pressed','false'); const o=svg.querySelector('#ov'); if(o) o.remove(); } else msToggle(false); return; }
-  if(e.key==='Escape'&&fpOn){ fpToggle(false); return; }
-  if(e.key==='Escape'&&l4on){ if(l4p){ l4p=null; const o=svg.querySelector('#ov'); if(o) o.remove(); l4Msg('Cliquez une <b>paroi</b>, puis la <b>paroi opposée</b>.'); } else l4Set(false); return; }
-  if(!edLim) return; if(e.key==='Escape'){ if(edP1){edP1=null;draw();} else if(edAdd){edAdd=false;updEd();draw();} } else if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ if(document.querySelector('dialog[open]')||!$('#vmm').hidden||!$('#ctxm').hidden||!$('#unm').hidden) return;
+    if(calOn){ calToggle(false); return; } if(msOn){ msToggle(false); return; } if(exOn){ exToggle(false); return; } if(fpOn){ fpToggle(false); return; } if(l4on){ l4Set(false); return; }
+    if(edLim){ $('#ed-lim').click(); return; } if(gen.mode){ setMode(gen.mode); return; } return; }
+  if(!edLim) return; if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
 $('#ed-lim').onclick=()=>{ if(!edLim&&exOn) exToggle(false); edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
   if(edLim){ if(gen.mode){ const m=gen.mode; edLim=false; setMode(m); edLim=true; $('#ed-lim').setAttribute('aria-pressed','true'); $('#ed-reset').hidden=false; } show.lnV=show.lnH=true; syncToggle('lnV'); syncToggle('lnH'); msg('Édition des limites : glissez une extrémité (point bleu) pour étirer ou raccourcir la ligne.'); }
   draw(); };
@@ -1901,11 +1905,14 @@ $('#pj-f2k').onclick=pickF2k; $('#es-f2k').onclick=pickF2k; $('#pj-pdfb').onclic
 $('#pj-file').onchange=e=>{ const f=e.target.files[0]; if(f) importF2K(f,false); };
 const SET_DEF=[['w-lim','Limites pointillées (PDF et ajoutées)',1.6,0.5,6],['w-rv','Révisions (ajoutée, modifiée, supprimée)',2.6,0.5,8],['w-gen','Bandes générées (contour)',2,0.5,6],['w-f2k','Bandes du .f2k et reconstruction',2,0.5,6],['w-col','Bandes colonnes du PDF',1.4,0.5,6],['w-foot','Empreinte du bâtiment',1.3,0.5,6],['w-grid','Trame (axes)',1,0.5,5],['w-l4','Repères L/4',1.2,0.5,6],['fs','Taille des étiquettes (×)',1,0.6,2.5]];
 let SETV={}; try{ SETV=JSON.parse(localStorage.getItem('l2c-reglages')||'{}')||{}; }catch(e){}
-function setApply(){ SET_DEF.forEach(([k,,d])=>{ const v=SETV[k]!==undefined?SETV[k]:d; document.documentElement.style.setProperty('--'+k,String(v)); }); }
+const SET_COL=[['c-f2k','Bandes importées du modèle SAFE (.f2k)','#17894f'],['c-rec','Bandes importées du PDF (reconstruction des limites)','#d2561a'],['c-gen','Bandes ajoutées ou modifiées dans l’outil','#e5484d','par défaut : rouge (A) / bleu (B)'],['c-lnp','Limites importées du PDF','#00a0db'],['c-lnn','Limites ajoutées dans l’outil','#00a0db']];
+function setApply(){ SET_DEF.forEach(([k,,d])=>{ const v=SETV[k]!==undefined?SETV[k]:d; document.documentElement.style.setProperty('--'+k,String(v)); }); SET_COL.forEach(([k])=>{ if(SETV[k]) document.documentElement.style.setProperty('--'+k,SETV[k]); else document.documentElement.style.removeProperty('--'+k); }); }
 function setSave(){ try{ localStorage.setItem('l2c-reglages',JSON.stringify(SETV)); }catch(e){} }
-function setBuild(){ $('#set-rows').innerHTML=SET_DEF.map(([k,t,d,mn,mx])=>{ const v=SETV[k]!==undefined?SETV[k]:d; return `<label class="srow"><span>${t}</span><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="0.1" value="${v}"><output>${(+v).toFixed(1)}</output></label>`; }).join(''); }
+function setBuild(){ $('#set-rows').innerHTML='<h3 style="margin:4px 0">Épaisseurs</h3>'+SET_DEF.map(([k,t,d,mn,mx])=>{ const v=SETV[k]!==undefined?SETV[k]:d; return `<label class="srow"><span>${t}</span><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="0.1" value="${v}"><output>${(+v).toFixed(1)}</output></label>`; }).join('')+'<h3 style="margin:12px 0 4px">Couleurs des bandes et des limites</h3>'+SET_COL.map(([k,t,d,n])=>`<label class="srow"><span>${t}${n?'<small style="display:block;color:var(--muted)">'+n+'</small>':''}</span><input type="color" data-c="${k}" value="${SETV[k]||d}"><button type="button" class="btn" data-cr="${k}" ${SETV[k]?'':'disabled'} style="padding:2px 8px">Défaut</button></label>`).join(''); }
 $('#set-rows').addEventListener('input',e=>{ const i=e.target.closest('input[data-k]'); if(!i) return; SETV[i.dataset.k]=parseFloat(i.value); i.nextElementSibling.textContent=(+i.value).toFixed(1); setApply(); setSave(); });
-$('#set-reset').onclick=()=>{ SETV={}; setSave(); setApply(); setBuild(); };
+$('#set-rows').addEventListener('input',e=>{ const i=e.target.closest('input[data-c]'); if(!i) return; SETV[i.dataset.c]=i.value; const b=i.parentNode.querySelector('[data-cr]'); if(b) b.disabled=false; setApply(); setSave(); if(typeof draw==='function') draw(); });
+$('#set-rows').addEventListener('click',e=>{ const b=e.target.closest('[data-cr]'); if(!b) return; delete SETV[b.dataset.cr]; setApply(); setSave(); setBuild(); draw(); });
+$('#set-reset').onclick=()=>{ SETV={}; setSave(); setApply(); setBuild(); draw(); };
 const faqOpen=()=>{ const d=$('#faqdlg'); if(d.showModal) d.showModal(); else d.setAttribute('open',''); };
 $('#pj-faq').onclick=faqOpen; $('#es-faq').onclick=faqOpen;
 $('#pj-set').onclick=()=>{ setBuild(); const d=$('#setdlg'); if(d.showModal) d.showModal(); else d.setAttribute('open',''); };
@@ -1939,7 +1946,7 @@ const PDF_SC=[['Ajustée à la page (100 si page libre)','fit'],['1:20',20],['1:
 $('#pf-fmt').innerHTML=PDF_PAPER.map(([l],i)=>`<option value="${i}">${l}</option>`).join('');
 $('#pf-sc').innerHTML=PDF_SC.map(([l,v])=>`<option value="${v}">${l}</option>`).join(''); $('#pf-sc').value='100';
 function pdUi(){ const can=!!(PJ.px&&D.pmap), over=$('#pdm-over'); over.disabled=!can; if(!can&&over.checked) $('#pdm-solo').checked=true;
-  const ov=over.checked; ['#pf-fmt-l','#pf-sc-l','#pf-cart-l'].forEach(q=>$(q).hidden=ov); if(ov){ if($('#pf-grid').dataset.t!=='o'){ $('#pf-grid').checked=false; $('#pf-col').checked=false; $('#pf-grid').dataset.t='o'; } } else if($('#pf-grid').dataset.t==='o'){ $('#pf-grid').checked=true; $('#pf-col').checked=true; $('#pf-grid').dataset.t=''; }
+  const ov=over.checked; ['#pf-fmt-l','#pf-sc-l','#pf-cart-l'].forEach(q=>$(q).hidden=ov); $('#pf-pg-l').hidden=!ov; if(PJ.px&&PJ.px.page){ const o=$('#pf-pg').options; o[0].textContent='Seulement la page du plan aligné (p. '+(PJ.px.page.no||1)+')'; o[1].textContent='Tout le jeu de plans ('+(PJ.px.page.n||'?')+' pages)'; } if(ov){ if($('#pf-grid').dataset.t!=='o'){ $('#pf-grid').checked=false; $('#pf-col').checked=false; $('#pf-grid').dataset.t='o'; } } else if($('#pf-grid').dataset.t==='o'){ $('#pf-grid').checked=true; $('#pf-col').checked=true; $('#pf-grid').dataset.t=''; }
   $('#pf-f2k-l').hidden=!PJ.hasF2k; $('#g-ex').hidden=!can; $('#pf-exst').hidden=!(can&&ov); $('#pdm-note').textContent=can?(ov?'Le PDF d’origine est repris tel quel; les annotations sont ajoutées par-dessus, dans la même page.':'Page blanche à l’échelle choisie, avec uniquement les annotations.'):'« Par-dessus le PDF » nécessite un PDF de plan importé dans ce projet.'; }
 document.querySelectorAll('input[name=pdm]').forEach(r=>r.onchange=pdUi); pdUi();
 async function pdfBufPut(id,buf){ try{ const db=await idbOpen(); await new Promise((res,rej)=>{ const q=db.transaction('pdfdata','readwrite').objectStore('pdfdata').put(buf,id+'#buf'); q.onsuccess=res; q.onerror=()=>rej(q.error); }); }catch(e){} }
@@ -1951,16 +1958,16 @@ const pdWA=t=>String(t==null?'':t).replace(/[^\x20-\x7E\xA0-\xFF]/g,' ');
 const pdHex=h=>{ const n=parseInt(String(h||'#888888').replace('#',''),16)||0; return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; };
 async function buildAnnotPdf(o,srcBuf){
   await pdfLibLoad(); const {PDFDocument,StandardFonts,rgb,degrees}=PDFLib; const C=a=>rgb(a[0],a[1],a[2]);
-  vSync(); const sets=[]; if(o.f2k&&PJ.hasF2k&&Array.isArray(f2k)&&f2k.length) sets.push({v:{name:'.f2k importé',color:'#e07b00'},objs:f2k.map(x=>({...x,kind:x.kind==='fc'?'gc':x.kind==='fm'?'gm':x.kind})),act:true});
-  if(o.act&&vAct()) sets.push({v:vAct(),objs:variantObjs(vAct()),act:true}); if(o.oth) VARS.list.filter(v=>v.id!==VARS.act).forEach(v=>sets.push({v,objs:variantObjs(v)}));
+  vSync(); const sets=[]; if(o.f2k&&PJ.hasF2k&&Array.isArray(f2k)&&f2k.length) sets.push({v:{name:'.f2k importé',color:'#e07b00'},objs:f2k.map(x=>({...x,kind:x.kind==='fc'?'gc':x.kind==='fm'?'gm':x.kind})),act:true,src:'f2k'});
+  if(o.act&&vAct()) sets.push({v:vAct(),objs:variantObjs(vAct()),act:true,src:'act'}); if(o.oth) VARS.list.filter(v=>v.id!==VARS.act).forEach(v=>sets.push({v,objs:variantObjs(v)}));
   const multi=sets.length>1, strips=[];
   sets.forEach(st=>st.objs.forEach(f=>{ if(st.act&&f.id&&isHid(f.id)) return; const kind=f.kind||'gc'; if((kind==='gc'&&!o.gc)||(kind==='gm'&&!o.gm)) return; const q=f.rect||rectOf(f);
-    strips.push({id:f.id,kind,layer:f.layer,x0:q.x,x1:q.x+q.w,y0:-(q.y+q.h),y1:-q.y,v:st.v}); }));
+    strips.push({id:f.id,src:st.src||'oth',kind,layer:f.layer,x0:q.x,x1:q.x+q.w,y0:-(q.y+q.h),y1:-q.y,v:st.v}); }));
   const lines=o.lim?(D.lines||[]).filter(l=>!l.del):[], cols=o.col?(D.cols||[]):[], foot=o.col?(D.foot||[]):[], ms=o.mes?meas.slice():[];
   const vg=gridVis(), gx=o.grid?vg.gx:[], gy=o.grid?vg.gy:[];
   const gex=gx.length||gy.length?[Math.min(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m)),Math.max(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m))]:[0,0], gey=gx.length||gy.length?[Math.min(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m)),Math.max(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m))]:[0,0], E=PAD-1.2;
   let doc, page, T, sc, W, H, info={};
-  if(o.over){ const M=D.pmap; doc=await PDFDocument.load(srcBuf,{ignoreEncryption:true}); const n=((PJ.px&&PJ.px.page&&PJ.px.page.no)||1)-1; if(n>=doc.getPageCount()) throw new Error('page '+(n+1)+' absente du PDF'); page=doc.getPage(n);
+  if(o.over){ const M=D.pmap; doc=await PDFDocument.load(srcBuf,{ignoreEncryption:true}); const n=((PJ.px&&PJ.px.page&&PJ.px.page.no)||1)-1; if(n>=doc.getPageCount()) throw new Error('page '+(n+1)+' absente du PDF'); info.pg=n+1; if(o.pages==='one'){ const one=await PDFDocument.create(); const [cp]=await one.copyPages(doc,[n]); doc=one; page=one.addPage(cp); } else page=doc.getPage(n);
     const E=exAB(), dn=E.ar*E.ar+E.ai*E.ai; T=(X,Y)=>{ const zr=((X-E.br)*E.ar+(Y-E.bi)*E.ai)/dn, zi=((Y-E.bi)*E.ar-(X-E.br)*E.ai)/dn; return [(zr-M.xb)/M.xa,(zi-M.yb)/M.ya]; }; sc=1/(Math.abs(M.xa)*Math.sqrt(dn)); }
   else { let b=[1e9,1e9,-1e9,-1e9]; const add=(x,y)=>{ b[0]=Math.min(b[0],x); b[1]=Math.min(b[1],y); b[2]=Math.max(b[2],x); b[3]=Math.max(b[3],y); };
     strips.forEach(q=>{ add(q.x0,q.y0); add(q.x1,q.y1); }); lines.forEach(l=>{ if(l.o==='V'){ add(l.pos,l.a); add(l.pos,l.b); } else { add(l.a,l.pos); add(l.b,l.pos); } }); cols.forEach(c=>{ add(c.x-c.w/2,c.y-c.h/2); add(c.x+c.w/2,c.y+c.h/2); }); foot.forEach(f=>{ add(f[0],f[1]); add(f[2],f[3]); }); ms.forEach(m=>{ add(m.a[0],m.a[1]); add(m.b[0],m.b[1]); });
@@ -1981,12 +1988,12 @@ async function buildAnnotPdf(o,srcBuf){
   foot.forEach(f=>L([f[0],f[1]],[f[2],f[3]],0.5,[0.55,0.55,0.55]));
   cols.forEach(c=>{ const p=T(c.x-c.w/2,c.y-c.h/2), q=T(c.x+c.w/2,c.y+c.h/2); page.drawRectangle({x:Math.min(p[0],q[0]),y:Math.min(p[1],q[1]),width:Math.abs(q[0]-p[0]),height:Math.abs(q[1]-p[1]),color:rgb(0.25,0.25,0.25),opacity:0.85}); });
   // bandes
-  const colOf=q=>multi?pdHex(q.v.color):(q.layer==='A'?[0.1,0.45,0.85]:[0.55,0.2,0.85]);
+  const colOf=q=>{ if(q.src==='f2k'&&SETV['c-f2k']) return pdHex(SETV['c-f2k']); if(q.src==='act'&&SETV['c-gen']) return pdHex(SETV['c-gen']); return multi?pdHex(q.v.color):(q.layer==='A'?[0.1,0.45,0.85]:[0.55,0.2,0.85]); };
   strips.forEach(q=>{ const p=T(q.x0,q.y0), r=T(q.x1,q.y1), c=colOf(q), x=Math.min(p[0],r[0]), y=Math.min(p[1],r[1]), w=Math.abs(r[0]-p[0]), h=Math.abs(r[1]-p[1]);
     page.drawRectangle({x,y,width:w,height:h,color:C(c),opacity:q.kind==='gm'?0.08:0.2,borderColor:C(c),borderWidth:q.kind==='gm'?0.7:1,borderOpacity:1,borderDashArray:q.kind==='gm'?[4,2]:undefined});
     if(o.lab&&q.id){ const size=7, tw=f2.widthOfTextAtSize(pdWA(q.id),size), vert=h>w; if((vert?h:w)>tw+3) TX(q.id,x+w/2,y+h/2,size,f2,c.map(v=>v*0.6),vert); } });
   // limites pointillées (bleu Bluebeam; nouvelles = violet)
-  lines.forEach(l=>{ const c=l.n?[0.5,0,1]:[0,0.5,1]; if(l.o==='V') L([l.pos,l.a],[l.pos,l.b],1.2,c,[6,4]); else L([l.a,l.pos],[l.b,l.pos],1.2,c,[6,4]); });
+  lines.forEach(l=>{ const c=l.n?(SETV['c-lnn']?pdHex(SETV['c-lnn']):[0.5,0,1]):(SETV['c-lnp']?pdHex(SETV['c-lnp']):[0,0.5,1]); if(l.o==='V') L([l.pos,l.a],[l.pos,l.b],1.2,c,[6,4]); else L([l.a,l.pos],[l.b,l.pos],1.2,c,[6,4]); });
   // cotes
   ms.forEach(m=>{ const c=[0.49,0.3,1]; L(m.a,m.b,1,c); [m.a,m.b].forEach(pt=>{ const p=T(pt[0],pt[1]); page.drawCircle({x:p[0],y:p[1],size:2,color:C(c)}); }); const p=T((m.a[0]+m.b[0])/2,(m.a[1]+m.b[1])/2); TX(fmtL(m.d*msK),p[0],p[1]+6,8,f2,c); });
   // cartouche
@@ -2001,10 +2008,10 @@ async function buildAnnotPdf(o,srcBuf){
 }
 $('#g-pdf').onclick=async()=>{ const msgEl=$('#pf-msg'), over=$('#pdm-over').checked&&!$('#pdm-over').disabled; msgEl.textContent='Génération du PDF…';
   try{ let src=null; if(over){ src=await pdfBufGet(PJ.id); if(!src){ msgEl.textContent='Le PDF d’origine n’est pas conservé dans ce projet : choisissez-le dans la fenêtre qui s’ouvre.'; src=await pdfPickFile(); if(!src){ msgEl.textContent='Export annulé (PDF d’origine non fourni).'; return; } await pdfBufPut(PJ.id,src); } }
-    const o={over,gc:$('#pf-gc').checked,gm:$('#pf-gm').checked,lab:$('#pf-lab').checked,lim:$('#pf-lim').checked,mes:$('#pf-mes').checked,f2k:$('#pf-f2k').checked,grid:$('#pf-grid').checked,col:$('#pf-col').checked,cart:$('#pf-cart').checked,act:$('#pf-act').checked,oth:$('#pf-oth').checked,fmt:$('#pf-fmt').value,sc:$('#pf-sc').value};
-    const r=await buildAnnotPdf(o,src); const nm=(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+(over?'_bandes_annotees.pdf':'_bandes.pdf');
+    const o={over,gc:$('#pf-gc').checked,gm:$('#pf-gm').checked,lab:$('#pf-lab').checked,lim:$('#pf-lim').checked,mes:$('#pf-mes').checked,f2k:$('#pf-f2k').checked,grid:$('#pf-grid').checked,col:$('#pf-col').checked,cart:$('#pf-cart').checked,act:$('#pf-act').checked,oth:$('#pf-oth').checked,fmt:$('#pf-fmt').value,pages:$('#pf-pg').value,sc:$('#pf-sc').value};
+    const r=await buildAnnotPdf(o,src); const nm=(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+(over?(o.pages==='one'?'_p'+r.info.pg:'')+'_bandes_annotees.pdf':'_bandes.pdf');
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([r.bytes],{type:'application/pdf'})); a.download=nm; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
-    msgEl.textContent=`PDF téléchargé : ${r.n} bandes, ${r.nl} limites, ${r.nm} cotes`+(over?' ajoutées au PDF du plan.':` · page ${Math.round(r.info.W)}×${Math.round(r.info.H)} pt à ≈ 1:${Math.round(r.info.N)}.`)+(r.info.over?' Attention : le plan dépasse la page à cette échelle.':'');
+    msgEl.textContent=`PDF téléchargé : ${r.n} bandes, ${r.nl} limites, ${r.nm} cotes`+(over?(o.pages==='one'?' ajoutées à la page '+r.info.pg+' du PDF (page seule).':' ajoutées au PDF du plan (jeu complet).'):` · page ${Math.round(r.info.W)}×${Math.round(r.info.H)} pt à ≈ 1:${Math.round(r.info.N)}.`)+(r.info.over?' Attention : le plan dépasse la page à cette échelle.':'');
   }catch(e){ msgEl.textContent='Export PDF impossible : '+(e&&e.message||e); } };
 
 /* ---------- Fond PDF + alignement modèle ↔ PDF (export par-dessus) ---------- */
