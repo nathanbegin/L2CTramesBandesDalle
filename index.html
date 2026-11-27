@@ -290,6 +290,7 @@ header{display:block;padding:10px 16px 8px}
 .gs.vx{fill:color-mix(in srgb,var(--vc) 14%,transparent);stroke:var(--vc);stroke-width:1.6;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;pointer-events:none}.gs.vx.gm{fill:color-mix(in srgb,var(--vc) 6%,transparent)}
 .ctxm{position:fixed;z-index:50;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px #0003;padding:4px;font-size:13px}.ctxm[hidden]{display:none}
 .ctxm .h{padding:4px 10px;color:var(--muted);font:11.5px var(--font-mono)}.ctxm>button,#vm-hid>button,#vmm #sb{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:6px 10px;border-radius:5px;cursor:pointer;font:inherit}.ctxm>button:hover:not(:disabled),#vm-hid>button:hover:not(:disabled),#vmm #sb:hover:not(:disabled){background:color-mix(in srgb,var(--accent,#f97316) 16%,transparent)}.ctxm>button:disabled,#vm-hid>button:disabled,#vmm #sb:disabled{color:var(--muted);cursor:not-allowed}.ctxm .dg{color:#c0262d}
+.msk{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.msk label{display:flex;flex-direction:column;gap:2px;font-size:12px}.msk input,.msk select{font:inherit}
 .vsec{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px 3px;border-top:1px solid var(--line);margin-top:4px}#vmm .grr{padding:0 10px 8px}
 </style>
 </head>
@@ -341,7 +342,9 @@ header{display:block;padding:10px 16px 8px}
 <div class="fpbox msbox" id="msbox" hidden><b>Mesure et déplacement</b>
 <div class="fpmode"><label><input type="radio" name="msm" value="meas" checked> Prendre une mesure (2 points)</label><label><input type="radio" name="msm" value="move"> Déplacer une bande</label></div>
 <p id="ms-msg"></p>
-<div id="ms-meas"><div id="ms-res"></div><div class="acts"><button class="btn" id="ms-new" type="button">Nouvelle mesure</button><button class="btn" id="ms-copy" type="button">Copier</button><button class="btn" id="ms-clr" type="button">Effacer</button></div></div>
+<div id="ms-meas"><div class="msk"><label>Échelle de mesure<select id="ms-sc"></select></label>
+<div class="acts"><button class="btn" id="ms-etl" type="button">Étalonner (2 points)</button><button class="btn" id="ms-k1" type="button" hidden>Réinitialiser ×1</button></div>
+<div id="ms-kin" hidden><label>Distance réelle connue<input id="ms-known" type="text" placeholder="ex. 6.000 · 600 cm · 12'-6&quot;"></label><div class="acts"><button class="btn pri" id="ms-kok" type="button">Appliquer</button></div></div><div id="ms-kst" style="font-size:12px;color:var(--muted)"></div></div><div id="ms-res"></div><div class="acts"><button class="btn" id="ms-new" type="button">Nouvelle mesure</button><button class="btn" id="ms-copy" type="button">Copier</button><button class="btn" id="ms-clr" type="button">Effacer</button></div></div>
 <div id="ms-move" hidden><div class="msd"><label>Delta X<input id="ms-dx" type="number" step="0.01" value="0"><span>m</span></label><label>Delta Y<input id="ms-dy" type="number" step="0.01" value="0"><span>m</span></label></div>
 <div class="acts"><button class="btn" id="ms-pick" type="button">Choisir 2 points sur le plan</button></div>
 <div class="acts"><button class="btn pri" id="ms-ok" type="button">Appliquer</button><button class="btn" id="ms-undo" type="button">Annuler le dernier</button></div></div>
@@ -372,7 +375,13 @@ header{display:block;padding:10px 16px 8px}
 <li><b>Importer ce .f2k dans l’outil</b> : il devient la référence unique. Le PDF (Bluebeam) sert seulement de guide pour les limites et se cale sur le modèle.</li>
 <li>Tracer les bandes, puis <b>exporter le .f2k</b> de l’outil et le <b>réimporter dans SAFE</b>.</li></ol><p class="why">Pourquoi ce flux : en partant du .f2k nettoyé, l’outil et SAFE partagent exactement les mêmes références. Les bandes se réimportent sans conflit ni problème de concordance.</p></div>
 <p class="emptyx"><button type="button" class="lnk" id="es-ex">Voir le projet exemple</button> · <button type="button" class="lnk" id="es-faq">FAQ</button></p></div></div>
-    <div class="scale" id="scale"></div>
+    <div class="scale" id="scale" role="button" tabindex="0" title="Changer les unités d’affichage" style="cursor:pointer"></div>
+    <div class="ctxm" id="unm" hidden role="dialog" aria-label="Unités d’affichage" style="min-width:240px;padding:10px"><b style="font-size:13px">Unités d’affichage</b>
+      <label style="display:block;margin:8px 0 2px;font-size:12px;color:var(--muted)">Unité</label>
+      <select id="un-u" style="width:100%"><optgroup label="Métrique"><option value="m">mètres (m)</option><option value="cm">centimètres (cm)</option><option value="mm">millimètres (mm)</option></optgroup><optgroup label="Impérial"><option value="ftin">pieds-pouces (12'-3 1/2")</option><option value="ft">pieds décimaux (pi)</option><option value="in">pouces décimaux (po)</option></optgroup></select>
+      <label id="un-dl" style="display:block;margin:8px 0 2px;font-size:12px;color:var(--muted)">Décimales</label>
+      <select id="un-d" style="width:100%"><option value="">Automatique</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      <p style="margin:8px 0 0;font-size:11.5px;color:var(--muted);line-height:1.4">Affichage seulement (mesures, règle d’échelle). Le modèle, les exports et le champ ΔX/ΔY restent en mètres.</p></div>
   </main>
   <aside>
     <div class="tabs" role="tablist" aria-label="Panneaux">
@@ -615,7 +624,7 @@ function planSVG(){
   if(meas.length) meas.forEach((m,i)=>{ const mx=(m.a[0]+m.b[0])/2, my=(m.a[1]+m.b[1])/2;
     r.push(`<line class="mline" x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}"/><circle class="mline" fill="#7c4dff" cx="${m.a[0]}" cy="${-m.a[1]}" r=".18"/><circle class="mline" fill="#7c4dff" cx="${m.b[0]}" cy="${-m.b[1]}" r=".18"/>`);
     r.push(`<line class="mline" style="stroke-dasharray:4 3;opacity:.5" x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.a[1]}"/><line class="mline" style="stroke-dasharray:4 3;opacity:.5" x1="${m.b[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}"/>`);
-    r.push(`<text class="mtxt" x="${mx}" y="${-my-.4}" text-anchor="middle">${m.d.toFixed(3)} m</text>`); });
+    r.push(`<text class="mtxt" x="${mx}" y="${-my-.4}" text-anchor="middle">${fmtL(m.d*msK)}</text>`); });
   if(msOn&&msMode==='move'){ const t=msTarget(), [dx,dy]=msDelta(); if(t&&(dx||dy)){ const o=t.s||t.f, g=Object.assign({},o,o.layer==='A'?{axis:o.axis+dx,lo:o.lo+dy,hi:o.hi+dy}:{axis:o.axis+dy,lo:o.lo+dx,hi:o.hi+dx}), q=rectOf(g);
       r.push(`<rect class="mghost" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); } }
   if(l4&&l4.g){ const ya=-(by1+PAD), yb=-(by0-PAD), xa=bx0-PAD, xb=bx1+PAD;
@@ -661,13 +670,21 @@ function fit(){
   let w=x1-x0, h=y1-y0; const k=Math.max(w/W,h/H);
   vb={x:x0-(W*k-w)/2, y:y0-(H*k-h)/2, w:W*k, h:H*k}; applyVB();
 }
+const UNITS={m:['mètres','m',3],cm:['centimètres','cm',1],mm:['millimètres','mm',0],ftin:['pieds-pouces','',0],ft:['pieds décimaux','pi',3],in:['pouces décimaux','po',2]};
+let UN={u:'m',d:null}; try{ const q=JSON.parse(localStorage.getItem('l2c-units')||'null'); if(q&&UNITS[q.u]) UN={u:q.u,d:(q.d===null||q.d===undefined||q.d==='')?null:+q.d}; }catch(_){}
+function fmtL(m,unit=true){ const u=UN.u, d=(UN.d==null?UNITS[u][2]:UN.d);
+  if(u==='ftin'){ const sg=m<0?'-':''; let q=Math.round(Math.abs(m)/0.0254*16); const ft=Math.floor(q/192); q-=ft*192; const inch=Math.floor(q/16), fr=q%16; let f=''; if(fr){ let n=fr,dn=16; while(n%2===0){ n/=2; dn/=2; } f=' '+n+'/'+dn; } return sg+ft+"'-"+inch+f+'"'; }
+  const f={m:1,cm:100,mm:1000,ft:1/0.3048,in:1/0.0254}[u]; return (m*f).toFixed(d)+(unit?' '+UNITS[u][1]:''); }
+function parseL(t){ t=String(t).trim().replace(',','.'); let m=t.match(/^(-?\d+(?:\.\d+)?)\s*'\s*-?\s*(?:(\d+(?:\.\d+)?)(?:\s+(\d+)\/(\d+))?\s*")?$/); if(m) return (+m[1]*12+(+m[2]||0)+(m[3]?m[3]/m[4]:0))*0.0254;
+  m=t.match(/^(-?\d+(?:\.\d+)?)\s*(m|cm|mm|ft|pi|in|po|"|')?$/i); if(!m) return NaN; const u=(m[2]||'').toLowerCase()||(UN.u==='ftin'?'ft':UN.u); return +m[1]*({m:1,cm:.01,mm:.001,ft:.3048,pi:.3048,"'":.3048,in:.0254,po:.0254,'"':.0254,ftin:.3048}[u]); }
 let scaleOrg='';
 function setOrigin(x,y){ scaleOrg=(x&&y)?`${x} / ${y}`:''; if(typeof vb!=='undefined'&&vb) applyVB(); }
 function applyVB(){
   $('#plan').setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
   const W=$('#plan').clientWidth||800, mpp=vb.w/W, target=100*mpp; // longueur de 100 px
-  const nice=[0.5,1,2,5,10,20,50].find(n=>n>=target)||50;
-  $('#scale').innerHTML = `<span>Unités : mètres${scaleOrg?' · origine : axe '+scaleOrg:''}</span><span>${nice} m ≈ ${Math.round(nice/mpp)} px</span>`;
+  const imp=UN.u==='ft'||UN.u==='in'||UN.u==='ftin', lst=imp?[1,2,5,10,20,50,100,200].map(f=>f*0.3048):[0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100];
+  const nice=lst.find(n=>n>=target)||lst[lst.length-1];
+  $('#scale').innerHTML = `<span>Unités : ${UNITS[UN.u][0]} ⚙${scaleOrg?' · origine : axe '+scaleOrg:''}</span><span>${fmtL(nice)} ≈ ${Math.round(nice/mpp)} px</span>`;
 }
 function draw(){ $('#plan').innerHTML = planSVG(); if(typeof updateSB==='function') updateSB(); if(typeof renderSteps==='function') renderSteps(); if(typeof renderLegend==='function') renderLegend(); if(typeof renderRev==='function') renderRev(); }
 
@@ -787,7 +804,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.14.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.15.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -841,6 +858,12 @@ svg.addEventListener('pointerup',e=>{
   if(el&&el.dataset.le!==undefined){ edSel=+el.dataset.le; updEd(); draw(); return; }
   if(el&&el.dataset.ln!==undefined) linePick(+el.dataset.ln); else if(el&&el.dataset.col!==undefined) manualPick(+el.dataset.col); else if(el&&el.dataset.obj) selectObj(el.dataset.obj); else if(el) select(el.dataset.id); else if(selObj){ selObj=null; draw(); renderInfo(); } else if(selId) select(selId);
 });
+function unOpen(){ const m=$('#unm'); ctxClose(); $('#un-u').value=UN.u; $('#un-d').value=UN.d==null?'':String(UN.d); $('#un-dl').hidden=$('#un-d').hidden=UN.u==='ftin'; m.hidden=false; const r=$('#scale').getBoundingClientRect(); m.style.left=Math.max(6,Math.min(innerWidth-m.offsetWidth-6,r.right-m.offsetWidth))+'px'; m.style.top=Math.max(6,r.top-m.offsetHeight-6)+'px'; }
+$('#scale').onclick=e=>{ e.stopPropagation(); if($('#unm').hidden) unOpen(); else $('#unm').hidden=true; };
+$('#scale').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#scale').click(); } };
+function unApply(){ UN={u:$('#un-u').value,d:$('#un-d').value===''?null:+$('#un-d').value}; $('#un-dl').hidden=$('#un-d').hidden=UN.u==='ftin'; try{ localStorage.setItem('l2c-units',JSON.stringify(UN)); }catch(_){} applyVB(); msRows(); draw(); }
+$('#un-u').onchange=$('#un-d').onchange=unApply;
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#unm')&&!e.target.closest('#scale')) $('#unm').hidden=true; });
 $('#fit').onclick=fit;
 $('#zin').onclick=()=>zoom(1/1.3,svg.clientWidth/2,svg.clientHeight/2);
 $('#zout').onclick=()=>zoom(1.3,svg.clientWidth/2,svg.clientHeight/2);
@@ -1115,24 +1138,32 @@ $('#cal-ok').onclick=()=>{ const ddx=(parseFloat($('#cal-dx').value)||0)/1000, d
 $('#cal-rst').onclick=()=>{ const c=calTot(); calSetPm({cal:null}); calMove(-c.dx,-c.dy); $('#cal-msg').textContent='Calage manuel réinitialisé.'; };
 $('#cal-auto').onchange=e=>{ const cs=D.pdfFit&&D.pdfFit.cs; if(!cs) return; const on=e.target.checked; calSetPm({calAuto:on}); calMove(on?cs.dx:-cs.dx,on?cs.dy:-cs.dy); };
 /* ---------- Mesure et déplacement de bande ---------- */
-let msKeep=false, msOn=false, msMode='meas', msP1=null, mvPick=0, mvP1=null; const meas=[], mvHist=[];
+let msK=1, msCal=0, msCalD=0, msLast=null; let msKeep=false, msOn=false, msMode='meas', msP1=null, mvPick=0, mvP1=null; const meas=[], mvHist=[];
 const msDelta=()=>[parseFloat($('#ms-dx').value)||0, parseFloat($('#ms-dy').value)||0];
 function msTarget(){ const g=gen.list.find(x=>x.id===selId&&(x.kind||'gc')==='gc'); if(g) return {s:g}; const f=(D.f2k||[]).find(x=>x.id===selId&&x.kind==='fc'); return f?{f,copy:true}:null; }
-function msRows(){ $('#ms-res').innerHTML=meas.slice(-5).reverse().map(m=>`<div>Δx ${m.dx.toFixed(3)} · Δy ${m.dy.toFixed(3)} m<br><b>${m.d.toFixed(3)} m</b> · ${m.ang.toFixed(2)}°</div>`).join('')||'<div style="color:var(--muted)">Aucune mesure.</div>'; }
-function msSet(){ const mv=msMode==='move'; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
-  if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b> (accrochage aux axes, colonnes, empreinte, limites). Échap pour quitter.'; msRows(); }
+function msRows(){ const K=msK; $('#ms-res').innerHTML=meas.slice(-5).reverse().map(m=>`<div>Δx ${fmtL(m.dx*K)} · Δy ${fmtL(m.dy*K)}<br><b>${fmtL(m.d*K)}</b> · ${m.ang.toFixed(2)}°</div>`).join('')||'<div style="color:var(--muted)">Aucune mesure.</div>';
+  $('#ms-kst').textContent=K===1?'':`Facteur d’échelle appliqué aux mesures : ×${K.toFixed(4)}`; $('#ms-k1').hidden=K===1; }
+const MSC=[['1:20',20],['1:25',25],['1:50',50],['1:75',75],['1:100',100],['1:125',125],['1:150',150],['1:200',200],['1:250',250],['1:500',500],['1/16" = 1\'-0"',192],['3/32" = 1\'-0"',128],['1/8" = 1\'-0"',96],['3/16" = 1\'-0"',64],['1/4" = 1\'-0"',48],['3/8" = 1\'-0"',32],['1/2" = 1\'-0"',24],['3/4" = 1\'-0"',16],['1" = 1\'-0"',12]];
+const msS0=()=>(PJ.pm&&PJ.pm.S)||0.03387;
+function msScBuild(){ const sc=$('#ms-sc'); sc.innerHTML='<option value="">Échelle du plan importé (×1)</option>'+(PJ.px?MSC.map(([l,n])=>`<option value="${n*0.0254/72}">Dessin réellement à ${l}</option>`).join(''):''); sc.value=''; sc.disabled=!PJ.px; sc.title=PJ.px?'Si le PDF a été importé à la mauvaise échelle, indiquez l’échelle réelle du dessin : les mesures sont corrigées.':'Disponible avec un PDF importé; sinon utilisez « Étalonner ».'; }
+function msKset(k){ msK=k>0?k:1; msCal=0; $('#ms-kin').hidden=true; msRows(); draw(); }
+function msSet(){ const mv=msMode==='move'; msScBuild(); msCal=0; $('#ms-kin').hidden=true; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
+  if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b> (accrochage aux axes, colonnes, empreinte, limites). <b>Shift</b> maintenu : bloque à l’horizontale ou à la verticale. Échap pour quitter.'; msRows(); }
   else { mvPick=0; mvP1=null; const t=msTarget(); $('#ms-msg').innerHTML=t?`Bande <b>${(t.s||t.f).id}</b> (couche ${(t.s||t.f).layer})${t.copy?' du .f2k : « Appliquer » crée une <b>copie</b> générée déplacée.':'.'} Entrez ΔX, ΔY ou choisissez 2 points.`:'Sélectionnez une <b>bande colonne</b> sur le plan ou dans la liste (générée ou du .f2k).'; } draw(); }
 function msToggle(on){ if(on&&calOn) calToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(msOn){ if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); msSet(); } else { mvPick=0; mvP1=null; msP1=null; draw(); } }
-function msPoint(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1); return sp; }
+function msPoint(e){ const [X,Y]=toModel(e); let sp=snapPt(X,Y,-1); const a=msMode==='meas'?msP1:mvP1;
+  if(e.shiftKey&&a){ if(Math.abs(sp.x-a.x)>=Math.abs(sp.y-a.y)) sp={x:sp.x,y:a.y,k:'horizontal (Shift)'}; else sp={x:a.x,y:sp.y,k:'vertical (Shift)'}; } return sp; }
 function msClick(e){ const sp=msPoint(e), o=svg.querySelector('#ov'); if(o) o.remove();
   if(msMode==='meas'){ if(!msP1){ msP1={x:sp.x,y:sp.y}; $('#ms-msg').innerHTML='Point 1 : <b>'+(sp.k||'libre')+'</b>. Cliquez le point 2.'; return; }
-    const dx=sp.x-msP1.x, dy=sp.y-msP1.y, m={a:[msP1.x,msP1.y],b:[sp.x,sp.y],dx,dy,d:Math.hypot(dx,dy),ang:Math.atan2(dy,dx)*180/Math.PI}; meas.push(m); msP1=null; msRows(); $('#ms-msg').innerHTML='Mesure ajoutée. Cliquez un nouveau point 1 pour continuer.'; draw(); return; }
+    const dx=sp.x-msP1.x, dy=sp.y-msP1.y, m={a:[msP1.x,msP1.y],b:[sp.x,sp.y],dx,dy,d:Math.hypot(dx,dy),ang:Math.atan2(dy,dx)*180/Math.PI};
+    if(msCal===1){ if(m.d<1e-6){ return; } msCalD=m.d; msCal=2; msP1=null; $('#ms-kin').hidden=false; $('#ms-known').focus(); $('#ms-msg').innerHTML='Distance brute : <b>'+fmtL(m.d)+'</b>. Entrez la distance réelle entre ces 2 points puis « Appliquer ».'; return; }
+    meas.push(m); msP1=null; msRows(); $('#ms-msg').innerHTML='Mesure ajoutée. Cliquez un nouveau point 1 pour continuer.'; draw(); return; }
   if(!mvP1){ mvP1={x:sp.x,y:sp.y}; $('#ms-msg').innerHTML='Point de départ : <b>'+(sp.k||'libre')+'</b>. Cliquez le point d’arrivée.'; return; }
   $('#ms-dx').value=(sp.x-mvP1.x).toFixed(3); $('#ms-dy').value=(sp.y-mvP1.y).toFixed(3); mvPick=0; mvP1=null; $('#ms-pick').setAttribute('aria-pressed','false'); $('#ms-msg').innerHTML='Delta repris des 2 points. Vérifiez le fantôme puis « Appliquer ».'; draw(); }
-function msPreview(e){ const sp=msPoint(e), u=vb.w/(svg.clientWidth||800), a=msMode==='meas'?msP1:mvP1; let g=svg.querySelector('#ov'); if(g) g.remove();
+function msPreview(e){ msLast={clientX:e.clientX,clientY:e.clientY}; const sp=msPoint(e), u=vb.w/(svg.clientWidth||800), a=msMode==='meas'?msP1:mvP1; let g=svg.querySelector('#ov'); if(g) g.remove();
   let h=`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#7c4dff" stroke-width="2" vector-effect="non-scaling-stroke"/>`, t=(a?'Point 2 : ':'Point 1 : ');
-  if(a){ h+=`<line x1="${a.x}" y1="${-a.y}" x2="${sp.x}" y2="${-sp.y}" stroke="#7c4dff" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`; t+=`Δx ${(sp.x-a.x).toFixed(3)} · Δy ${(sp.y-a.y).toFixed(3)} · d ${Math.hypot(sp.x-a.x,sp.y-a.y).toFixed(3)} m · `; }
+  if(a){ h+=`<line x1="${a.x}" y1="${-a.y}" x2="${sp.x}" y2="${-sp.y}" stroke="#7c4dff" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`; t+=`Δx ${fmtL((sp.x-a.x)*msK)} · Δy ${fmtL((sp.y-a.y)*msK)} · d ${fmtL(Math.hypot(sp.x-a.x,sp.y-a.y)*msK)} · `; }
   svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#ms-msg').innerHTML=t+(sp.k||'libre'); }
 function msApply(){ const t=msTarget(), [dx,dy]=msDelta(); if(!t){ $('#ms-msg').textContent='Aucune bande colonne sélectionnée.'; return; } if(!dx&&!dy){ $('#ms-msg').textContent='Delta nul.'; return; }
   const mvd=o=>o.layer==='A'?{axis:o.axis+dx,lo:o.lo+dy,hi:o.hi+dy}:{axis:o.axis+dy,lo:o.lo+dx,hi:o.hi+dx};
@@ -1145,8 +1176,15 @@ function msUndo(){ const h=mvHist.pop(); if(!h){ $('#ms-msg').textContent='Rien 
 $('#ms').onclick=()=>msToggle(!msOn); $('#ms-done').onclick=()=>msToggle(false);
 document.querySelectorAll('input[name=msm]').forEach(r=>r.onchange=()=>{ msMode=document.querySelector('input[name=msm]:checked').value; msSet(); });
 $('#ms-new').onclick=()=>{ msP1=null; const o=svg.querySelector('#ov'); if(o) o.remove(); $('#ms-msg').textContent='Cliquez le point 1.'; };
+$('#ms-sc').onchange=()=>{ const v=parseFloat($('#ms-sc').value); msKset(v?v/msS0():1); };
+$('#ms-etl').onclick=()=>{ msCal=1; msP1=null; $('#ms-kin').hidden=true; const o=svg.querySelector('#ov'); if(o) o.remove(); $('#ms-msg').innerHTML='Étalonnage : cliquez 2 points dont vous connaissez la distance réelle.'; };
+$('#ms-kok').onclick=()=>{ const v=parseL($('#ms-known').value); if(!(v>0)){ $('#ms-msg').textContent='Distance invalide (ex. 6.000, 600 cm, 12\'-6").'; return; } msKset(v/msCalD); $('#ms-known').value=''; $('#ms-sc').value=''; $('#ms-msg').innerHTML='Échelle étalonnée : ×'+msK.toFixed(4)+'. Cliquez le point 1 pour mesurer.'; };
+$('#ms-known').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#ms-kok').click(); } });
+$('#ms-k1').onclick=()=>{ msKset(1); $('#ms-sc').value=''; };
+window.addEventListener('keydown',e=>{ if(e.key==='Shift'&&msOn&&msLast&&!e.repeat) msPreview({clientX:msLast.clientX,clientY:msLast.clientY,shiftKey:true}); });
+window.addEventListener('keyup',e=>{ if(e.key==='Shift'&&msOn&&msLast) msPreview({clientX:msLast.clientX,clientY:msLast.clientY,shiftKey:false}); });
 $('#ms-clr').onclick=()=>{ meas.length=0; msP1=null; msRows(); draw(); };
-$('#ms-copy').onclick=async()=>{ const m=meas[meas.length-1]; if(!m) return; const tx=`Δx = ${m.dx.toFixed(3)} m\nΔy = ${m.dy.toFixed(3)} m\nDistance = ${m.d.toFixed(3)} m\nAngle = ${m.ang.toFixed(2)}°\nP1 (SAFE) = ${(m.a[0]+OXm).toFixed(3)} ; ${(m.a[1]+OYm).toFixed(3)}\nP2 (SAFE) = ${(m.b[0]+OXm).toFixed(3)} ; ${(m.b[1]+OYm).toFixed(3)}`; try{ await navigator.clipboard.writeText(tx); $('#ms-msg').textContent='Mesure copiée.'; }catch(_){ $('#ms-msg').textContent='Copie impossible (presse-papiers).'; } };
+$('#ms-copy').onclick=async()=>{ const m=meas[meas.length-1]; if(!m) return; const tx=`Δx = ${fmtL(m.dx*msK)}\nΔy = ${fmtL(m.dy*msK)}\nDistance = ${fmtL(m.d*msK)}\nAngle = ${m.ang.toFixed(2)}°\nP1 (SAFE) = ${(m.a[0]+OXm).toFixed(3)} ; ${(m.a[1]+OYm).toFixed(3)}\nP2 (SAFE) = ${(m.b[0]+OXm).toFixed(3)} ; ${(m.b[1]+OYm).toFixed(3)}`; try{ await navigator.clipboard.writeText(tx); $('#ms-msg').textContent='Mesure copiée.'; }catch(_){ $('#ms-msg').textContent='Copie impossible (presse-papiers).'; } };
 $('#ms-pick').onclick=()=>{ mvPick=1; mvP1=null; $('#ms-pick').setAttribute('aria-pressed','true'); $('#ms-msg').textContent='Cliquez le point de départ.'; };
 $('#ms-ok').onclick=msApply; $('#ms-undo').onclick=msUndo;
 ['#ms-dx','#ms-dy'].forEach(q=>$(q).addEventListener('input',()=>draw()));
