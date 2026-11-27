@@ -448,6 +448,18 @@ header{display:block;padding:10px 16px 8px}
       <label>Unités du dessin<select id="dx-u"><option value="1000">mm</option><option value="1">m</option></select></label>
       <label>Origine<select id="dx-o"><option value="safe">Coordonnées SAFE</option><option value="loc">Locales de l’outil (origine = 1er axe)</option></select></label></div>
       <div class="acts"><button class="btn pri" id="g-dxf" type="button">Télécharger le DXF</button></div></section>
+      <section class="sec"><h2>Export PDF : annotations de bandes</h2>
+      <p>Dessin vectoriel des bandes, des limites pointillées et des cotes : soit <b>par-dessus le PDF du plan</b>, soit en <b>PDF seul</b>, à l’échelle.</p>
+      <div class="frm" style="grid-template-columns:1fr">
+      <label class="ck"><input type="radio" name="pdm" value="over" id="pdm-over"> Par-dessus le PDF du plan</label>
+      <label class="ck"><input type="radio" name="pdm" value="solo" id="pdm-solo" checked> PDF seul (annotations uniquement)</label>
+      <div class="mut" id="pdm-note"></div>
+      <label class="ck"><input id="pf-gc" type="checkbox" checked>Bandes colonnes</label><label class="ck"><input id="pf-gm" type="checkbox" checked>Bandes milieu</label><label class="ck"><input id="pf-lab" type="checkbox" checked>Étiquettes (noms de bandes)</label>
+      <label class="ck"><input id="pf-lim" type="checkbox" checked>Limites pointillées</label><label class="ck"><input id="pf-mes" type="checkbox" checked>Cotes (mesures)</label>
+      <label class="ck" id="pf-grid-l"><input id="pf-grid" type="checkbox" checked>Trame (axes et bulles)</label><label class="ck" id="pf-col-l"><input id="pf-col" type="checkbox" checked>Colonnes et empreinte du bâtiment</label><label class="ck" id="pf-cart-l"><input id="pf-cart" type="checkbox" checked>Cartouche (projet, échelle, légende)</label>
+      <label class="ck" id="pf-f2k-l"><input id="pf-f2k" type="checkbox" checked>Bandes du .f2k importé</label><label class="ck"><input id="pf-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="pf-oth" type="checkbox">Autres variantes de l’outil</label>
+      <label id="pf-fmt-l">Format de page<select id="pf-fmt"></select></label><label id="pf-sc-l">Échelle<select id="pf-sc"></select></label></div>
+      <div class="acts"><button class="btn pri" id="g-pdf" type="button">Télécharger le PDF</button></div><p id="pf-msg" class="mut" role="status"></p></section>
       <section class="sec"><h2>Vérification</h2>
       <p>Compare les bandes créées à celles déjà présentes dans le .f2k du modèle.</p>
       <div class="acts"><button class="btn" id="g-cmp" type="button">Comparer au .f2k</button></div>
@@ -805,7 +817,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.15.2', APP_DATE='2026-11-25';
+const APP_VERSION='1.16.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1665,7 +1677,7 @@ function renderPj(){
 function renderSteps(){
   if(!$('#steps')||typeof D==='undefined') return;
   const nL=(D.lines||[]).filter(l=>!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0, nf=(D.f2k||[]).length;
-  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap); $('#cal').hidden=!(PJ.px&&PJ.hasF2k&&D.pmap);
+  const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple'; $('#empty').hidden=!empty; $('#layers').hidden=empty; if(typeof pdUi==='function') pdUi(); $('#fp').hidden=!(PJ.px&&PJ.px.styles&&D.pmap); $('#cal').hidden=!(PJ.px&&PJ.hasF2k&&D.pmap);
   const d1=!!PJ.hasPdf||PJ.id==='exemple', d2=!!PJ.hasF2k, d3=nL>0||ng>0, d4=ng>0;
   const nowN=!d1&&!d2?1:(!d3?3:(!d4?3:4));
   const set=(i,done,sub)=>{ const e=$('#st'+i); e.classList.toggle('done',done); e.classList.toggle('now',nowN===i&&!done); $('#st'+i+'s').textContent=sub; };
@@ -1809,7 +1821,7 @@ async function applyPdf(){
   if(asNew){ id='p'+Date.now().toString(36); name=fname.replace(/\.[^.]+$/,''); OX=parseFloat($('#pd-ox').value)||0; OY=parseFloat($('#pd-oy').value)||0; }
   else if(!ds){ OX=parseFloat($('#pd-ox').value)||0; OY=parseFloat($('#pd-oy').value)||0; if(/^Nouveau projet/.test(name)) name=fname.replace(/\.[^.]+$/,''); }
   const pm={S,OX,OY,fname,page:px.page.no||1};
-  if(ST.ok){ try{ await ST.pcol.doc(id).set({px}); }catch(e){ pjMsg('Sauvegarde du PDF impossible ('+((e&&e.code)||'erreur')+').'); } }
+  if(ST.ok){ try{ await ST.pcol.doc(id).set({px}); }catch(e){ pjMsg('Sauvegarde du PDF impossible ('+((e&&e.code)||'erreur')+').'); } if(PDFX.buf) await pdfBufPut(id,PDFX.buf); }
   const d=buildD(id,ds,px,pm,OX,OY);
   applyProject(d,{id,name,OXm:OX,OYm:OY,hasF2k:!!ds,fname:ds?PJ.fname:'',Z:ds?ds.Z:47.244,levels:ds?ds.levels:null,maxPt:ds?ds.maxPt:847,hasPdf:true,pm,ds,px},asNew?null:{lines:[],gen:genState()});
   if(asNew){ ST.list.push({id,name}); } else { const q=ST.list.find(x=>x.id===id); if(q) q.name=name; }
@@ -1887,13 +1899,87 @@ $('#pj-del').onclick=async()=>{
   if(!delArm){ b.textContent='Cliquer pour confirmer'; delArm=setTimeout(()=>{ delArm=null; renderPj(); },4000); return; }
   clearTimeout(delArm); delArm=null; $('#pj-menu').open=false;
   const id=PJ.id;
-  if(ST.ok){ try{ await ST.col.doc(id).delete(); await ST.dcol.doc(id).delete(); await ST.pcol.doc(id).delete(); }catch(e){ pjMsg('Suppression impossible.'); } }
+  if(ST.ok){ try{ await ST.col.doc(id).delete(); await ST.dcol.doc(id).delete(); await ST.pcol.doc(id).delete(); await pdfBufDel(id); }catch(e){ pjMsg('Suppression impossible.'); } }
   ST.list=ST.list.filter(p=>p.id!==id);
   if(ST.list.length) await openProject(ST.list[ST.list.length-1].id); else await newBlank();
   pjMsg('Projet supprimé.');
 };
 
 buildToggles(); buildList(); updateGen(true); fit(); initStore();
+
+/* ---------- Export PDF : annotations (par-dessus le PDF ou PDF seul) ---------- */
+const PDF_PAPER=[['Selon l’échelle (page ajustée au plan)',null],['Lettre 8,5×11 po',[612,792]],['Tabloid 11×17 po',[792,1224]],['ARCH C 18×24 po',[1296,1728]],['ARCH D 24×36 po',[1728,2592]],['ARCH E 36×48 po',[2592,3456]],['A4',[595.28,841.89]],['A3',[841.89,1190.55]],['A2',[1190.55,1683.78]],['A1',[1683.78,2383.94]]];
+const PDF_SC=[['Ajustée à la page (100 si page libre)','fit'],['1:20',20],['1:25',25],['1:50',50],['1:75',75],['1:100',100],['1:125',125],['1:150',150],['1:200',200],['1:250',250],['1:500',500],['1/8" = 1\'-0"',96],['3/16" = 1\'-0"',64],['1/4" = 1\'-0"',48],['3/32" = 1\'-0"',128],['1/16" = 1\'-0"',192]];
+$('#pf-fmt').innerHTML=PDF_PAPER.map(([l],i)=>`<option value="${i}">${l}</option>`).join('');
+$('#pf-sc').innerHTML=PDF_SC.map(([l,v])=>`<option value="${v}">${l}</option>`).join(''); $('#pf-sc').value='100';
+function pdUi(){ const can=!!(PJ.px&&D.pmap), over=$('#pdm-over'); over.disabled=!can; if(!can&&over.checked) $('#pdm-solo').checked=true;
+  const ov=over.checked; ['#pf-fmt-l','#pf-sc-l','#pf-cart-l'].forEach(q=>$(q).hidden=ov); if(ov){ if($('#pf-grid').dataset.t!=='o'){ $('#pf-grid').checked=false; $('#pf-col').checked=false; $('#pf-grid').dataset.t='o'; } } else if($('#pf-grid').dataset.t==='o'){ $('#pf-grid').checked=true; $('#pf-col').checked=true; $('#pf-grid').dataset.t=''; }
+  $('#pf-f2k-l').hidden=!PJ.hasF2k; $('#pdm-note').textContent=can?(ov?'Le PDF d’origine est repris tel quel; les annotations sont ajoutées par-dessus, dans la même page.':'Page blanche à l’échelle choisie, avec uniquement les annotations.'):'« Par-dessus le PDF » nécessite un PDF de plan importé dans ce projet.'; }
+document.querySelectorAll('input[name=pdm]').forEach(r=>r.onchange=pdUi); pdUi();
+async function pdfBufPut(id,buf){ try{ const db=await idbOpen(); await new Promise((res,rej)=>{ const q=db.transaction('pdfdata','readwrite').objectStore('pdfdata').put(buf,id+'#buf'); q.onsuccess=res; q.onerror=()=>rej(q.error); }); }catch(e){} }
+async function pdfBufGet(id){ try{ const db=await idbOpen(); return await new Promise((res,rej)=>{ const q=db.transaction('pdfdata').objectStore('pdfdata').get(id+'#buf'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>rej(q.error); }); }catch(e){ return null; } }
+async function pdfBufDel(id){ try{ const db=await idbOpen(); await new Promise(res=>{ const q=db.transaction('pdfdata','readwrite').objectStore('pdfdata').delete(id+'#buf'); q.onsuccess=q.onerror=res; }); }catch(e){} }
+function pdfPickFile(){ return new Promise(res=>{ const i=document.createElement('input'); i.type='file'; i.accept='application/pdf,.pdf'; i.onchange=async()=>{ const f=i.files[0]; res(f?await f.arrayBuffer():null); }; i.oncancel=()=>res(null); i.click(); }); }
+async function pdfLibLoad(){ if(window.PDFLib) return; await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='./pdf-lib.min.js'; s.onload=res; s.onerror=()=>rej(new Error('pdf-lib.min.js introuvable')); document.head.appendChild(s); }); }
+const pdWA=t=>String(t==null?'':t).replace(/[^\x20-\x7E\xA0-\xFF]/g,' ');
+const pdHex=h=>{ const n=parseInt(String(h||'#888888').replace('#',''),16)||0; return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; };
+async function buildAnnotPdf(o,srcBuf){
+  await pdfLibLoad(); const {PDFDocument,StandardFonts,rgb,degrees}=PDFLib; const C=a=>rgb(a[0],a[1],a[2]);
+  vSync(); const sets=[]; if(o.f2k&&PJ.hasF2k&&Array.isArray(f2k)&&f2k.length) sets.push({v:{name:'.f2k importé',color:'#e07b00'},objs:f2k.map(x=>({...x,kind:x.kind==='fc'?'gc':x.kind==='fm'?'gm':x.kind})),act:true});
+  if(o.act&&vAct()) sets.push({v:vAct(),objs:variantObjs(vAct()),act:true}); if(o.oth) VARS.list.filter(v=>v.id!==VARS.act).forEach(v=>sets.push({v,objs:variantObjs(v)}));
+  const multi=sets.length>1, strips=[];
+  sets.forEach(st=>st.objs.forEach(f=>{ if(st.act&&f.id&&isHid(f.id)) return; const kind=f.kind||'gc'; if((kind==='gc'&&!o.gc)||(kind==='gm'&&!o.gm)) return; const q=f.rect||rectOf(f);
+    strips.push({id:f.id,kind,layer:f.layer,x0:q.x,x1:q.x+q.w,y0:-(q.y+q.h),y1:-q.y,v:st.v}); }));
+  const lines=o.lim?(D.lines||[]).filter(l=>!l.del):[], cols=o.col?(D.cols||[]):[], foot=o.col?(D.foot||[]):[], ms=o.mes?meas.slice():[];
+  const vg=gridVis(), gx=o.grid?vg.gx:[], gy=o.grid?vg.gy:[];
+  const gex=gx.length||gy.length?[Math.min(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m)),Math.max(...(vg.gx.length?vg.gx:D.gx).map(g=>g.m))]:[0,0], gey=gx.length||gy.length?[Math.min(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m)),Math.max(...(vg.gy.length?vg.gy:D.gy).map(g=>g.m))]:[0,0], E=PAD-1.2;
+  let doc, page, T, sc, W, H, info={};
+  if(o.over){ const M=D.pmap; doc=await PDFDocument.load(srcBuf,{ignoreEncryption:true}); const n=((PJ.px&&PJ.px.page&&PJ.px.page.no)||1)-1; if(n>=doc.getPageCount()) throw new Error('page '+(n+1)+' absente du PDF'); page=doc.getPage(n);
+    T=(X,Y)=>[(X-M.xb)/M.xa,(Y-M.yb)/M.ya]; sc=1/Math.abs(M.xa); }
+  else { let b=[1e9,1e9,-1e9,-1e9]; const add=(x,y)=>{ b[0]=Math.min(b[0],x); b[1]=Math.min(b[1],y); b[2]=Math.max(b[2],x); b[3]=Math.max(b[3],y); };
+    strips.forEach(q=>{ add(q.x0,q.y0); add(q.x1,q.y1); }); lines.forEach(l=>{ if(l.o==='V'){ add(l.pos,l.a); add(l.pos,l.b); } else { add(l.a,l.pos); add(l.b,l.pos); } }); cols.forEach(c=>{ add(c.x-c.w/2,c.y-c.h/2); add(c.x+c.w/2,c.y+c.h/2); }); foot.forEach(f=>{ add(f[0],f[1]); add(f[2],f[3]); }); ms.forEach(m=>{ add(m.a[0],m.a[1]); add(m.b[0],m.b[1]); });
+    if(o.grid&&(gx.length||gy.length)){ add(gex[0]-E,gey[0]-E); add(gex[1]+E,gey[1]+E); }
+    if(b[0]>b[2]) throw new Error('rien à exporter (aucun objet sélectionné)');
+    const bw=Math.max(b[2]-b[0],1), bh=Math.max(b[3]-b[1],1), pad=28, cart=o.cart?58:0, P=PDF_PAPER[+o.fmt][1], N=o.sc==='fit'?null:+o.sc;
+    if(!P){ sc=2834.646/(N||100); W=bw*sc+2*pad; H=bh*sc+2*pad+cart; }
+    else { let [pw,ph]=P; if(bw>=bh){ pw=Math.max(P[0],P[1]); ph=Math.min(P[0],P[1]); } else { pw=Math.min(P[0],P[1]); ph=Math.max(P[0],P[1]); } W=pw; H=ph; const fit=Math.min((W-2*pad)/bw,(H-2*pad-cart)/bh); sc=N?2834.646/N:fit; info.over=bw*sc>W-2*pad+0.5||bh*sc>H-2*pad-cart+0.5; }
+    if(W>14400||H>14400) throw new Error('page trop grande ('+Math.round(W)+' × '+Math.round(H)+' pt) : choisissez une échelle plus petite');
+    doc=await PDFDocument.create(); page=doc.addPage([W,H]); const ox=(W-bw*sc)/2-b[0]*sc, oy=pad+cart+((H-2*pad-cart)-bh*sc)/2-b[1]*sc; T=(X,Y)=>[ox+X*sc,oy+Y*sc]; info.N=2834.646/sc; info.W=W; info.H=H; }
+  const f1=await doc.embedFont(StandardFonts.Helvetica), f2=await doc.embedFont(StandardFonts.HelveticaBold);
+  const L=(a,b,w,col,dash,op)=>{ const p=T(a[0],a[1]), q=T(b[0],b[1]); page.drawLine({start:{x:p[0],y:p[1]},end:{x:q[0],y:q[1]},thickness:w,color:C(col),dashArray:dash,opacity:op==null?1:op}); };
+  const TX=(t,x,y,size,font,col,rot)=>{ t=pdWA(t); const tw=font.widthOfTextAtSize(t,size); page.drawText(t,rot?{x:x+size*0.35,y:y-tw/2,size,font,color:C(col),rotate:degrees(90)}:{x:x-tw/2,y:y-size*0.35,size,font,color:C(col)}); return tw; };
+  // trame
+  if(o.grid&&(gx.length||gy.length)){ const gc=[0.85,0.35,0.35];
+    gx.forEach(g=>{ L([g.m,gey[0]-E],[g.m,gey[1]+E],0.4,gc,[6,2,1,2]); [gey[0]-E,gey[1]+E].forEach(y=>{ const p=T(g.m,y); page.drawCircle({x:p[0],y:p[1],size:8,borderColor:C(gc),borderWidth:0.7,color:rgb(1,1,1)}); TX(g.l,p[0],p[1],8,f1,[0.2,0.2,0.2]); }); });
+    gy.forEach(g=>{ L([gex[0]-E,g.m],[gex[1]+E,g.m],0.4,gc,[6,2,1,2]); [gex[0]-E,gex[1]+E].forEach(x=>{ const p=T(x,g.m); page.drawCircle({x:p[0],y:p[1],size:8,borderColor:C(gc),borderWidth:0.7,color:rgb(1,1,1)}); TX(g.l,p[0],p[1],8,f1,[0.2,0.2,0.2]); }); }); }
+  foot.forEach(f=>L([f[0],f[1]],[f[2],f[3]],0.5,[0.55,0.55,0.55]));
+  cols.forEach(c=>{ const p=T(c.x-c.w/2,c.y-c.h/2), q=T(c.x+c.w/2,c.y+c.h/2); page.drawRectangle({x:Math.min(p[0],q[0]),y:Math.min(p[1],q[1]),width:Math.abs(q[0]-p[0]),height:Math.abs(q[1]-p[1]),color:rgb(0.25,0.25,0.25),opacity:0.85}); });
+  // bandes
+  const colOf=q=>multi?pdHex(q.v.color):(q.layer==='A'?[0.1,0.45,0.85]:[0.55,0.2,0.85]);
+  strips.forEach(q=>{ const p=T(q.x0,q.y0), r=T(q.x1,q.y1), c=colOf(q), x=Math.min(p[0],r[0]), y=Math.min(p[1],r[1]), w=Math.abs(r[0]-p[0]), h=Math.abs(r[1]-p[1]);
+    page.drawRectangle({x,y,width:w,height:h,color:C(c),opacity:q.kind==='gm'?0.08:0.2,borderColor:C(c),borderWidth:q.kind==='gm'?0.7:1,borderOpacity:1,borderDashArray:q.kind==='gm'?[4,2]:undefined});
+    if(o.lab&&q.id){ const size=7, tw=f2.widthOfTextAtSize(pdWA(q.id),size), vert=h>w; if((vert?h:w)>tw+3) TX(q.id,x+w/2,y+h/2,size,f2,c.map(v=>v*0.6),vert); } });
+  // limites pointillées (bleu Bluebeam; nouvelles = violet)
+  lines.forEach(l=>{ const c=l.n?[0.5,0,1]:[0,0.5,1]; if(l.o==='V') L([l.pos,l.a],[l.pos,l.b],1.2,c,[6,4]); else L([l.a,l.pos],[l.b,l.pos],1.2,c,[6,4]); });
+  // cotes
+  ms.forEach(m=>{ const c=[0.49,0.3,1]; L(m.a,m.b,1,c); [m.a,m.b].forEach(pt=>{ const p=T(pt[0],pt[1]); page.drawCircle({x:p[0],y:p[1],size:2,color:C(c)}); }); const p=T((m.a[0]+m.b[0])/2,(m.a[1]+m.b[1])/2); TX(fmtL(m.d*msK),p[0],p[1]+6,8,f2,c); });
+  // cartouche
+  if(!o.over&&o.cart){ const x=28, w=W-56, y=28; page.drawRectangle({x,y,width:w,height:46,borderColor:rgb(0.2,0.2,0.2),borderWidth:0.8});
+    const vn=sets.map(s=>s.v.name).join(', ')||'—', nb=strips.filter(q=>q.kind==='gc').length, d=new Date().toISOString().slice(0,10);
+    page.drawText(pdWA((PJ.name||'Projet')+' - Bandes de dalle'),{x:x+8,y:y+30,size:11,font:f2,color:rgb(0.1,0.1,0.1)});
+    page.drawText(pdWA('Variante(s) : '+vn+'  |  '+nb+' bandes colonnes'),{x:x+8,y:y+17,size:8,font:f1,color:rgb(0.2,0.2,0.2)});
+    page.drawText(pdWA('Echelle 1:'+Math.round(info.N)+' (impression a 100 %)  |  '+d+'  |  L2C Trame des bandes v'+APP_VERSION),{x:x+8,y:y+6,size:7.5,font:f1,color:rgb(0.35,0.35,0.35)});
+    let lx=x+w-250; const sw=(c,t,dash)=>{ page.drawLine({start:{x:lx,y:y+31},end:{x:lx+16,y:y+31},thickness:1.4,color:C(c),dashArray:dash}); page.drawText(pdWA(t),{x:lx+20,y:y+28,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); lx+=t.length*3.6+32; };
+    if(!multi){ sw([0.1,0.45,0.85],'Couche A'); sw([0.55,0.2,0.85],'Couche B'); } if(lines.length) sw([0,0.5,1],'Limites',[6,4]); }
+  return {bytes:await doc.save(),info,n:strips.length,nl:lines.length,nm:ms.length};
+}
+$('#g-pdf').onclick=async()=>{ const msgEl=$('#pf-msg'), over=$('#pdm-over').checked&&!$('#pdm-over').disabled; msgEl.textContent='Génération du PDF…';
+  try{ let src=null; if(over){ src=await pdfBufGet(PJ.id); if(!src){ msgEl.textContent='Le PDF d’origine n’est pas conservé dans ce projet : choisissez-le dans la fenêtre qui s’ouvre.'; src=await pdfPickFile(); if(!src){ msgEl.textContent='Export annulé (PDF d’origine non fourni).'; return; } await pdfBufPut(PJ.id,src); } }
+    const o={over,gc:$('#pf-gc').checked,gm:$('#pf-gm').checked,lab:$('#pf-lab').checked,lim:$('#pf-lim').checked,mes:$('#pf-mes').checked,f2k:$('#pf-f2k').checked,grid:$('#pf-grid').checked,col:$('#pf-col').checked,cart:$('#pf-cart').checked,act:$('#pf-act').checked,oth:$('#pf-oth').checked,fmt:$('#pf-fmt').value,sc:$('#pf-sc').value};
+    const r=await buildAnnotPdf(o,src); const nm=(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+(over?'_bandes_annotees.pdf':'_bandes.pdf');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([r.bytes],{type:'application/pdf'})); a.download=nm; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+    msgEl.textContent=`PDF téléchargé : ${r.n} bandes, ${r.nl} limites, ${r.nm} cotes`+(over?' ajoutées au PDF du plan.':` · page ${Math.round(r.info.W)}×${Math.round(r.info.H)} pt à ≈ 1:${Math.round(r.info.N)}.`)+(r.info.over?' Attention : le plan dépasse la page à cette échelle.':'');
+  }catch(e){ msgEl.textContent='Export PDF impossible : '+(e&&e.message||e); } };
 </script>
 </body>
 </html>
