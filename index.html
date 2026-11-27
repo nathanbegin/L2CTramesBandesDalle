@@ -344,7 +344,8 @@ header{display:block;padding:10px 16px 8px}
 <p id="ms-msg"></p>
 <div id="ms-meas"><div class="msk"><label>Échelle de mesure<select id="ms-sc"></select></label>
 <div class="acts"><button class="btn" id="ms-etl" type="button">Étalonner (2 points)</button><button class="btn" id="ms-k1" type="button" hidden>Réinitialiser ×1</button></div>
-<div id="ms-kin" hidden><label>Distance réelle connue<input id="ms-known" type="text" placeholder="ex. 6.000 · 600 cm · 12'-6&quot;"></label><div class="acts"><button class="btn pri" id="ms-kok" type="button">Appliquer</button></div></div><div id="ms-kst" style="font-size:12px;color:var(--muted)"></div></div><div id="ms-res"></div><div class="acts"><button class="btn" id="ms-new" type="button">Nouvelle mesure</button><button class="btn" id="ms-copy" type="button">Copier</button><button class="btn" id="ms-clr" type="button">Effacer</button></div></div>
+<div id="ms-kin" hidden><label>Distance réelle connue<input id="ms-known" type="text" placeholder="ex. 6.000 · 600 cm · 12'-6&quot;"></label><div class="acts"><button class="btn pri" id="ms-kok" type="button">Appliquer</button></div></div><div id="ms-kst" style="font-size:12px;color:var(--muted)"></div></div><div id="ms-res"></div><div id="ms-selbox" hidden style="margin:6px 0;padding:6px 8px;border:1.5px solid #7c4dff;border-radius:7px"><div id="ms-seltxt" style="font-size:12.5px;margin-bottom:5px"></div><div class="acts" style="margin:0"><button class="btn" id="ms-del" type="button" style="color:#b3261e">Supprimer la cote</button><button class="btn" id="ms-desel" type="button">Désélectionner</button></div></div>
+<div class="acts"><button class="btn" id="ms-new" type="button">Nouvelle mesure</button><button class="btn" id="ms-copy" type="button">Copier</button><button class="btn" id="ms-clr" type="button">Effacer</button></div></div>
 <div id="ms-move" hidden><div class="msd"><label>Delta X<input id="ms-dx" type="number" step="0.01" value="0"><span>m</span></label><label>Delta Y<input id="ms-dy" type="number" step="0.01" value="0"><span>m</span></label></div>
 <div class="acts"><button class="btn" id="ms-pick" type="button">Choisir 2 points sur le plan</button></div>
 <div class="acts"><button class="btn pri" id="ms-ok" type="button">Appliquer</button><button class="btn" id="ms-undo" type="button">Annuler le dernier</button></div></div>
@@ -622,9 +623,9 @@ function planSVG(){
         r.push(`<line class="${cls}" x1="${X(q[0])}" y1="${Y(q[1])}" x2="${X(q[2])}" y2="${Y(q[3])}"/>`);
         r.push(`<line class="fphit" data-fp="${i}:${j}" x1="${X(q[0])}" y1="${Y(q[1])}" x2="${X(q[2])}" y2="${Y(q[3])}"/>`); }); }); }
   if(meas.length) meas.forEach((m,i)=>{ const mx=(m.a[0]+m.b[0])/2, my=(m.a[1]+m.b[1])/2;
-    r.push(`<line class="mline" data-mi="${i}" x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}"/><circle class="mline" fill="#7c4dff" cx="${m.a[0]}" cy="${-m.a[1]}" r=".18"/><circle class="mline" fill="#7c4dff" cx="${m.b[0]}" cy="${-m.b[1]}" r=".18"/>`);
+    const sel=i===msSel; r.push(`<line data-mi="${i}" x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" style="pointer-events:${msOn?'stroke':'none'};cursor:pointer"/><line class="mline"${sel?' style="stroke:#e65100;stroke-width:4"':''} x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}"/><circle class="mline" fill="#7c4dff" cx="${m.a[0]}" cy="${-m.a[1]}" r=".18"/><circle class="mline" fill="#7c4dff" cx="${m.b[0]}" cy="${-m.b[1]}" r=".18"/>`);
     r.push(`<line class="mline" style="stroke-dasharray:4 3;opacity:.5" x1="${m.a[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.a[1]}"/><line class="mline" style="stroke-dasharray:4 3;opacity:.5" x1="${m.b[0]}" y1="${-m.a[1]}" x2="${m.b[0]}" y2="${-m.b[1]}"/>`);
-    r.push(`<text class="mtxt" data-mi="${i}" style="pointer-events:auto;cursor:context-menu" x="${mx}" y="${-my-.4}" text-anchor="middle"><title>Clic droit : supprimer cette cote</title>${fmtL(m.d*msK)}</text>`); });
+    r.push(`<text class="mtxt" data-mi="${i}" style="pointer-events:${msOn?'auto':'none'};cursor:pointer${sel?';fill:#e65100':''}" x="${mx}" y="${-my-.4}" text-anchor="middle">${fmtL(m.d*msK)}</text>`); });
   if(msOn&&msMode==='move'){ const t=msTarget(), [dx,dy]=msDelta(); if(t&&(dx||dy)){ const o=t.s||t.f, g=Object.assign({},o,o.layer==='A'?{axis:o.axis+dx,lo:o.lo+dy,hi:o.hi+dy}:{axis:o.axis+dy,lo:o.lo+dx,hi:o.hi+dx}), q=rectOf(g);
       r.push(`<rect class="mghost" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}"/>`); } }
   if(l4&&l4.g){ const ya=-(by1+PAD), yb=-(by0-PAD), xa=bx0-PAD, xb=bx1+PAD;
@@ -804,7 +805,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.15.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.15.2', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -852,6 +853,7 @@ svg.addEventListener('pointerup',e=>{
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
   if(calOn&&calPick){ calClick(e); return; }
+  { const mi=msOn&&msMode==='meas'&&!msP1&&!msCal&&t&&t.closest&&t.closest('[data-mi]'); if(mi){ msSelect(+mi.dataset.mi===msSel?null:+mi.dataset.mi); return; } }
   if(msOn&&(msMode==='meas'||mvPick)){ msClick(e); return; }
   if(l4on){ l4Click(e); return; }
   if(edLim&&edAdd){ addPoint(e); return; }
@@ -1138,17 +1140,18 @@ $('#cal-ok').onclick=()=>{ const ddx=(parseFloat($('#cal-dx').value)||0)/1000, d
 $('#cal-rst').onclick=()=>{ const c=calTot(); calSetPm({cal:null}); calMove(-c.dx,-c.dy); $('#cal-msg').textContent='Calage manuel réinitialisé.'; };
 $('#cal-auto').onchange=e=>{ const cs=D.pdfFit&&D.pdfFit.cs; if(!cs) return; const on=e.target.checked; calSetPm({calAuto:on}); calMove(on?cs.dx:-cs.dx,on?cs.dy:-cs.dy); };
 /* ---------- Mesure et déplacement de bande ---------- */
-let msK=1, msCal=0, msCalD=0, msLast=null; let msKeep=false, msOn=false, msMode='meas', msP1=null, mvPick=0, mvP1=null; const meas=[], mvHist=[];
+let msSel=null, msK=1, msCal=0, msCalD=0, msLast=null; let msKeep=false, msOn=false, msMode='meas', msP1=null, mvPick=0, mvP1=null; const meas=[], mvHist=[];
 const msDelta=()=>[parseFloat($('#ms-dx').value)||0, parseFloat($('#ms-dy').value)||0];
 function msTarget(){ const g=gen.list.find(x=>x.id===selId&&(x.kind||'gc')==='gc'); if(g) return {s:g}; const f=(D.f2k||[]).find(x=>x.id===selId&&x.kind==='fc'); return f?{f,copy:true}:null; }
-function msRows(){ const K=msK; $('#ms-res').innerHTML=meas.map((m,i)=>({m,i})).slice(-8).reverse().map(({m,i})=>`<div style="display:flex;gap:6px;align-items:flex-start"><span style="flex:1">Δx ${fmtL(m.dx*K)} · Δy ${fmtL(m.dy*K)}<br><b>${fmtL(m.d*K)}</b> · ${m.ang.toFixed(2)}°</span><button type="button" class="btn" data-mdel="${i}" title="Supprimer cette cote" aria-label="Supprimer cette cote" style="padding:0 7px">✕</button></div>`).join('')||'<div style="color:var(--muted)">Aucune mesure.</div>';
+function msRows(){ const K=msK; $('#ms-res').innerHTML=meas.map((m,i)=>({m,i})).slice(-8).reverse().map(({m,i})=>`<div data-msel="${i}" style="cursor:pointer;padding:3px 5px;border-radius:5px;${i===msSel?'background:color-mix(in srgb,#7c4dff 16%,transparent);outline:1.5px solid #7c4dff':''}">Δx ${fmtL(m.dx*K)} · Δy ${fmtL(m.dy*K)}<br><b>${fmtL(m.d*K)}</b> · ${m.ang.toFixed(2)}°</div>`).join('')||'<div style="color:var(--muted)">Aucune mesure.</div>';
+  $('#ms-selbox').hidden=msSel===null||!meas[msSel]; if(!$('#ms-selbox').hidden){ const m=meas[msSel]; $('#ms-seltxt').textContent='Cote sélectionnée : '+fmtL(m.d*K); }
   $('#ms-kst').textContent=K===1?'':`Facteur d’échelle appliqué aux mesures : ×${K.toFixed(4)}`; $('#ms-k1').hidden=K===1; }
 const MSC=[['1:20',20],['1:25',25],['1:50',50],['1:75',75],['1:100',100],['1:125',125],['1:150',150],['1:200',200],['1:250',250],['1:500',500],['1/16" = 1\'-0"',192],['3/32" = 1\'-0"',128],['1/8" = 1\'-0"',96],['3/16" = 1\'-0"',64],['1/4" = 1\'-0"',48],['3/8" = 1\'-0"',32],['1/2" = 1\'-0"',24],['3/4" = 1\'-0"',16],['1" = 1\'-0"',12]];
 const msS0=()=>(PJ.pm&&PJ.pm.S)||0.03387;
 function msScBuild(){ const sc=$('#ms-sc'); sc.innerHTML='<option value="">Échelle du plan importé (×1)</option>'+(PJ.px?MSC.map(([l,n])=>`<option value="${n*0.0254/72}">Dessin réellement à ${l}</option>`).join(''):''); sc.value=''; sc.disabled=!PJ.px; sc.title=PJ.px?'Si le PDF a été importé à la mauvaise échelle, indiquez l’échelle réelle du dessin : les mesures sont corrigées.':'Disponible avec un PDF importé; sinon utilisez « Étalonner ».'; }
 function msKset(k){ msK=k>0?k:1; msCal=0; $('#ms-kin').hidden=true; msRows(); draw(); }
 function msSet(){ const mv=msMode==='move'; msScBuild(); msCal=0; $('#ms-kin').hidden=true; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
-  if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b>. Clic droit sur une cote pour la supprimer (accrochage aux axes, colonnes, empreinte, limites). <b>Shift</b> maintenu : bloque à l’horizontale ou à la verticale. Échap pour quitter.'; msRows(); }
+  if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b>. Cliquez une cote pour la sélectionner (accrochage aux axes, colonnes, empreinte, limites). <b>Shift</b> maintenu : bloque à l’horizontale ou à la verticale. Échap pour quitter.'; msRows(); }
   else { mvPick=0; mvP1=null; const t=msTarget(); $('#ms-msg').innerHTML=t?`Bande <b>${(t.s||t.f).id}</b> (couche ${(t.s||t.f).layer})${t.copy?' du .f2k : « Appliquer » crée une <b>copie</b> générée déplacée.':'.'} Entrez ΔX, ΔY ou choisissez 2 points.`:'Sélectionnez une <b>bande colonne</b> sur le plan ou dans la liste (générée ou du .f2k).'; } draw(); }
 function msToggle(on){ if(on&&calOn) calToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(msOn){ if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); msSet(); } else { mvPick=0; mvP1=null; msP1=null; draw(); } }
@@ -1176,8 +1179,11 @@ function msUndo(){ const h=mvHist.pop(); if(!h){ $('#ms-msg').textContent='Rien 
 $('#ms').onclick=()=>msToggle(!msOn); $('#ms-done').onclick=()=>msToggle(false);
 document.querySelectorAll('input[name=msm]').forEach(r=>r.onchange=()=>{ msMode=document.querySelector('input[name=msm]:checked').value; msSet(); });
 $('#ms-new').onclick=()=>{ msP1=null; const o=svg.querySelector('#ov'); if(o) o.remove(); $('#ms-msg').textContent='Cliquez le point 1.'; };
-$('#ms-res').addEventListener('click',e=>{ const b=e.target.closest('[data-mdel]'); if(!b) return; meas.splice(+b.dataset.mdel,1); msRows(); draw(); });
-svg.addEventListener('contextmenu',e=>{ const t=e.target.closest&&e.target.closest('[data-mi]'); if(!t) return; e.preventDefault(); meas.splice(+t.dataset.mi,1); msRows(); draw(); msg('Cote supprimée.'); });
+function msSelect(i){ msSel=(i===null||!meas[i])?null:i; msRows(); draw(); }
+function msDelSel(){ if(msSel===null||!meas[msSel]) return; meas.splice(msSel,1); msSel=null; msRows(); draw(); $('#ms-msg').textContent='Cote supprimée.'; }
+$('#ms-res').addEventListener('click',e=>{ const b=e.target.closest('[data-msel]'); if(b) msSelect(+b.dataset.msel===msSel?null:+b.dataset.msel); });
+$('#ms-del').onclick=msDelSel; $('#ms-desel').onclick=()=>msSelect(null);
+window.addEventListener('keydown',e=>{ if(msOn&&msSel!==null&&(e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement&&document.activeElement.tagName)){ e.preventDefault(); msDelSel(); } });
 $('#ms-sc').onchange=()=>{ const v=parseFloat($('#ms-sc').value); msKset(v?v/msS0():1); };
 $('#ms-etl').onclick=()=>{ msCal=1; msP1=null; $('#ms-kin').hidden=true; const o=svg.querySelector('#ov'); if(o) o.remove(); $('#ms-msg').innerHTML='Étalonnage : cliquez 2 points dont vous connaissez la distance réelle.'; };
 $('#ms-kok').onclick=()=>{ const v=parseL($('#ms-known').value); if(!(v>0)){ $('#ms-msg').textContent='Distance invalide (ex. 6.000, 600 cm, 12\'-6").'; return; } msKset(v/msCalD); $('#ms-known').value=''; $('#ms-sc').value=''; $('#ms-msg').innerHTML='Échelle étalonnée : ×'+msK.toFixed(4)+'. Cliquez le point 1 pour mesurer.'; };
@@ -1185,7 +1191,7 @@ $('#ms-known').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDef
 $('#ms-k1').onclick=()=>{ msKset(1); $('#ms-sc').value=''; };
 window.addEventListener('keydown',e=>{ if(e.key==='Shift'&&msOn&&msLast&&!e.repeat) msPreview({clientX:msLast.clientX,clientY:msLast.clientY,shiftKey:true}); });
 window.addEventListener('keyup',e=>{ if(e.key==='Shift'&&msOn&&msLast) msPreview({clientX:msLast.clientX,clientY:msLast.clientY,shiftKey:false}); });
-$('#ms-clr').onclick=()=>{ meas.length=0; msP1=null; msRows(); draw(); };
+$('#ms-clr').onclick=()=>{ meas.length=0; msSel=null; msP1=null; msRows(); draw(); };
 $('#ms-copy').onclick=async()=>{ const m=meas[meas.length-1]; if(!m) return; const tx=`Δx = ${fmtL(m.dx*msK)}\nΔy = ${fmtL(m.dy*msK)}\nDistance = ${fmtL(m.d*msK)}\nAngle = ${m.ang.toFixed(2)}°\nP1 (SAFE) = ${(m.a[0]+OXm).toFixed(3)} ; ${(m.a[1]+OYm).toFixed(3)}\nP2 (SAFE) = ${(m.b[0]+OXm).toFixed(3)} ; ${(m.b[1]+OYm).toFixed(3)}`; try{ await navigator.clipboard.writeText(tx); $('#ms-msg').textContent='Mesure copiée.'; }catch(_){ $('#ms-msg').textContent='Copie impossible (presse-papiers).'; } };
 $('#ms-pick').onclick=()=>{ mvPick=1; mvP1=null; $('#ms-pick').setAttribute('aria-pressed','true'); $('#ms-msg').textContent='Cliquez le point de départ.'; };
 $('#ms-ok').onclick=msApply; $('#ms-undo').onclick=msUndo;
