@@ -54,6 +54,10 @@ main{position:relative;min-width:0;min-height:0}
 svg#plan{width:100%;height:100%;display:block;cursor:grab;touch-action:none;background:var(--paper)}
 svg#plan.drag{cursor:grabbing}
 .btns{position:absolute;left:12px;bottom:12px;display:flex;gap:6px}
+.toolbox{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:3px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px;box-shadow:0 2px 8px #0002;max-height:calc(100% - 70px);overflow:auto}
+.toolbox .btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:60px;padding:7px 2px 5px;font-size:10.5px;line-height:1.1;text-align:center}
+.toolbox .btn[hidden]{display:none}.toolbox .btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.toolbox .tsep{height:1px;background:var(--line);margin:3px 4px}
 .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:12.5px;padding:5px 10px;border-radius:6px;cursor:pointer}
 .scale{position:absolute;right:12px;bottom:12px;font:11px var(--font-mono);color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:3px 7px;border-radius:6px}
 aside{border-left:1px solid var(--line);background:var(--panel);min-height:0;display:flex;flex-direction:column}
@@ -132,7 +136,7 @@ table.cmp tr[data-sel]{cursor:pointer} table.cmp tr[data-sel]:hover{background:c
 .ln{stroke:var(--c-lnp,var(--lim));stroke-width:var(--w-lim,1.6);stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
 .ln.on{stroke:var(--sel);stroke-width:calc(var(--w-lim,1.6)*2.2);stroke-dasharray:none}
 .lnhit{stroke:transparent;stroke-width:14;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:crosshair}
-.edpanel{position:absolute;left:12px;top:12px;background:var(--paper);border:1px solid var(--line,#ccc);border-radius:8px;padding:10px;font-size:12px;box-shadow:0 2px 8px #0002;max-width:230px;z-index:3}
+.edpanel{position:absolute;left:84px;top:12px;background:var(--paper);border:1px solid var(--line,#ccc);border-radius:8px;padding:10px;font-size:12px;box-shadow:0 2px 8px #0002;max-width:230px;z-index:3}
 .edpanel[hidden]{display:none}
 .edrow{display:flex;gap:6px;margin-bottom:8px}
 .edsn{display:flex;flex-direction:column;gap:3px}
@@ -261,7 +265,7 @@ header{display:block;padding:10px 16px 8px}
 .srow{display:grid;grid-template-columns:1fr 130px 44px;gap:8px;align-items:center;font-size:12.5px}
 .srow output{font:12px var(--font-mono);text-align:right;color:var(--muted)}
 .srow input[type=range]{width:100%;accent-color:var(--brand)}
-.fpbox{position:absolute;left:12px;top:12px;z-index:4;background:var(--panel);border:1.5px solid #16a34a;border-radius:8px;padding:9px 11px;font-size:12.5px;width:340px;max-height:calc(100% - 70px);overflow:auto;box-shadow:0 2px 8px #0002}
+.fpbox{position:absolute;left:84px;top:12px;z-index:4;background:var(--panel);border:1.5px solid #16a34a;border-radius:8px;padding:9px 11px;font-size:12.5px;width:340px;max-height:calc(100% - 70px);overflow:auto;box-shadow:0 2px 8px #0002}
 .fpbox[hidden]{display:none}.fpbox p{margin:4px 0 6px;color:var(--muted);line-height:1.4}
 .fpmode{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}.fpmode label{display:flex;gap:6px;align-items:center}
 .fpl{display:flex;flex-direction:column;gap:1px;margin-bottom:8px}
@@ -904,7 +908,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.25.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.26.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -2458,6 +2462,20 @@ $('#adm-body').addEventListener('click',async e=>{ const b=e.target.closest('but
     if(D.am){ clTeam=D.am; CL.extraTeams=admData.teams; $('#admdlg').close(); clTeamDlg(); return; }
     if(D.at2){ const t=admData.teams.find(x=>x.id===D.at2); if(!confirm('Supprimer l’équipe « '+t.name+' » ?')) return; await api('team_delete',{q:'t='+t.id,json:{}}); await clRefresh(); await admLoad(); } }catch(er){ admRender('<b style="color:#b3261e">'+esc2(er.message)+'</b>'); } });
 $('#adm-x').onclick=()=>$('#admdlg').close(); $('#acct-adm').onclick=clAdmDlg;
+/* ====================== BOÎTE À OUTILS (colonne de gauche) ====================== */
+(function(){ const IC={
+  ms:'<path d="M3 17 17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/>',
+  l4:'<path d="M3 6v12M21 6v12M3 12h18M9 9v6M15 9v6"/>',
+  'ed-lim':'<path d="M3 12h4M10 12h4M17 12h4"/><path d="M12 4v4M12 16v4"/>',
+  'ed-reset':'<path d="M4 9a8 8 0 1 1 1 7"/><path d="M4 4v5h5"/>',
+  cal:'<circle cx="12" cy="12" r="7"/><path d="M12 2v6M12 16v6M2 12h6M16 12h6"/>',
+  fp:'<path d="M4 4h5M15 4h5M20 4v5M20 15v5M15 20h5M9 20H4M4 20v-5M4 9V4"/>',
+  rb:'<path d="M3 15h14a4 4 0 0 0 4-4V7"/><path d="M3 15l3-3M3 15l3 3"/>',
+  an:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>'};
+  const SH={ms:'Mesurer','l4':'Portée L/4','ed-lim':'Limites','ed-reset':'Rétablir',cal:'Calage',fp:'Empreinte',rb:'Armature',an:'Dessin'};
+  const tb=document.createElement('div'); tb.className='toolbox'; tb.id='toolbox'; tb.setAttribute('role','toolbar'); tb.setAttribute('aria-label','Outils');
+  [['fp','cal'],['ms','l4','ed-lim','ed-reset'],['rb','an']].forEach((g,gi)=>{ if(gi) tb.insertAdjacentHTML('beforeend','<div class="tsep"></div>'); g.forEach(id=>{ const b=document.getElementById(id); if(!b) return; if(!b.title) b.title=b.textContent.trim(); b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+IC[id]+'</svg><span>'+SH[id]+'</span>'; tb.appendChild(b); }); });
+  document.querySelector('main').appendChild(tb); })();
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 $('#cl-st').onclick=()=>{ if(CL.me&&(CL.state==='local'||CL.state==='err')) clDlg(); else if(!CL.me) clAuthDlg('login'); };
 clAuthMode(); clLoadMe();
