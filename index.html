@@ -365,10 +365,14 @@ header{display:block;padding:10px 16px 8px}
 <label id="rb-side-l">Côté (crochets, étiquette)<select id="rb-side"><option value="1">Gauche</option><option value="-1">Droite</option></select></label>
 <label id="rb-tg-l">Position de l’étiquette<input id="rb-tg" type="range" min="0" max="100" value="25"></label>
 <label>Couleur<span style="display:flex;gap:6px"><input id="rb-col" type="color" value="#111111"><button class="btn" id="rb-colr" type="button">Selon le type</button></span></label>
-<label id="rb-txt-l">Étiquette<input id="rb-txt" type="text"></label></div>
+<label id="rb-txt-l">Étiquette<input id="rb-txt" type="text"></label><label id="rb-ts-l">Taille du texte de cette barre (%)<input id="rb-ts" type="number" min="30" max="400" step="10" placeholder="100"></label></div>
 <div id="rb-info" class="mut" style="line-height:1.45;margin-top:4px"></div>
 <div id="rb-sel" hidden><div class="msd"><label>Δ X<input id="rb-dx" type="number" step="10" value="0"><span>mm</span></label><label>Δ Y<input id="rb-dy" type="number" step="10" value="0"><span>mm</span></label></div>
+<details class="rbtx"><summary>Texte de l’armature</summary><div class="rbf"><label>Taille (%) <input id="rbx-k" type="range" min="40" max="300" step="10" value="100"></label>
+<label>Police<select id="rbx-font"><option value="mono">Monospace</option><option value="sans">Sans-serif</option><option value="serif">Serif</option></select></label>
+<label class="ck"><input id="rbx-bold" type="checkbox">Gras</label><label class="ck"><input id="rbx-halo" type="checkbox" checked>Contour clair (lisibilité)</label><label class="ck"><input id="rbx-black" type="checkbox">Texte noir (sinon couleur de la barre)</label></div></details>
 <label class="ck" style="margin:6px 0"><input id="rb-lapl" type="checkbox" checked>Afficher la cote 1,3ℓd des chevauchements</label>
+<label class="ck" id="rb-lapjog-l"><input id="rb-lapjog" type="checkbox" checked>Décalage en diagonale (coude de la 1re barre)</label>
 <div class="acts"><button class="btn pri" id="rb-lap" type="button" hidden title="Place la 2e barre en chevauchement 1,3ℓd avec la 1re">Chevaucher les 2 barres</button></div>
 <div class="acts"><button class="btn" id="rb-mv" type="button">Déplacer</button><button class="btn" id="rb-dup" type="button">Dupliquer</button><button class="btn" id="rb-del" type="button" style="color:#b3261e">Supprimer</button></div></div>
 <div class="acts"><button class="btn" id="rb-types" type="button">Types, typique et nomenclature…</button><button class="btn pri" id="rb-done" type="button">Terminer</button></div></div>
@@ -870,7 +874,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.20.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.21.1', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1517,9 +1521,9 @@ $('#g-dxf').onclick=()=>{
     if($('#dx-lab').checked){ const tl=lay(ly+'_TXT',7), nm=o.id||(o.between?o.between.join('-'):'M'), cx=(x0+x1)/2+ox, cy=(y0+y1)/2+oy; E.push('0','TEXT','8',tl,'10',f(cx),'20',f(cy),'30','0','40',th,'1',nm,'72','1','73','2','11',f(cx),'21',f(cy),'31','0'); } }));
   if($('#dx-rb')&&$('#dx-rb').checked&&RB&&RB.bars.length){ const tx=(ly,t,x,y,h,rot)=>E.push('0','TEXT','8',ly,'10',f(x+ox),'20',f(y+oy),'30','0','40',h,'1',t,'72','1','73','2','11',f(x+ox),'21',f(y+oy),'31','0',...(rot?['50','90']:[]));
     RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const ty=rbType(b.t)||{}, nm=String(ty.name||'TYPE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24).toUpperCase(), ly=lay('ARM_'+nm,aci(rbCol(b)));
-      if(b.p){ const r=0.45; const N=24, pts=[]; if(ty.shape==='box') pts.push([b.p[0]-.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]-.38]); else for(let i=0;i<=N;i++) pts.push([b.p[0]+r*Math.cos(i*2*Math.PI/N),b.p[1]+r*Math.sin(i*2*Math.PI/N)]); pl(ly,pts); tx(ly,b.txt||ty.text||'',b.p[0],b.p[1],0.55*U); return; }
-      const g=rbGeom(b); pl(ly,[b.a,b.b]); g.hooks.forEach(h=>pl(ly,[h[0],h[1]])); const t=rbTxt(b); if(t){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1); tx(ly,t,b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off,0.5*U,Math.abs(g.uy)>Math.abs(g.ux)); } });
-    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U,Math.abs(l.uy)>Math.abs(l.ux)); }); }
+      if(b.p){ const r=0.45; const N=24, pts=[]; if(ty.shape==='box') pts.push([b.p[0]-.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]-.38]); else for(let i=0;i<=N;i++) pts.push([b.p[0]+r*Math.cos(i*2*Math.PI/N),b.p[1]+r*Math.sin(i*2*Math.PI/N)]); pl(ly,pts); tx(ly,b.txt||ty.text||'',b.p[0],b.p[1],0.55*U*rbTx().k/100); return; }
+      const g=rbGeom(b); pl(ly,rbPath(b)); g.hooks.forEach(h=>pl(ly,[h[0],h[1]])); const t=rbTxt(b); if(t){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1); tx(ly,t,b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off,0.5*U*rbTx().k/100*(b.ts||100)/100,Math.abs(g.uy)>Math.abs(g.ux)); } });
+    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U*rbTx().k/100,Math.abs(l.uy)>Math.abs(l.ux)); }); }
   const H=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','9','$INSBASE','10','0','20','0','30','0','0','ENDSEC','0','SECTION','2','TABLES','0','TABLE','2','LTYPE','70','1','0','LTYPE','2','CONTINUOUS','70','0','3','Solid line','72','65','73','0','40','0','0','ENDTAB','0','TABLE','2','LAYER','70',String(layers.size+1),'0','LAYER','2','0','70','0','62','7','6','CONTINUOUS'];
   layers.forEach((c,nm)=>H.push('0','LAYER','2',nm,'70','0','62',String(c),'6','CONTINUOUS')); H.push('0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES');
   const txt=[...H,...E,'0','ENDSEC','0','EOF',''].join('\r\n');
@@ -2035,13 +2039,13 @@ async function buildAnnotPdf(o,srcBuf){
   // cotes
   ms.forEach(m=>{ const c=[0.49,0.3,1]; L(m.a,m.b,1,c); [m.a,m.b].forEach(pt=>{ const p=T(pt[0],pt[1]); page.drawCircle({x:p[0],y:p[1],size:2,color:C(c)}); }); const p=T((m.a[0]+m.b[0])/2,(m.a[1]+m.b[1])/2); TX(fmtL(m.d*msK),p[0],p[1]+6,8,f2,c); });
   // armature
-  if(o.rb&&RB&&RB.bars.length){ const bw=(b)=>((rbType(b.t)||{}).w||2)*0.5;
+  if(o.rb&&RB&&RB.bars.length){ const X=rbTx(), K=X.k/100, SF=StandardFonts, fam={mono:['Courier','CourierBold'],sans:['Helvetica','HelveticaBold'],serif:['TimesRoman','TimesRomanBold']}[X.font]||['Helvetica','HelveticaBold'], rf=await doc.embedFont(SF[fam[X.bold?1:0]]), tc=(c)=>X.black?[0.07,0.07,0.07]:c; const bw=(b)=>((rbType(b.t)||{}).w||2)*0.5;
     RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const c=pdHex(rbCol(b));
-      if(b.p){ const p=T(b.p[0],b.p[1]), shp=(rbType(b.t)||{}).shape, r=7; if(shp==='box') page.drawRectangle({x:p[0]-r*1.3,y:p[1]-r*0.9,width:r*2.6,height:r*1.8,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); else page.drawCircle({x:p[0],y:p[1],size:r,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); TX(b.txt||(rbType(b.t)||{}).text||'',p[0],p[1],8,f2,c); return; }
-      const g=rbGeom(b); L(b.a,b.b,bw(b),c); g.hooks.forEach(h=>L(h[0],h[1],bw(b),c));
-      const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1), q=T(b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off); TX(tx,q[0],q[1],7,f2,c,Math.abs(g.uy)>Math.abs(g.ux)); } });
+      if(b.p){ const p=T(b.p[0],b.p[1]), shp=(rbType(b.t)||{}).shape, r=7; if(shp==='box') page.drawRectangle({x:p[0]-r*1.3,y:p[1]-r*0.9,width:r*2.6,height:r*1.8,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); else page.drawCircle({x:p[0],y:p[1],size:r,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); TX(b.txt||(rbType(b.t)||{}).text||'',p[0],p[1],8*K,rf,tc(c)); return; }
+      const g=rbGeom(b), pp=rbPath(b); for(let i=0;i<pp.length-1;i++) L(pp[i],pp[i+1],bw(b),c); g.hooks.forEach(h=>L(h[0],h[1],bw(b),c));
+      const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1), q=T(b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off); TX(tx,q[0],q[1],7*K*(b.ts||100)/100,rf,tc(c),Math.abs(g.uy)>Math.abs(g.ux)); } });
     rbLaps().forEach(l=>{ const c=l.ok?[0.17,0.54,0.24]:[0.84,0.19,0.15], nx=-l.uy*.22, ny=l.ux*.22; L([l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],0.8,c); L(l.a,[l.a[0]+nx,l.a[1]+ny],0.8,c); L(l.b,[l.b[0]+nx,l.b[1]+ny],0.8,c);
-      if(RB.showLap===false&&l.ok) return; const q=T((l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8); TX(l.ok?'1.3 ld = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' < '+Math.round(l.req*1000),q[0],q[1],6,f1,c,Math.abs(l.uy)>Math.abs(l.ux)); });
+      if(RB.showLap===false&&l.ok) return; const q=T((l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8); TX(l.ok?'1.3 ld = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' < '+Math.round(l.req*1000),q[0],q[1],6*K,rf,tc(c),Math.abs(l.uy)>Math.abs(l.ux)); });
     if(o.over||o.cart){ const S=rbSummary(); let ty=page.getHeight()-36; const lx=28; page.drawText(pdWA('Armature - typique : '+RB.typ.bar+' @ '+RB.typ.s+' c/c (As min)'),{x:lx,y:ty,size:8,font:f2,color:rgb(0.1,0.1,0.1)}); S.forEach(e=>{ ty-=10; page.drawText(pdWA(e.tn+' : '+e.bar+', '+e.bars+' barres, '+e.len.toFixed(1)+' m'),{x:lx,y:ty,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); }); } }
   // cartouche
   if(!o.over&&o.cart){ const x=28, w=W-56, y=28; page.drawRectangle({x,y,width:w,height:46,borderColor:rgb(0.2,0.2,0.2),borderWidth:0.8});
@@ -2116,6 +2120,9 @@ const RB_SETS={
   I:[['#3',9.5,71,0.560],['#4',12.7,129,0.994],['#5',15.9,199,1.552],['#6',19.1,284,2.235],['#7',22.2,387,3.042],['#8',25.4,510,3.973],['#9',28.7,645,5.060],['#10',32.3,819,6.404],['#11',35.8,1006,7.907],['#14',43.0,1452,11.38],['#18',57.3,2581,20.24]] };
 const RB_ALL=()=>[...RB_SETS.M,...RB_SETS.I];
 function rbInfo(n){ const a=RB_ALL().find(x=>x[0]===n); return a?{n:a[0],db:a[1],ab:a[2],kg:a[3]}:null; }
+const RB_FONTS={mono:'var(--font-mono),monospace',sans:'system-ui,Arial,sans-serif',serif:'Georgia,serif'};
+const rbTx=()=>Object.assign({k:100,bold:false,font:'mono',halo:true,black:false},(RB&&RB.tx)||{});
+function rbTs(px,col,w){ const t=rbTx(); return `font:${t.bold?700:w} ${px*t.k/100}px ${RB_FONTS[t.font]||RB_FONTS.mono};fill:${t.black?'#111':col};`+(t.halo?`paint-order:stroke;stroke:var(--panel);stroke-width:${.28*px*t.k/100}px;`:'')+'pointer-events:none'; }
 function rbDefault(){ return {sys:'M',typ:{bar:'15M',s:350,note:''},fy:400,fc:30,seq:1,
   types:[{id:'t1',kind:'bar',name:'Barre typique (As min)',bar:'',color:'#111111',w:2,hook:'none',top:false},
          {id:'t2',kind:'bar',name:'Chapeau (armature supérieure)',bar:'',color:'#c2255c',w:2,hook:'both',top:true},
@@ -2133,7 +2140,9 @@ function rbLd(name,top){ const b=rbInfo(name); if(!b) return 0; const fcs=Math.m
   return Math.max(300,1.15*k1*k4/(2.5*b.db)*((RB.fy||400)/fcs)*b.ab); }
 const rbLap=b=>{ const t=rbType(b.t)||{}; return Math.ceil(1.3*rbLd(rbBarName(b),!!t.top)/10)*10; };
 function rbTxt(b){ if(b.txt) return b.txt; const n=b.n, c=b.nc; let s=n?(c?`${n}(${c})`:`${n}`):''; if(b.bar&&b.bar!==RB.typ.bar) s+=(s?' ':'')+b.bar; return s; }
-function rbGeom(b){ const [x1,y1]=b.a,[x2,y2]=b.b, L=Math.hypot(x2-x1,y2-y1)||1, ux=(x2-x1)/L, uy=(y2-y1)/L, s=b.side===-1?-1:1, nx=-uy*s, ny=ux*s, h=rbHook(b), HL=0.3; const pts=[[x1,y1],[x2,y2]];
+function rbPath(b){ if(!b.jog) return [b.a,b.b]; const j=b.jog, E=b[j.e], O=b[j.e==='a'?'b':'a'], L=Math.hypot(O[0]-E[0],O[1]-E[1])||1, ux=(O[0]-E[0])/L, uy=(O[1]-E[1])/L, d=j.e==='a'?1:-1, nx=-uy*d*(j.off>=0?1:-1), ny=ux*d*(j.off>=0?1:-1), o=Math.abs(j.off), r=Math.min(j.r,L*0.8), jl=Math.min(j.l,L*0.2);
+  const P0=[E[0]+ux*(r+jl),E[1]+uy*(r+jl)], P1=[E[0]+ux*r+nx*o,E[1]+uy*r+ny*o], P2=[E[0]+nx*o,E[1]+ny*o]; return j.e==='b'?[b.a,P0,P1,P2]:[P2,P1,P0,b.b]; }
+function rbGeom(b){ const pp=rbPath(b), [x1,y1]=pp[0],[x2,y2]=pp[pp.length-1], L=Math.hypot(b.b[0]-b.a[0],b.b[1]-b.a[1])||1, ux=(b.b[0]-b.a[0])/L, uy=(b.b[1]-b.a[1])/L, s=b.side===-1?-1:1, nx=-uy*s, ny=ux*s, h=rbHook(b), HL=0.3; const pts=[[x1,y1],[x2,y2]];
   const g={ux,uy,nx,ny,L,hooks:[]}; if(h==='a'||h==='both') g.hooks.push([[x1,y1],[x1+nx*HL,y1+ny*HL]]); if(h==='b'||h==='both') g.hooks.push([[x2,y2],[x2+nx*HL,y2+ny*HL]]); g.pts=pts; return g; }
 function rbLaps(){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
   for(let i=0;i<B.length;i++) for(let j=i+1;j<B.length;j++){ const p=B[i], q=B[j]; if(p.t!==q.t) continue; const gp=rbGeom(p), gq=rbGeom(q);
@@ -2145,18 +2154,18 @@ function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.cl
   RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=b.id===rbSel||b.id===rbSel2, hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
     if(b.p){ const [x,y]=b.p, txt=b.txt||(t&&t.text)||'', shp=(t&&t.shape)||'circle';
       r.push(`<g data-rb="${b.id}" style="${hit.replace('stroke','all')}">`+(shp==='box'?`<rect x="${x-.55}" y="${-y-.38}" width="1.1" height="0.76" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`:`<circle cx="${x}" cy="${-y}" r=".45" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`)
-        +`<text x="${x}" y="${-y+.22}" text-anchor="middle" style="font:600 .62px var(--font-mono);fill:${col};pointer-events:none">${esc2(txt)}</text></g>`);
+        +`<text x="${x}" y="${-y+.22}" text-anchor="middle" style="${rbTs(.62,col,600)}">${esc2(txt)}</text></g>`);
       if(sel) r.push(`<circle cx="${x}" cy="${-y}" r="${9*u}" fill="none" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`); return; }
-    const g=rbGeom(b), w=(t&&t.w)||2, pl=[`${b.a[0]},${-b.a[1]}`,`${b.b[0]},${-b.b[1]}`].join(' ');
+    const g=rbGeom(b), w=(t&&t.w)||2, pl=rbPath(b).map(q=>`${q[0]},${-q[1]}`).join(' ');
     r.push(`<g data-rb="${b.id}"><polyline points="${pl}" fill="none" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" style="${hit}"/>`
       +`<polyline points="${pl}" fill="none" stroke="${sel?'#fb8f37':col}" stroke-width="${sel?w+1.2:w}" vector-effect="non-scaling-stroke" stroke-linecap="butt" pointer-events="none"/>`
       +g.hooks.map(h=>`<polyline points="${h[0][0]},${-h[0][1]} ${h[1][0]},${-h[1][1]}" fill="none" stroke="${sel?'#fb8f37':col}" stroke-width="${sel?w+1.2:w}" vector-effect="non-scaling-stroke" pointer-events="none"/>`).join('')+'</g>');
     const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, mx=b.a[0]+(b.b[0]-b.a[0])*k, my=b.a[1]+(b.b[1]-b.a[1])*k, off=.42*(b.side===-1?-1:1), px=mx+g.nx*off, py=my+g.ny*off, vert=Math.abs(g.uy)>Math.abs(g.ux);
-      r.push(`<text x="${px}" y="${-py}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${px} ${-py})"`:''} style="font:500 .72px var(--font-mono);fill:${col};paint-order:stroke;stroke:var(--panel);stroke-width:.2px;pointer-events:none">${esc2(tx)}</text>`); }
+      r.push(`<text x="${px}" y="${-py}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${px} ${-py})"`:''} style="${rbTs(.72*(b.ts||100)/100,col,500)}">${esc2(tx)}</text>`); }
     if(sel&&act&&b.id===rbSel&&!rbSel2) [['a',b.a],['b',b.b]].forEach(([k,p])=>r.push(`<circle data-rbh="${k}" data-rb="${b.id}" cx="${p[0]}" cy="${-p[1]}" r="${6*u}" fill="#fff" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`)); });
   rbLaps().forEach(l=>{ const nx=-l.uy*.22, ny=l.ux*.22, ax=l.a[0]+nx, ay=l.a[1]+ny, bx=l.b[0]+nx, by=l.b[1]+ny, c=l.ok?'#2b8a3e':'#d73027', mx=(ax+bx)/2, my=(ay+by)/2, vert=Math.abs(l.uy)>Math.abs(l.ux);
     r.push(`<g pointer-events="none"><polyline points="${l.a[0]},${-l.a[1]} ${ax},${-ay} ${bx},${-by} ${l.b[0]},${-l.b[1]}" fill="none" stroke="${c}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`
-      +(RB.showLap===false&&l.ok?'':`<text x="${mx+nx*1.6}" y="${-(my+ny*1.6)}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${mx+nx*1.6} ${-(my+ny*1.6)})"`:''} style="font:500 .55px var(--font-mono);fill:${c};paint-order:stroke;stroke:var(--panel);stroke-width:.15px">${l.ok?'1,3ℓd = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' &lt; '+Math.round(l.req*1000)}</text>`)+'</g>'); });
+      +(RB.showLap===false&&l.ok?'':`<text x="${mx+nx*1.6}" y="${-(my+ny*1.6)}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${mx+nx*1.6} ${-(my+ny*1.6)})"`:''} style="${rbTs(.55,c,500)}">${l.ok?'1,3ℓd = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' &lt; '+Math.round(l.req*1000)}</text>`)+'</g>'); });
   return r.join(''); }
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -2170,9 +2179,9 @@ function rbBarOpts(sel,blank){ const sets=RB.sys==='M'?[['Métrique (CSA G30.18)
 function rbFill(){ const b=rbCtx(), v=b||rbCur, isMark=b?!!b.p:(rbType(rbCur.t)||{}).kind==='mark';
   $('#rb-ctx').textContent=b?(b.p?'Repère ':'Barre ')+b.id+' sélectionné'+(b.p?'':' · '+(rbL(b)*1000).toFixed(0)+' mm'):'Nouvelle pose (valeurs par défaut)';
   $('#rb-t').innerHTML=rbTypeOpts(v.t); $('#rb-bar').innerHTML=rbBarOpts(v.bar||'','Selon le type / typique ('+(((rbType(v.t)||{}).bar)||RB.typ.bar)+')');
-  $('#rb-n').value=v.n||''; $('#rb-nc').value=v.nc||''; $('#rb-hook').value=v.hook||''; $('#rb-side').value=String(v.side===-1?-1:1); $('#rb-tg').value=v.tg==null?25:v.tg; $('#rb-col').value=v.col||(rbType(v.t)||{}).color||'#111111'; $('#rb-txt').value=v.txt||'';
+  $('#rb-n').value=v.n||''; $('#rb-nc').value=v.nc||''; $('#rb-hook').value=v.hook||''; $('#rb-side').value=String(v.side===-1?-1:1); $('#rb-tg').value=v.tg==null?25:v.tg; $('#rb-col').value=v.col||(rbType(v.t)||{}).color||'#111111'; $('#rb-txt').value=v.txt||''; $('#rb-ts').value=v.ts||'';
   $('#rb-bar-l').hidden=$('#rb-n-l').hidden=$('#rb-nc-l').hidden=$('#rb-hook-l').hidden=$('#rb-side-l').hidden=$('#rb-tg-l').hidden=isMark; $('#rb-txt-l').firstChild.textContent=isMark?'Texte du repère':'Étiquette (vide = automatique)';
-  $('#rb-lapl').checked=RB.showLap!==false; $('#rb-sel').hidden=!b; $('#rb-lap').hidden=!(b&&rbSel2); if(b&&rbSel2) $('#rb-ctx').textContent='Barres '+b.id+' + '+rbSel2+' sélectionnées'; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
+  $('#rb-lapl').checked=RB.showLap!==false; { const t=rbTx(); $('#rbx-k').value=t.k; $('#rbx-font').value=t.font; $('#rbx-bold').checked=t.bold; $('#rbx-halo').checked=t.halo; $('#rbx-black').checked=t.black; } $('#rb-sel').hidden=!b; $('#rb-lap').hidden=$('#rb-lapjog-l').hidden=!(b&&rbSel2); if(b&&rbSel2) $('#rb-ctx').textContent='Barres '+b.id+' + '+rbSel2+' sélectionnées'; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
 function rbInfoHtml(b){ const bi=rbInfo(rbBarName(b)), L=rbL(b); if(!bi) return ''; const n=+b.n||0; let h=`⌀${bi.db} mm · ${bi.ab} mm² · ${bi.kg} kg/m`+(n?` · ${n} × ${bi.ab} = <b>${n*bi.ab} mm²</b> · masse ${(n*L*bi.kg).toFixed(1)} kg`:'');
   h+=`<br>Chevauchement 1,3ℓd ≈ <b>${rbLap(b)} mm</b> (indicatif)`;
   const o=b.strip&&byId[b.strip]; if(o&&n){ const rq=rectOf(o), wmm=(o.layer==='A'?rq.w:rq.h)*1000, ti=rbInfo(RB.typ.bar); if(ti&&wmm&&RB.typ.s){ const req=ti.ab*wmm/RB.typ.s, got=n*bi.ab; h+=`<br>Bande ${esc2(b.strip)} : largeur ${Math.round(wmm)} mm · As min typique ${RB.typ.bar} @ ${RB.typ.s} ≈ ${Math.round(req)} mm² · fournie ${got} mm² `+(got>=req*0.99?'<b style="color:#2b8a3e">✓</b>':'<b style="color:#d73027">⚠ inférieure à l’As min</b>'); } }
@@ -2207,7 +2216,9 @@ function rbMove(e){ const d=rbDrag, b=RB.bars.find(x=>x.id===d.id); if(!b) retur
   draw(); $('#rb-ctx').textContent=(b.p?'Repère ':'Barre ')+b.id+' sélectionné'+(b.p?'':' · '+(rbL(b)*1000).toFixed(0)+' mm'); }
 function rbUp(){ const d=rbDrag; rbDrag=null; if(d&&d.moved){ touch(); } draw(); rbFill(); }
 function rbDelete(){ const b=rbCtx(); if(!b) return; RB.bars=RB.bars.filter(x=>x!==b); rbSel=null; touch(); rbFill(); draw(); $('#rb-msg').textContent='Supprimé.'; }
-function rbLapDo(){ const p=rbCtx(), q=RB.bars.find(x=>x.id===rbSel2); if(!p||!q||p.p||q.p) return; const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q);
+function rbLapJog(p,q){ const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q), ends=[['a',-1],['b',1]]; let best=null; ends.forEach(([ep,sg])=>['a','b'].forEach(k=>{ const d=Math.hypot(q[k][0]-p[ep][0],q[k][1]-p[ep][1]); if(!best||d<best.d) best={d,ep,sg,k}; }));
+  const ux=g.ux*best.sg, uy=g.uy*best.sg, pe=p[best.ep], n0=[pe[0]-ux*req,pe[1]-uy*req], f0=[n0[0]+ux*Lq,n0[1]+uy*Lq]; p.jog={e:best.ep,off:0.12*(rbCur.side===-1?-1:1),l:0.25,r:req}; if(best.k==='a'){ q.a=n0; q.b=f0; } else { q.b=n0; q.a=f0; } q.t=p.t; if(p.bar) q.bar=p.bar; else delete q.bar; }
+function rbLapDo(){ const p=rbCtx(), q=RB.bars.find(x=>x.id===rbSel2); if(!p||!q||p.p||q.p) return; if($('#rb-lapjog').checked){ rbLapJog(p,q); touch(); rbSel2=null; rbFill(); draw(); $('#rb-msg').innerHTML='Chevauchement avec coude posé : <b>'+rbLap(p)+' mm</b> (1,3ℓd, indicatif).'; return; } delete p.jog; const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q);
   const ends=[[p.a,-1],[p.b,1]], qe=['a','b']; let best=null; ends.forEach(([pe,sg])=>qe.forEach(k=>{ const d=Math.hypot(q[k][0]-pe[0],q[k][1]-pe[1]); if(!best||d<best.d) best={d,pe,sg,k}; }));
   const ux=g.ux*best.sg, uy=g.uy*best.sg, nx=-g.uy, ny=g.ux, off=0.1*(rbCur.side===-1?-1:1), n0=[best.pe[0]-ux*req+nx*off, best.pe[1]-uy*req+ny*off], f0=[n0[0]+ux*Lq, n0[1]+uy*Lq];
   if(best.k==='a'){ q.a=n0; q.b=f0; } else { q.b=n0; q.a=f0; }
@@ -2254,11 +2265,12 @@ $('#rbd-ok').onclick=()=>$('#rbdlg').close&&$('#rbdlg').close();
 /* --- câblage du panneau --- */
 $('#rb').onclick=()=>rbToggle(!rbOn); $('#rb-done').onclick=()=>rbToggle(false);
 $('#rb-tool-sel').onclick=()=>rbSetTool('sel'); $('#rb-tool-draw').onclick=()=>rbSetTool('draw'); $('#rb-tool-mark').onclick=()=>rbSetTool('mark');
+['k','font','bold','halo','black'].forEach(k=>{ const e=$('#rbx-'+k); e.addEventListener('input',()=>{ RB.tx=rbTx(); RB.tx[k]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value; touch(); draw(); }); });
 $('#rb-lap').onclick=rbLapDo; $('#rb-lapl').onchange=()=>{ RB.showLap=$('#rb-lapl').checked; touch(); draw(); }; $('#rb-instrip').onclick=rbInStrip; $('#rb-del').onclick=rbDelete; $('#rb-dup').onclick=rbDup; $('#rb-types').onclick=rbDlgOpen;
 $('#rb-mv').onclick=()=>{ rbShift((parseFloat($('#rb-dx').value)||0)/1000,(parseFloat($('#rb-dy').value)||0)/1000); $('#rb-dx').value='0'; $('#rb-dy').value='0'; };
 $('#rb-t').onchange=()=>{ rbSet('t',$('#rb-t').value); if(!rbCtx()){ rbFill(); } };
 $('#rb-bar').onchange=()=>rbSet('bar',$('#rb-bar').value); $('#rb-n').onchange=()=>rbSet('n',$('#rb-n').value?Math.max(1,Math.round(+$('#rb-n').value)):''); $('#rb-nc').onchange=()=>rbSet('nc',$('#rb-nc').value?Math.max(0,Math.round(+$('#rb-nc').value)):'');
-$('#rb-hook').onchange=()=>rbSet('hook',$('#rb-hook').value); $('#rb-side').onchange=()=>rbSet('side',+$('#rb-side').value); $('#rb-tg').oninput=()=>rbSet('tg',+$('#rb-tg').value); $('#rb-col').oninput=()=>rbSet('col',$('#rb-col').value); $('#rb-colr').onclick=()=>{ rbSet('col',''); rbFill(); }; $('#rb-txt').onchange=()=>rbSet('txt',$('#rb-txt').value.trim());
+$('#rb-hook').onchange=()=>rbSet('hook',$('#rb-hook').value); $('#rb-side').onchange=()=>rbSet('side',+$('#rb-side').value); $('#rb-tg').oninput=()=>rbSet('tg',+$('#rb-tg').value); $('#rb-col').oninput=()=>rbSet('col',$('#rb-col').value); $('#rb-colr').onclick=()=>{ rbSet('col',''); rbFill(); }; $('#rb-ts').onchange=()=>rbSet('ts',$('#rb-ts').value?Math.max(30,Math.min(400,+$('#rb-ts').value)):''); $('#rb-txt').onchange=()=>rbSet('txt',$('#rb-txt').value.trim());
 window.addEventListener('keydown',e=>{ if(!rbOn||/INPUT|SELECT|TEXTAREA/.test(document.activeElement&&document.activeElement.tagName)) return; if(e.key==='Delete'||e.key==='Backspace'){ if(rbCtx()){ e.preventDefault(); rbDelete(); } return; }
   const st=e.shiftKey?0.5:0.05, m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,st],ArrowDown:[0,-st]}[e.key]; if(m&&rbCtx()){ e.preventDefault(); rbShift(m[0],m[1]); } });
 </script>
