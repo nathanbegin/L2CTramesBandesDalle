@@ -1,0 +1,7 @@
+{
+  "name": "trame-bandes-dalle",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": { "@vercel/blob": "^2.9.0" }
+}
