@@ -373,6 +373,7 @@ header{display:block;padding:10px 16px 8px}
 <label class="ck"><input id="rbx-bold" type="checkbox">Gras</label><label class="ck"><input id="rbx-halo" type="checkbox" checked>Contour clair (lisibilité)</label><label class="ck"><input id="rbx-black" type="checkbox">Texte noir (sinon couleur de la barre)</label></div></details>
 <label class="ck" style="margin:6px 0"><input id="rb-lapl" type="checkbox" checked>Afficher la cote 1,3ℓd des chevauchements</label>
 <label class="ck" id="rb-lapjog-l"><input id="rb-lapjog" type="checkbox" checked>Décalage en diagonale (coude de la 1re barre)</label>
+<div class="acts" id="rb-unl" hidden><button class="btn" id="rb-unlap" type="button" title="Sépare les deux barres : bout à bout, sans recouvrement">Délier : bout à bout</button><button class="btn" id="rb-nolap" type="button" title="Laisse les barres en place mais ne les traite plus comme un chevauchement">Ignorer le chevauchement</button></div>
 <div class="acts"><button class="btn pri" id="rb-lap" type="button" hidden title="Place la 2e barre en chevauchement 1,3ℓd avec la 1re">Chevaucher les 2 barres</button></div>
 <div class="acts"><button class="btn" id="rb-mv" type="button">Déplacer</button><button class="btn" id="rb-dup" type="button">Dupliquer</button><button class="btn" id="rb-del" type="button" style="color:#b3261e">Supprimer</button></div></div>
 <div class="acts"><button class="btn" id="rb-types" type="button">Types, typique et nomenclature…</button><button class="btn pri" id="rb-done" type="button">Terminer</button></div></div>
@@ -874,7 +875,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.21.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.21.2', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1523,7 +1524,7 @@ $('#g-dxf').onclick=()=>{
     RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const ty=rbType(b.t)||{}, nm=String(ty.name||'TYPE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24).toUpperCase(), ly=lay('ARM_'+nm,aci(rbCol(b)));
       if(b.p){ const r=0.45; const N=24, pts=[]; if(ty.shape==='box') pts.push([b.p[0]-.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]-.38]); else for(let i=0;i<=N;i++) pts.push([b.p[0]+r*Math.cos(i*2*Math.PI/N),b.p[1]+r*Math.sin(i*2*Math.PI/N)]); pl(ly,pts); tx(ly,b.txt||ty.text||'',b.p[0],b.p[1],0.55*U*rbTx().k/100); return; }
       const g=rbGeom(b); pl(ly,rbPath(b)); g.hooks.forEach(h=>pl(ly,[h[0],h[1]])); const t=rbTxt(b); if(t){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1); tx(ly,t,b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off,0.5*U*rbTx().k/100*(b.ts||100)/100,Math.abs(g.uy)>Math.abs(g.ux)); } });
-    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U*rbTx().k/100,Math.abs(l.uy)>Math.abs(l.ux)); }); }
+    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok) pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U*rbTx().k/100,Math.abs(l.uy)>Math.abs(l.ux)); }); }
   const H=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','9','$INSBASE','10','0','20','0','30','0','0','ENDSEC','0','SECTION','2','TABLES','0','TABLE','2','LTYPE','70','1','0','LTYPE','2','CONTINUOUS','70','0','3','Solid line','72','65','73','0','40','0','0','ENDTAB','0','TABLE','2','LAYER','70',String(layers.size+1),'0','LAYER','2','0','70','0','62','7','6','CONTINUOUS'];
   layers.forEach((c,nm)=>H.push('0','LAYER','2',nm,'70','0','62',String(c),'6','CONTINUOUS')); H.push('0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES');
   const txt=[...H,...E,'0','ENDSEC','0','EOF',''].join('\r\n');
@@ -2044,7 +2045,7 @@ async function buildAnnotPdf(o,srcBuf){
       if(b.p){ const p=T(b.p[0],b.p[1]), shp=(rbType(b.t)||{}).shape, r=7; if(shp==='box') page.drawRectangle({x:p[0]-r*1.3,y:p[1]-r*0.9,width:r*2.6,height:r*1.8,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); else page.drawCircle({x:p[0],y:p[1],size:r,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); TX(b.txt||(rbType(b.t)||{}).text||'',p[0],p[1],8*K,rf,tc(c)); return; }
       const g=rbGeom(b), pp=rbPath(b); for(let i=0;i<pp.length-1;i++) L(pp[i],pp[i+1],bw(b),c); g.hooks.forEach(h=>L(h[0],h[1],bw(b),c));
       const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1), q=T(b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off); TX(tx,q[0],q[1],7*K*(b.ts||100)/100,rf,tc(c),Math.abs(g.uy)>Math.abs(g.ux)); } });
-    rbLaps().forEach(l=>{ const c=l.ok?[0.17,0.54,0.24]:[0.84,0.19,0.15], nx=-l.uy*.22, ny=l.ux*.22; L([l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],0.8,c); L(l.a,[l.a[0]+nx,l.a[1]+ny],0.8,c); L(l.b,[l.b[0]+nx,l.b[1]+ny],0.8,c);
+    rbLaps().forEach(l=>{ const c=l.ok?[0.17,0.54,0.24]:[0.84,0.19,0.15], nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok){ L([l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],0.8,c); L(l.a,[l.a[0]+nx,l.a[1]+ny],0.8,c); L(l.b,[l.b[0]+nx,l.b[1]+ny],0.8,c); }
       if(RB.showLap===false&&l.ok) return; const q=T((l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8); TX(l.ok?'1.3 ld = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' < '+Math.round(l.req*1000),q[0],q[1],6*K,rf,tc(c),Math.abs(l.uy)>Math.abs(l.ux)); });
     if(o.over||o.cart){ const S=rbSummary(); let ty=page.getHeight()-36; const lx=28; page.drawText(pdWA('Armature - typique : '+RB.typ.bar+' @ '+RB.typ.s+' c/c (As min)'),{x:lx,y:ty,size:8,font:f2,color:rgb(0.1,0.1,0.1)}); S.forEach(e=>{ ty-=10; page.drawText(pdWA(e.tn+' : '+e.bar+', '+e.bars+' barres, '+e.len.toFixed(1)+' m'),{x:lx,y:ty,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); }); } }
   // cartouche
@@ -2130,7 +2131,7 @@ function rbDefault(){ return {sys:'M',typ:{bar:'15M',s:350,note:''},fy:400,fc:30
          {id:'m1',kind:'mark',name:'Armature d’intégrité (colonne)',shape:'circle',text:'A',color:'#111111'},
          {id:'m2',kind:'mark',name:'Renfort de cisaillement',shape:'box',text:'X',color:'#d6249f'}],
   bars:[]}; }
-let rbTool='sel', rbSel=null, rbSel2=null, rbP1=null, rbDrag=null, rbCur={t:'t1',bar:'',n:'',nc:'',hook:'',side:1,tg:25,col:'',txt:'',mt:''};
+let rbPart=null, rbTool='sel', rbSel=null, rbSel2=null, rbP1=null, rbDrag=null, rbCur={t:'t1',bar:'',n:'',nc:'',hook:'',side:1,tg:25,col:'',txt:'',mt:''};
 const rbType=id=>RB.types.find(t=>t.id===id);
 const rbBarName=b=>b.bar||(rbType(b.t)||{}).bar||RB.typ.bar;
 const rbL=b=>b.p?0:Math.hypot(b.b[0]-b.a[0],b.b[1]-b.a[1]);
@@ -2144,11 +2145,11 @@ function rbPath(b){ if(!b.jog) return [b.a,b.b]; const j=b.jog, E=b[j.e], O=b[j.
   const P0=[E[0]+ux*(r+jl),E[1]+uy*(r+jl)], P1=[E[0]+ux*r+nx*o,E[1]+uy*r+ny*o], P2=[E[0]+nx*o,E[1]+ny*o]; return j.e==='b'?[b.a,P0,P1,P2]:[P2,P1,P0,b.b]; }
 function rbGeom(b){ const pp=rbPath(b), [x1,y1]=pp[0],[x2,y2]=pp[pp.length-1], L=Math.hypot(b.b[0]-b.a[0],b.b[1]-b.a[1])||1, ux=(b.b[0]-b.a[0])/L, uy=(b.b[1]-b.a[1])/L, s=b.side===-1?-1:1, nx=-uy*s, ny=ux*s, h=rbHook(b), HL=0.3; const pts=[[x1,y1],[x2,y2]];
   const g={ux,uy,nx,ny,L,hooks:[]}; if(h==='a'||h==='both') g.hooks.push([[x1,y1],[x1+nx*HL,y1+ny*HL]]); if(h==='b'||h==='both') g.hooks.push([[x2,y2],[x2+nx*HL,y2+ny*HL]]); g.pts=pts; return g; }
-function rbLaps(){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
+function rbLaps(all){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
   for(let i=0;i<B.length;i++) for(let j=i+1;j<B.length;j++){ const p=B[i], q=B[j]; if(p.t!==q.t) continue; const gp=rbGeom(p), gq=rbGeom(q);
     if(Math.abs(gp.ux*gq.uy-gp.uy*gq.ux)>0.02) continue; const dx=q.a[0]-p.a[0], dy=q.a[1]-p.a[1]; if(Math.abs(dx*gp.uy-dy*gp.ux)>0.15) continue;
     const pr=pt=>(pt[0]-p.a[0])*gp.ux+(pt[1]-p.a[1])*gp.uy, a1=0,a2=gp.L, b1=pr(q.a), b2=pr(q.b), lo=Math.max(Math.min(a1,a2),Math.min(b1,b2)), hi=Math.min(Math.max(a1,a2),Math.max(b1,b2)); if(hi-lo<0.05) continue;
-    const req=rbLap(p)/1000; out.push({a:[p.a[0]+gp.ux*lo,p.a[1]+gp.uy*lo],b:[p.a[0]+gp.ux*hi,p.a[1]+gp.uy*hi],len:hi-lo,req,ok:hi-lo>=req*0.98,ux:gp.ux,uy:gp.uy,ids:[p.id,q.id],bar:rbBarName(p)}); } return out; }
+    const req=rbLap(p)/1000, key=[p.id,q.id].sort().join('|'), ign=(RB.nolap||[]).includes(key); if(ign&&!all) continue; out.push({ign,a:[p.a[0]+gp.ux*lo,p.a[1]+gp.uy*lo],b:[p.a[0]+gp.ux*hi,p.a[1]+gp.uy*hi],len:hi-lo,req,ok:hi-lo>=req*0.98,ux:gp.ux,uy:gp.uy,ids:[p.id,q.id],bar:rbBarName(p)}); } return out; }
 const rbInk=()=>({ink:getComputedStyle(document.documentElement).getPropertyValue('--ink')||'#111'});
 function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.clientWidth||800), act=rbOn&&rbTool==='sel';
   RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=b.id===rbSel||b.id===rbSel2, hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
@@ -2164,7 +2165,7 @@ function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.cl
       r.push(`<text x="${px}" y="${-py}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${px} ${-py})"`:''} style="${rbTs(.72*(b.ts||100)/100,col,500)}">${esc2(tx)}</text>`); }
     if(sel&&act&&b.id===rbSel&&!rbSel2) [['a',b.a],['b',b.b]].forEach(([k,p])=>r.push(`<circle data-rbh="${k}" data-rb="${b.id}" cx="${p[0]}" cy="${-p[1]}" r="${6*u}" fill="#fff" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`)); });
   rbLaps().forEach(l=>{ const nx=-l.uy*.22, ny=l.ux*.22, ax=l.a[0]+nx, ay=l.a[1]+ny, bx=l.b[0]+nx, by=l.b[1]+ny, c=l.ok?'#2b8a3e':'#d73027', mx=(ax+bx)/2, my=(ay+by)/2, vert=Math.abs(l.uy)>Math.abs(l.ux);
-    r.push(`<g pointer-events="none"><polyline points="${l.a[0]},${-l.a[1]} ${ax},${-ay} ${bx},${-by} ${l.b[0]},${-l.b[1]}" fill="none" stroke="${c}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`
+    r.push(`<g pointer-events="none">`+(l.ok?'':`<polyline points="${l.a[0]},${-l.a[1]} ${ax},${-ay} ${bx},${-by} ${l.b[0]},${-l.b[1]}" fill="none" stroke="${c}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`)
       +(RB.showLap===false&&l.ok?'':`<text x="${mx+nx*1.6}" y="${-(my+ny*1.6)}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${mx+nx*1.6} ${-(my+ny*1.6)})"`:''} style="${rbTs(.55,c,500)}">${l.ok?'1,3ℓd = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' &lt; '+Math.round(l.req*1000)}</text>`)+'</g>'); });
   return r.join(''); }
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -2181,7 +2182,7 @@ function rbFill(){ const b=rbCtx(), v=b||rbCur, isMark=b?!!b.p:(rbType(rbCur.t)|
   $('#rb-t').innerHTML=rbTypeOpts(v.t); $('#rb-bar').innerHTML=rbBarOpts(v.bar||'','Selon le type / typique ('+(((rbType(v.t)||{}).bar)||RB.typ.bar)+')');
   $('#rb-n').value=v.n||''; $('#rb-nc').value=v.nc||''; $('#rb-hook').value=v.hook||''; $('#rb-side').value=String(v.side===-1?-1:1); $('#rb-tg').value=v.tg==null?25:v.tg; $('#rb-col').value=v.col||(rbType(v.t)||{}).color||'#111111'; $('#rb-txt').value=v.txt||''; $('#rb-ts').value=v.ts||'';
   $('#rb-bar-l').hidden=$('#rb-n-l').hidden=$('#rb-nc-l').hidden=$('#rb-hook-l').hidden=$('#rb-side-l').hidden=$('#rb-tg-l').hidden=isMark; $('#rb-txt-l').firstChild.textContent=isMark?'Texte du repère':'Étiquette (vide = automatique)';
-  $('#rb-lapl').checked=RB.showLap!==false; { const t=rbTx(); $('#rbx-k').value=t.k; $('#rbx-font').value=t.font; $('#rbx-bold').checked=t.bold; $('#rbx-halo').checked=t.halo; $('#rbx-black').checked=t.black; } $('#rb-sel').hidden=!b; $('#rb-lap').hidden=$('#rb-lapjog-l').hidden=!(b&&rbSel2); if(b&&rbSel2) $('#rb-ctx').textContent='Barres '+b.id+' + '+rbSel2+' sélectionnées'; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
+  $('#rb-lapl').checked=RB.showLap!==false; { const t=rbTx(); $('#rbx-k').value=t.k; $('#rbx-font').value=t.font; $('#rbx-bold').checked=t.bold; $('#rbx-halo').checked=t.halo; $('#rbx-black').checked=t.black; } $('#rb-sel').hidden=!b; $('#rb-lap').hidden=$('#rb-lapjog-l').hidden=!(b&&rbSel2); rbPart=null; if(b&&!b.p){ const L=rbLaps(true).filter(l=>l.ids.includes(b.id)); const id=rbSel2||(L[0]&&L[0].ids.find(x=>x!==b.id)); if(id&&(rbSel2||L.length)){ rbPart=id; const ign=(RB.nolap||[]).includes([b.id,id].sort().join('|')); $('#rb-nolap').textContent=ign?'Retraiter comme chevauchement':'Ignorer le chevauchement'; $('#rb-unlap').hidden=ign&&false; } } $('#rb-unl').hidden=!rbPart; if(b&&rbSel2) $('#rb-ctx').textContent='Barres '+b.id+' + '+rbSel2+' sélectionnées'; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
 function rbInfoHtml(b){ const bi=rbInfo(rbBarName(b)), L=rbL(b); if(!bi) return ''; const n=+b.n||0; let h=`⌀${bi.db} mm · ${bi.ab} mm² · ${bi.kg} kg/m`+(n?` · ${n} × ${bi.ab} = <b>${n*bi.ab} mm²</b> · masse ${(n*L*bi.kg).toFixed(1)} kg`:'');
   h+=`<br>Chevauchement 1,3ℓd ≈ <b>${rbLap(b)} mm</b> (indicatif)`;
   const o=b.strip&&byId[b.strip]; if(o&&n){ const rq=rectOf(o), wmm=(o.layer==='A'?rq.w:rq.h)*1000, ti=rbInfo(RB.typ.bar); if(ti&&wmm&&RB.typ.s){ const req=ti.ab*wmm/RB.typ.s, got=n*bi.ab; h+=`<br>Bande ${esc2(b.strip)} : largeur ${Math.round(wmm)} mm · As min typique ${RB.typ.bar} @ ${RB.typ.s} ≈ ${Math.round(req)} mm² · fournie ${got} mm² `+(got>=req*0.99?'<b style="color:#2b8a3e">✓</b>':'<b style="color:#d73027">⚠ inférieure à l’As min</b>'); } }
@@ -2218,6 +2219,9 @@ function rbUp(){ const d=rbDrag; rbDrag=null; if(d&&d.moved){ touch(); } draw();
 function rbDelete(){ const b=rbCtx(); if(!b) return; RB.bars=RB.bars.filter(x=>x!==b); rbSel=null; touch(); rbFill(); draw(); $('#rb-msg').textContent='Supprimé.'; }
 function rbLapJog(p,q){ const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q), ends=[['a',-1],['b',1]]; let best=null; ends.forEach(([ep,sg])=>['a','b'].forEach(k=>{ const d=Math.hypot(q[k][0]-p[ep][0],q[k][1]-p[ep][1]); if(!best||d<best.d) best={d,ep,sg,k}; }));
   const ux=g.ux*best.sg, uy=g.uy*best.sg, pe=p[best.ep], n0=[pe[0]-ux*req,pe[1]-uy*req], f0=[n0[0]+ux*Lq,n0[1]+uy*Lq]; p.jog={e:best.ep,off:0.12*(rbCur.side===-1?-1:1),l:0.25,r:req}; if(best.k==='a'){ q.a=n0; q.b=f0; } else { q.b=n0; q.a=f0; } q.t=p.t; if(p.bar) q.bar=p.bar; else delete q.bar; }
+function rbUnlap(){ const p=rbCtx(), q=RB.bars.find(x=>x.id===rbPart); if(!p||!q) return; const g=rbGeom(p); let best=null; ['a','b'].forEach(ep=>['a','b'].forEach(k=>{ const d=Math.hypot(q[k][0]-p[ep][0],q[k][1]-p[ep][1]); if(!best||d<best.d) best={d,ep,k}; }));
+  const t=(p[best.ep][0]-q[best.k][0])*g.ux+(p[best.ep][1]-q[best.k][1])*g.uy; q.a=[q.a[0]+g.ux*t,q.a[1]+g.uy*t]; q.b=[q.b[0]+g.ux*t,q.b[1]+g.uy*t]; delete p.jog; delete q.jog; rbSel2=null; touch(); rbFill(); draw(); $('#rb-msg').textContent='Barres déliées : bout à bout.'; }
+function rbNoLap(){ const p=rbCtx(); if(!p||!rbPart) return; const k=[p.id,rbPart].sort().join('|'); RB.nolap=RB.nolap||[]; const i=RB.nolap.indexOf(k); if(i>=0) RB.nolap.splice(i,1); else RB.nolap.push(k); touch(); rbFill(); draw(); $('#rb-msg').textContent=i>=0?'Chevauchement rétabli.':'Chevauchement ignoré (barres laissées en place).'; }
 function rbLapDo(){ const p=rbCtx(), q=RB.bars.find(x=>x.id===rbSel2); if(!p||!q||p.p||q.p) return; if($('#rb-lapjog').checked){ rbLapJog(p,q); touch(); rbSel2=null; rbFill(); draw(); $('#rb-msg').innerHTML='Chevauchement avec coude posé : <b>'+rbLap(p)+' mm</b> (1,3ℓd, indicatif).'; return; } delete p.jog; const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q);
   const ends=[[p.a,-1],[p.b,1]], qe=['a','b']; let best=null; ends.forEach(([pe,sg])=>qe.forEach(k=>{ const d=Math.hypot(q[k][0]-pe[0],q[k][1]-pe[1]); if(!best||d<best.d) best={d,pe,sg,k}; }));
   const ux=g.ux*best.sg, uy=g.uy*best.sg, nx=-g.uy, ny=g.ux, off=0.1*(rbCur.side===-1?-1:1), n0=[best.pe[0]-ux*req+nx*off, best.pe[1]-uy*req+ny*off], f0=[n0[0]+ux*Lq, n0[1]+uy*Lq];
@@ -2266,7 +2270,7 @@ $('#rbd-ok').onclick=()=>$('#rbdlg').close&&$('#rbdlg').close();
 $('#rb').onclick=()=>rbToggle(!rbOn); $('#rb-done').onclick=()=>rbToggle(false);
 $('#rb-tool-sel').onclick=()=>rbSetTool('sel'); $('#rb-tool-draw').onclick=()=>rbSetTool('draw'); $('#rb-tool-mark').onclick=()=>rbSetTool('mark');
 ['k','font','bold','halo','black'].forEach(k=>{ const e=$('#rbx-'+k); e.addEventListener('input',()=>{ RB.tx=rbTx(); RB.tx[k]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value; touch(); draw(); }); });
-$('#rb-lap').onclick=rbLapDo; $('#rb-lapl').onchange=()=>{ RB.showLap=$('#rb-lapl').checked; touch(); draw(); }; $('#rb-instrip').onclick=rbInStrip; $('#rb-del').onclick=rbDelete; $('#rb-dup').onclick=rbDup; $('#rb-types').onclick=rbDlgOpen;
+$('#rb-lap').onclick=rbLapDo; $('#rb-unlap').onclick=rbUnlap; $('#rb-nolap').onclick=rbNoLap; $('#rb-lapl').onchange=()=>{ RB.showLap=$('#rb-lapl').checked; touch(); draw(); }; $('#rb-instrip').onclick=rbInStrip; $('#rb-del').onclick=rbDelete; $('#rb-dup').onclick=rbDup; $('#rb-types').onclick=rbDlgOpen;
 $('#rb-mv').onclick=()=>{ rbShift((parseFloat($('#rb-dx').value)||0)/1000,(parseFloat($('#rb-dy').value)||0)/1000); $('#rb-dx').value='0'; $('#rb-dy').value='0'; };
 $('#rb-t').onchange=()=>{ rbSet('t',$('#rb-t').value); if(!rbCtx()){ rbFill(); } };
 $('#rb-bar').onchange=()=>rbSet('bar',$('#rb-bar').value); $('#rb-n').onchange=()=>rbSet('n',$('#rb-n').value?Math.max(1,Math.round(+$('#rb-n').value)):''); $('#rb-nc').onchange=()=>rbSet('nc',$('#rb-nc').value?Math.max(0,Math.round(+$('#rb-nc').value)):'');
