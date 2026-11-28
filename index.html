@@ -368,6 +368,7 @@ header{display:block;padding:10px 16px 8px}
 <label id="rb-txt-l">Étiquette<input id="rb-txt" type="text"></label></div>
 <div id="rb-info" class="mut" style="line-height:1.45;margin-top:4px"></div>
 <div id="rb-sel" hidden><div class="msd"><label>Δ X<input id="rb-dx" type="number" step="10" value="0"><span>mm</span></label><label>Δ Y<input id="rb-dy" type="number" step="10" value="0"><span>mm</span></label></div>
+<div class="acts"><button class="btn pri" id="rb-lap" type="button" hidden title="Place la 2e barre en chevauchement 1,3ℓd avec la 1re">Chevaucher les 2 barres</button></div>
 <div class="acts"><button class="btn" id="rb-mv" type="button">Déplacer</button><button class="btn" id="rb-dup" type="button">Dupliquer</button><button class="btn" id="rb-del" type="button" style="color:#b3261e">Supprimer</button></div></div>
 <div class="acts"><button class="btn" id="rb-types" type="button">Types, typique et nomenclature…</button><button class="btn pri" id="rb-done" type="button">Terminer</button></div></div>
 <div class="fpbox msbox" id="calbox" hidden><b>Calage des sources</b>
@@ -868,7 +869,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.19.2', APP_DATE='2026-11-25';
+const APP_VERSION='1.20.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -920,7 +921,7 @@ svg.addEventListener('pointerup',e=>{
   if(wasMoved) return;
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(rbOn&&(rbTool==='draw'||rbTool==='mark')){ rbClick(e); return; }
-  if(rbOn&&rbTool==='sel'&&rbSel&&!(t&&t.closest&&t.closest('[data-rb]'))){ rbSel=null; rbFill(); }
+  if(rbOn&&rbTool==='sel'&&rbSel&&!(t&&t.closest&&t.closest('[data-rb]'))){ rbSel=null; rbSel2=null; rbFill(); }
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
   if(exOn&&exPick){ exClick(e); return; }
   if(calOn&&calPick){ calClick(e); return; }
@@ -2121,7 +2122,7 @@ function rbDefault(){ return {sys:'M',typ:{bar:'15M',s:350,note:''},fy:400,fc:30
          {id:'m1',kind:'mark',name:'Armature d’intégrité (colonne)',shape:'circle',text:'A',color:'#111111'},
          {id:'m2',kind:'mark',name:'Renfort de cisaillement',shape:'box',text:'X',color:'#d6249f'}],
   bars:[]}; }
-let rbTool='sel', rbSel=null, rbP1=null, rbDrag=null, rbCur={t:'t1',bar:'',n:'',nc:'',hook:'',side:1,tg:25,col:'',txt:'',mt:''};
+let rbTool='sel', rbSel=null, rbSel2=null, rbP1=null, rbDrag=null, rbCur={t:'t1',bar:'',n:'',nc:'',hook:'',side:1,tg:25,col:'',txt:'',mt:''};
 const rbType=id=>RB.types.find(t=>t.id===id);
 const rbBarName=b=>b.bar||(rbType(b.t)||{}).bar||RB.typ.bar;
 const rbL=b=>b.p?0:Math.hypot(b.b[0]-b.a[0],b.b[1]-b.a[1]);
@@ -2135,12 +2136,12 @@ function rbGeom(b){ const [x1,y1]=b.a,[x2,y2]=b.b, L=Math.hypot(x2-x1,y2-y1)||1,
   const g={ux,uy,nx,ny,L,hooks:[]}; if(h==='a'||h==='both') g.hooks.push([[x1,y1],[x1+nx*HL,y1+ny*HL]]); if(h==='b'||h==='both') g.hooks.push([[x2,y2],[x2+nx*HL,y2+ny*HL]]); g.pts=pts; return g; }
 function rbLaps(){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
   for(let i=0;i<B.length;i++) for(let j=i+1;j<B.length;j++){ const p=B[i], q=B[j]; if(p.t!==q.t) continue; const gp=rbGeom(p), gq=rbGeom(q);
-    if(Math.abs(gp.ux*gq.uy-gp.uy*gq.ux)>0.02) continue; const dx=q.a[0]-p.a[0], dy=q.a[1]-p.a[1]; if(Math.abs(dx*gp.uy-dy*gp.ux)>0.06) continue;
+    if(Math.abs(gp.ux*gq.uy-gp.uy*gq.ux)>0.02) continue; const dx=q.a[0]-p.a[0], dy=q.a[1]-p.a[1]; if(Math.abs(dx*gp.uy-dy*gp.ux)>0.15) continue;
     const pr=pt=>(pt[0]-p.a[0])*gp.ux+(pt[1]-p.a[1])*gp.uy, a1=0,a2=gp.L, b1=pr(q.a), b2=pr(q.b), lo=Math.max(Math.min(a1,a2),Math.min(b1,b2)), hi=Math.min(Math.max(a1,a2),Math.max(b1,b2)); if(hi-lo<0.05) continue;
     const req=rbLap(p)/1000; out.push({a:[p.a[0]+gp.ux*lo,p.a[1]+gp.uy*lo],b:[p.a[0]+gp.ux*hi,p.a[1]+gp.uy*hi],len:hi-lo,req,ok:hi-lo>=req*0.98,ux:gp.ux,uy:gp.uy,ids:[p.id,q.id],bar:rbBarName(p)}); } return out; }
 const rbInk=()=>({ink:getComputedStyle(document.documentElement).getPropertyValue('--ink')||'#111'});
 function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.clientWidth||800), act=rbOn&&rbTool==='sel';
-  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=b.id===rbSel, hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
+  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=b.id===rbSel||b.id===rbSel2, hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
     if(b.p){ const [x,y]=b.p, txt=b.txt||(t&&t.text)||'', shp=(t&&t.shape)||'circle';
       r.push(`<g data-rb="${b.id}" style="${hit.replace('stroke','all')}">`+(shp==='box'?`<rect x="${x-.55}" y="${-y-.38}" width="1.1" height="0.76" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`:`<circle cx="${x}" cy="${-y}" r=".45" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`)
         +`<text x="${x}" y="${-y+.22}" text-anchor="middle" style="font:600 .62px var(--font-mono);fill:${col};pointer-events:none">${esc2(txt)}</text></g>`);
@@ -2151,7 +2152,7 @@ function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.cl
       +g.hooks.map(h=>`<polyline points="${h[0][0]},${-h[0][1]} ${h[1][0]},${-h[1][1]}" fill="none" stroke="${sel?'#fb8f37':col}" stroke-width="${sel?w+1.2:w}" vector-effect="non-scaling-stroke" pointer-events="none"/>`).join('')+'</g>');
     const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, mx=b.a[0]+(b.b[0]-b.a[0])*k, my=b.a[1]+(b.b[1]-b.a[1])*k, off=.42*(b.side===-1?-1:1), px=mx+g.nx*off, py=my+g.ny*off, vert=Math.abs(g.uy)>Math.abs(g.ux);
       r.push(`<text x="${px}" y="${-py}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${px} ${-py})"`:''} style="font:500 .72px var(--font-mono);fill:${col};paint-order:stroke;stroke:var(--panel);stroke-width:.2px;pointer-events:none">${esc2(tx)}</text>`); }
-    if(sel&&act) [['a',b.a],['b',b.b]].forEach(([k,p])=>r.push(`<circle data-rbh="${k}" data-rb="${b.id}" cx="${p[0]}" cy="${-p[1]}" r="${6*u}" fill="#fff" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`)); });
+    if(sel&&act&&b.id===rbSel&&!rbSel2) [['a',b.a],['b',b.b]].forEach(([k,p])=>r.push(`<circle data-rbh="${k}" data-rb="${b.id}" cx="${p[0]}" cy="${-p[1]}" r="${6*u}" fill="#fff" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`)); });
   rbLaps().forEach(l=>{ const nx=-l.uy*.22, ny=l.ux*.22, ax=l.a[0]+nx, ay=l.a[1]+ny, bx=l.b[0]+nx, by=l.b[1]+ny, c=l.ok?'#2b8a3e':'#d73027', mx=(ax+bx)/2, my=(ay+by)/2, vert=Math.abs(l.uy)>Math.abs(l.ux);
     r.push(`<g pointer-events="none"><polyline points="${l.a[0]},${-l.a[1]} ${ax},${-ay} ${bx},${-by} ${l.b[0]},${-l.b[1]}" fill="none" stroke="${c}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`
       +`<text x="${mx+nx*1.6}" y="${-(my+ny*1.6)}" text-anchor="middle" dominant-baseline="central" ${vert?`transform="rotate(-90 ${mx+nx*1.6} ${-(my+ny*1.6)})"`:''} style="font:500 .55px var(--font-mono);fill:${c};paint-order:stroke;stroke:var(--panel);stroke-width:.15px">${l.ok?'1,3ℓd = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' &lt; '+Math.round(l.req*1000)}</text></g>`); });
@@ -2160,7 +2161,7 @@ const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;'
 
 /* --- outil : états, panneau --- */
 const rbSnap=(e,from)=>{ const [X,Y]=toModel(e); let sp=snapPt(X,Y,-1); if(e.shiftKey&&from){ if(Math.abs(sp.x-from.x)>=Math.abs(sp.y-from.y)) sp={x:sp.x,y:from.y,k:'horizontal (Shift)'}; else sp={x:from.x,y:sp.y,k:'vertical (Shift)'}; } return sp; };
-function rbSelect(id){ rbSel=id||null; rbFill(); draw(); }
+function rbSelect(id){ rbSel=id||null; rbSel2=null; rbFill(); draw(); }
 function rbCtx(){ const b=rbSel&&RB.bars.find(x=>x.id===rbSel); return b||null; }
 function rbTypeOpts(sel,kind){ return RB.types.filter(t=>!kind||t.kind===kind).map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${esc2(t.name)}</option>`).join(''); }
 function rbBarOpts(sel,blank){ const sets=RB.sys==='M'?[['Métrique (CSA G30.18)',RB_SETS.M]]:RB.sys==='I'?[['Impérial (CSA G30.18)',RB_SETS.I]]:[['Métrique',RB_SETS.M],['Impérial',RB_SETS.I]];
@@ -2170,7 +2171,7 @@ function rbFill(){ const b=rbCtx(), v=b||rbCur, isMark=b?!!b.p:(rbType(rbCur.t)|
   $('#rb-t').innerHTML=rbTypeOpts(v.t); $('#rb-bar').innerHTML=rbBarOpts(v.bar||'','Selon le type / typique ('+(((rbType(v.t)||{}).bar)||RB.typ.bar)+')');
   $('#rb-n').value=v.n||''; $('#rb-nc').value=v.nc||''; $('#rb-hook').value=v.hook||''; $('#rb-side').value=String(v.side===-1?-1:1); $('#rb-tg').value=v.tg==null?25:v.tg; $('#rb-col').value=v.col||(rbType(v.t)||{}).color||'#111111'; $('#rb-txt').value=v.txt||'';
   $('#rb-bar-l').hidden=$('#rb-n-l').hidden=$('#rb-nc-l').hidden=$('#rb-hook-l').hidden=$('#rb-side-l').hidden=$('#rb-tg-l').hidden=isMark; $('#rb-txt-l').firstChild.textContent=isMark?'Texte du repère':'Étiquette (vide = automatique)';
-  $('#rb-sel').hidden=!b; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
+  $('#rb-sel').hidden=!b; $('#rb-lap').hidden=!(b&&rbSel2); if(b&&rbSel2) $('#rb-ctx').textContent='Barres '+b.id+' + '+rbSel2+' sélectionnées'; $('#rb-info').innerHTML=b&&!b.p?rbInfoHtml(b):''; }
 function rbInfoHtml(b){ const bi=rbInfo(rbBarName(b)), L=rbL(b); if(!bi) return ''; const n=+b.n||0; let h=`⌀${bi.db} mm · ${bi.ab} mm² · ${bi.kg} kg/m`+(n?` · ${n} × ${bi.ab} = <b>${n*bi.ab} mm²</b> · masse ${(n*L*bi.kg).toFixed(1)} kg`:'');
   h+=`<br>Chevauchement 1,3ℓd ≈ <b>${rbLap(b)} mm</b> (indicatif)`;
   const o=b.strip&&byId[b.strip]; if(o&&n){ const rq=rectOf(o), wmm=(o.layer==='A'?rq.w:rq.h)*1000, ti=rbInfo(RB.typ.bar); if(ti&&wmm&&RB.typ.s){ const req=ti.ab*wmm/RB.typ.s, got=n*bi.ab; h+=`<br>Bande ${esc2(b.strip)} : largeur ${Math.round(wmm)} mm · As min typique ${RB.typ.bar} @ ${RB.typ.s} ≈ ${Math.round(req)} mm² · fournie ${got} mm² `+(got>=req*0.99?'<b style="color:#2b8a3e">✓</b>':'<b style="color:#d73027">⚠ inférieure à l’As min</b>'); } }
@@ -2180,7 +2181,7 @@ function rbToggle(on){ rbOn=!!on; $('#rb').setAttribute('aria-pressed',String(rb
   if(rbOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(exOn) exToggle(false); if(edLim) $('#ed-lim').click(); show.rb=true; syncToggle('rb'); rbSetTool('sel'); rbFill(); }
   draw(); }
 function rbSetTool(t){ rbTool=t; rbP1=null; ['sel','draw','mark'].forEach(k=>$('#rb-tool-'+k).setAttribute('aria-pressed',String(k===t))); const ov=svg.querySelector('#ov'); if(ov) ov.remove();
-  $('#rb-msg').innerHTML=t==='sel'?'Cliquez une barre pour la sélectionner, glissez-la pour la déplacer (poignées = extrémités). Clic sur une bande + « Poser dans la bande ».':t==='draw'?'Cliquez le <b>point de départ</b>, puis le <b>point d’arrivée</b> (<b>Shift</b> = horizontal / vertical). Échap pour quitter.':'Cliquez où placer le <b>repère</b>.'; if(rbOn) draw(); }
+  $('#rb-msg').innerHTML=t==='sel'?'Cliquez une barre pour la sélectionner, glissez-la pour la déplacer. <b>Shift + clic</b> sur une 2e barre adjacente puis « Chevaucher les 2 barres ».':t==='draw'?'Cliquez le <b>point de départ</b>, puis le <b>point d’arrivée</b> (<b>Shift</b> = horizontal / vertical). Échap pour quitter.':'Cliquez où placer le <b>repère</b>.'; if(rbOn) draw(); }
 function rbAdd(o){ o.id='R'+(RB.seq++); RB.bars.push(o); touch(); return o; }
 function rbNewBar(a,b,extra){ const c=rbCur, t=rbType(c.t)||RB.types[0]; return rbAdd(Object.assign({t:t.id,a:[a.x,a.y],b:[b.x,b.y]},c.bar?{bar:c.bar}:{},c.n?{n:+c.n}:{},c.nc?{nc:+c.nc}:{},c.hook?{hook:c.hook}:{},c.side===-1?{side:-1}:{},c.col?{col:c.col}:{},c.txt?{txt:c.txt}:{},c.tg!=null&&c.tg!==25?{tg:c.tg}:{},extra||{})); }
 function rbClick(e){ if(rbTool==='mark'){ const sp=rbSnap(e), t=(rbType(rbCur.t)&&rbType(rbCur.t).kind==='mark')?rbCur.t:RB.types.find(x=>x.kind==='mark').id; const m=rbAdd({t,p:[sp.x,sp.y]}); if(rbCur.txt) m.txt=rbCur.txt; rbSelect(m.id); return; }
@@ -2194,7 +2195,9 @@ function rbPreview(e){ if(rbTool==='sel') return; const sp=rbSnap(e,rbTool==='dr
   if(rbTool==='draw'&&rbP1){ h+=`<line x1="${rbP1.x}" y1="${-rbP1.y}" x2="${sp.x}" y2="${-sp.y}" stroke="${rbCur.col||((rbType(rbCur.t)||{}).color)||'#111'}" stroke-width="2.5" stroke-dasharray="6 3" vector-effect="non-scaling-stroke"/>`; t+=fmtL(Math.hypot(sp.x-rbP1.x,sp.y-rbP1.y))+' · '; }
   svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#rb-msg').innerHTML=(rbTool==='mark'?'Repère : ':t)+(sp.k||'libre'); }
 function rbDown(e){ if(rbTool!=='sel') return false; const t=e.target.closest&&e.target.closest('[data-rbh],[data-rb]'); if(!t) return false; const id=t.dataset.rb, b=RB.bars.find(x=>x.id===id); if(!b) return false;
-  const [X,Y]=toModel(e); rbDrag={id,mode:t.dataset.rbh||'move',x0:X,y0:Y,cx:e.clientX,cy:e.clientY,o:JSON.parse(JSON.stringify(b)),moved:false}; if(rbSel!==id){ rbSel=id; rbFill(); } try{ svg.setPointerCapture(e.pointerId); }catch(_){} return true; }
+  if(e.shiftKey&&rbSel&&id!==rbSel&&!b.p&&!(RB.bars.find(x=>x.id===rbSel)||{}).p){ rbSel2=id; rbFill(); draw(); return true; }
+  if(rbSel2){ rbSel2=null; }
+  const [X,Y]=toModel(e); rbDrag={id,mode:t.dataset.rbh||'move',x0:X,y0:Y,cx:e.clientX,cy:e.clientY,o:JSON.parse(JSON.stringify(b)),moved:false}; if(rbSel!==id){ rbSel=id; rbFill(); } else if(!rbSel2) rbFill(); try{ svg.setPointerCapture(e.pointerId); }catch(_){} return true; }
 function rbMove(e){ const d=rbDrag, b=RB.bars.find(x=>x.id===d.id); if(!b) return; if(!d.moved&&Math.hypot(e.clientX-d.cx,e.clientY-d.cy)<4) return; d.moved=true;
   const [X,Y]=toModel(e); let dx=X-d.x0, dy=Y-d.y0;
   if(d.mode==='move'){ const ref=d.o.p||d.o.a; if(e.shiftKey){ if(Math.abs(dx)>=Math.abs(dy)) dy=0; else dx=0; } const sp=snapPt(ref[0]+dx,ref[1]+dy,-1); if(sp.k){ dx=sp.x-ref[0]; dy=sp.y-ref[1]; }
@@ -2203,6 +2206,11 @@ function rbMove(e){ const d=rbDrag, b=RB.bars.find(x=>x.id===d.id); if(!b) retur
   draw(); $('#rb-ctx').textContent=(b.p?'Repère ':'Barre ')+b.id+' sélectionné'+(b.p?'':' · '+(rbL(b)*1000).toFixed(0)+' mm'); }
 function rbUp(){ const d=rbDrag; rbDrag=null; if(d&&d.moved){ touch(); } draw(); rbFill(); }
 function rbDelete(){ const b=rbCtx(); if(!b) return; RB.bars=RB.bars.filter(x=>x!==b); rbSel=null; touch(); rbFill(); draw(); $('#rb-msg').textContent='Supprimé.'; }
+function rbLapDo(){ const p=rbCtx(), q=RB.bars.find(x=>x.id===rbSel2); if(!p||!q||p.p||q.p) return; const g=rbGeom(p), req=rbLap(p)/1000, Lq=rbL(q);
+  const ends=[[p.a,-1],[p.b,1]], qe=['a','b']; let best=null; ends.forEach(([pe,sg])=>qe.forEach(k=>{ const d=Math.hypot(q[k][0]-pe[0],q[k][1]-pe[1]); if(!best||d<best.d) best={d,pe,sg,k}; }));
+  const ux=g.ux*best.sg, uy=g.uy*best.sg, nx=-g.uy, ny=g.ux, off=0.1*(rbCur.side===-1?-1:1), n0=[best.pe[0]-ux*req+nx*off, best.pe[1]-uy*req+ny*off], f0=[n0[0]+ux*Lq, n0[1]+uy*Lq];
+  if(best.k==='a'){ q.a=n0; q.b=f0; } else { q.b=n0; q.a=f0; }
+  q.t=p.t; if(p.bar) q.bar=p.bar; else delete q.bar; touch(); rbSel2=null; rbFill(); draw(); $('#rb-msg').innerHTML='Chevauchement posé : <b>'+Math.round(req*1000)+' mm</b> (1,3ℓd, indicatif).'; }
 function rbDup(){ const b=rbCtx(); if(!b) return; const c=JSON.parse(JSON.stringify(b)); c.id='R'+(RB.seq++); if(c.p){ c.p=[c.p[0]+0.5,c.p[1]+0.5]; } else { c.a=[c.a[0]+0.3,c.a[1]+0.3]; c.b=[c.b[0]+0.3,c.b[1]+0.3]; } RB.bars.push(c); rbSel=c.id; touch(); rbFill(); draw(); }
 function rbShift(dx,dy){ const b=rbCtx(); if(!b||(!dx&&!dy)) return; if(b.p) b.p=[b.p[0]+dx,b.p[1]+dy]; else { b.a=[b.a[0]+dx,b.a[1]+dy]; b.b=[b.b[0]+dx,b.b[1]+dy]; } touch(); draw(); rbFill(); }
 function rbInStrip(){ const o=selId&&byId[selId]; if(!o||!o.layer){ $('#rb-msg').textContent='Sélectionnez d’abord une bande (clic sur la bande, outil Sélection).'; return; }
@@ -2245,7 +2253,7 @@ $('#rbd-ok').onclick=()=>$('#rbdlg').close&&$('#rbdlg').close();
 /* --- câblage du panneau --- */
 $('#rb').onclick=()=>rbToggle(!rbOn); $('#rb-done').onclick=()=>rbToggle(false);
 $('#rb-tool-sel').onclick=()=>rbSetTool('sel'); $('#rb-tool-draw').onclick=()=>rbSetTool('draw'); $('#rb-tool-mark').onclick=()=>rbSetTool('mark');
-$('#rb-instrip').onclick=rbInStrip; $('#rb-del').onclick=rbDelete; $('#rb-dup').onclick=rbDup; $('#rb-types').onclick=rbDlgOpen;
+$('#rb-lap').onclick=rbLapDo; $('#rb-instrip').onclick=rbInStrip; $('#rb-del').onclick=rbDelete; $('#rb-dup').onclick=rbDup; $('#rb-types').onclick=rbDlgOpen;
 $('#rb-mv').onclick=()=>{ rbShift((parseFloat($('#rb-dx').value)||0)/1000,(parseFloat($('#rb-dy').value)||0)/1000); $('#rb-dx').value='0'; $('#rb-dy').value='0'; };
 $('#rb-t').onchange=()=>{ rbSet('t',$('#rb-t').value); if(!rbCtx()){ rbFill(); } };
 $('#rb-bar').onchange=()=>rbSet('bar',$('#rb-bar').value); $('#rb-n').onchange=()=>rbSet('n',$('#rb-n').value?Math.max(1,Math.round(+$('#rb-n').value)):''); $('#rb-nc').onchange=()=>rbSet('nc',$('#rb-nc').value?Math.max(0,Math.round(+$('#rb-nc').value)):'');
