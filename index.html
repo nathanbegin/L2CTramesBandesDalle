@@ -312,6 +312,18 @@ header{display:block;padding:10px 16px 8px}
 #rbdlg{max-width:820px;width:94vw;border:1px solid var(--line);border-radius:10px;padding:16px 20px;background:var(--panel);color:var(--ink);max-height:90vh}#rbdlg h3{margin:14px 0 4px;font-size:13px}
 .rbrow{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.rbrow label{display:flex;flex-direction:column;gap:2px;font-size:12px}.rbt{width:100%;border-collapse:collapse;font-size:12px}.rbt td,.rbt th{padding:3px 5px;border-bottom:1px solid var(--line);text-align:left}.rbt input[type=text]{width:100%;font:inherit}.rbul{margin:4px 0;padding-left:18px;font-size:12px}
 .vsec{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px 3px;border-top:1px solid var(--line);margin-top:4px}#vmm .grr{padding:0 10px 8px}
+
+.stepsrow{display:flex;gap:8px;align-items:stretch}.stepsrow .steps{flex:1;min-width:0}#st-tg{margin-top:10px;padding:2px 9px;font-size:12px;white-space:nowrap;align-self:center}#st-tg[hidden]{display:none}
+.steps.compact{margin-top:8px}.steps.compact .step{padding:3px 8px;flex-wrap:nowrap;gap:7px}.steps.compact .step .tx small,.steps.compact .step .tx b i,.steps.compact #st3-ed{display:none}
+.steps.compact .step .tx{min-width:0}.steps.compact .step .tx b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.steps.compact .step .n{width:18px;height:18px;font-size:10.5px}.steps.compact .step .btn{padding:1px 8px;font-size:11.5px;white-space:nowrap}
+.next.compact{display:none}
+.toolpane{display:none;flex-direction:column;overflow:auto;min-height:0}aside.tool-on .toolpane{display:flex;flex:1}aside.tool-on>.tabs,aside.tool-on>.pane{display:none!important}
+.toolpane>.fpbox,.toolpane>.edpanel{position:static;width:auto;max-width:none;max-height:none;box-shadow:none;border:0;border-radius:0;padding:14px 16px;font-size:13px;background:var(--panel);transform:none}.toolpane>[hidden]{display:none!important}
+.toolpane>div>b:first-child{display:block;font-size:15px;margin-bottom:6px}
+.vflist{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow:auto;margin-top:6px}#vf-out p.ok{color:#2b8a3e}#vf-out p{margin:6px 0}
+.toolbox[hidden]{display:none!important}.vfrow{white-space:normal!important;text-align:left;font:12px/1.35 var(--font-sans,system-ui,sans-serif)!important}.vfrow{box-sizing:border-box;flex-direction:column;gap:1px;align-items:flex-start}.vfrow b{flex:none}.vfrow span{min-width:0;overflow-wrap:anywhere}
+.badge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#c92a2a;color:#fff;font:600 10.5px var(--font-mono,monospace);margin-left:5px;vertical-align:1px}.badge[hidden]{display:none}
+#h-undo,#h-redo{font-size:15px;line-height:1;padding:4px 10px}#h-undo:disabled,#h-redo:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -330,18 +342,18 @@ header{display:block;padding:10px 16px 8px}
 <span id="pj-msg" role="status"></span>
 <input type="file" id="pj-file" accept=".f2k,.txt" hidden><input type="file" id="pj-pdf" accept=".pdf,application/pdf" hidden><input type="file" id="pj-bkf" accept=".json" hidden></div>
 </div>
-<ol class="steps" id="steps" aria-label="Étapes">
+<div class="stepsrow"><ol class="steps" id="steps" aria-label="Étapes">
 <li class="step" id="st1"><span class="n">1</span><div class="tx"><b>Plan PDF</b><small id="st1s"></small></div><button class="btn" id="pj-pdfb" type="button">Importer un PDF</button></li>
 <li class="step" id="st2"><span class="n">2</span><div class="tx"><b>Modèle SAFE <i>(facultatif)</i></b><small id="st2s"></small></div><button class="btn" id="pj-f2k" type="button">Importer un .f2k</button></li>
 <li class="step" id="st3"><span class="n">3</span><div class="tx"><b>Limites et bandes</b><small id="st3s"></small></div><button class="btn" id="st3-ed" type="button">Éditer les limites</button><button class="btn" id="st3-gen" type="button">Générer</button></li>
 <li class="step" id="st4"><span class="n">4</span><div class="tx"><b>Export SAFE</b><small id="st4s"></small></div><button class="btn pri" id="st4-x" type="button">Ouvrir l’export</button></li>
-</ol>
+</ol><button class="btn" id="st-tg" type="button" aria-controls="steps">Détails ▾</button></div>
 <div class="next" id="next" role="status"></div>
 </header>
   <main>
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
-      <button class="btn" id="fit" type="button">Ajuster</button>
+      <button class="btn" id="fit" type="button">Ajuster</button><button class="btn" id="h-undo" type="button" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled>↶</button><button class="btn" id="h-redo" type="button" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled>↷</button>
 <button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="vm" type="button" aria-haspopup="menu" aria-expanded="false" title="Menu Affichage : réafficher les bandes masquées">Affichage ▾</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="rb" type="button" aria-pressed="false" title="Poser, déplacer et supprimer l’armature (barres, repères, chevauchements)">Armature</button><button class="btn" id="an" type="button" aria-pressed="false" title="Texte, lignes, flèches, rectangles et ellipses avec accrochage">Dessin</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
@@ -454,12 +466,12 @@ header{display:block;padding:10px 16px 8px}
     <div class="tabs" role="tablist" aria-label="Panneaux">
       <button class="tab" type="button" role="tab" id="tab-b" aria-selected="true" aria-controls="pane-b">Bandes</button>
       <button class="tab" type="button" role="tab" id="tab-g" aria-selected="false" aria-controls="pane-g">Créer</button>
-      <button class="tab" type="button" role="tab" id="tab-x" aria-selected="false" aria-controls="pane-x">Export</button>
+      <button class="tab" type="button" role="tab" id="tab-x" aria-selected="false" aria-controls="pane-x">Export<span class="badge" id="vf-badge" hidden></span></button>
     </div>
     <div class="pane" id="pane-b" role="tabpanel" aria-labelledby="tab-b">
       <div class="info" id="info"></div>
       <div class="list" id="list"></div>
-      <div class="note">Limites bleues : lignes tracées dans le PDF Bluebeam ou ajoutées dans l’outil (mode « Éditer les limites »). Reconstruction v2 et bandes .f2k : voir les calques. Dalles du .f2k : colorées selon les charges uniformes qui leur sont assignées.</div>
+      <div class="note">Limites : une couleur par source (PDF, modèle SAFE, générées L/4, tracées à la main), à afficher ou masquer dans Calques. Dalles du .f2k : colorées selon leurs charges uniformes. Ctrl+Z / Ctrl+Y : annuler / rétablir.</div>
     </div>
     <div class="pane gen" id="pane-g" role="tabpanel" aria-labelledby="tab-g" hidden>
       <section class="sec"><h2>Variantes de bandes</h2>
@@ -504,6 +516,8 @@ header{display:block;padding:10px 16px 8px}
       <div class="acts"><button class="btn pri" id="g-goexp" type="button">Continuer vers l’export →</button></div></section>
     </div>
     <div class="pane gen" id="pane-x" role="tabpanel" aria-labelledby="tab-x" hidden>
+      <section class="sec" id="vf-sec"><div class="sech"><h2>Vérification avant export</h2><button class="btn" id="vf-run" type="button">Vérifier</button></div>
+      <label class="ck"><input id="vf-show" type="checkbox" checked>Afficher sur le plan (hachures roses : couche A sans bande · bleues : couche B)</label><div id="vf-out"></div></section>
       <section class="sec"><h2>Export vers SAFE</h2>
       <p>Fichier .f2k à importer dans SAFE 23 (Interactive Database Editing → Import → Add to Existing).</p>
       <div class="frm"><label>Premier n° de point (SAFE)<input id="x-pt" type="number" step="1" min="1" value="2000"></label><label>Premier n° de bande<input id="x-n" type="number" step="1" min="1" value="101"></label><label style="grid-column:1/-1">Élévation Z des bandes (mm)<input id="x-z" type="number" step="1" list="x-zl"><datalist id="x-zl"></datalist></label></div>
@@ -532,7 +546,7 @@ header{display:block;padding:10px 16px 8px}
       <label id="pf-pg-l">Pages exportées<select id="pf-pg"><option value="one">Seulement la page du plan aligné</option><option value="all">Tout le jeu de plans</option></select></label>
       <label id="pf-fmt-l">Format de page<select id="pf-fmt"></select></label><label id="pf-sc-l">Échelle<select id="pf-sc"></select></label></div>
       <div class="acts"><button class="btn" id="g-ex" type="button">Aligner le modèle sur le PDF…</button><button class="btn pri" id="g-pdf" type="button">Télécharger le PDF</button></div><p class="mut" id="pf-exst"></p><p id="pf-msg" class="mut" role="status"></p></section>
-      <section class="sec"><h2>Vérification</h2>
+      <section class="sec"><h2>Comparaison au .f2k</h2>
       <p>Compare les bandes créées à celles déjà présentes dans le .f2k du modèle.</p>
       <div class="acts"><button class="btn" id="g-cmp" type="button">Comparer au .f2k</button></div>
       <div id="g-cmpout"></div></section>
@@ -775,6 +789,7 @@ function planSVG(){
     }
   }
   if(show.rb&&RBF&&typeof rbSVGAll==='function') r.push(rbSVGAll());
+  if(typeof vfSVG==='function') r.push(vfSVG());
   if(show.an&&typeof AN!=='undefined'&&AN&&AN.items.length) r.push(anSVG());
   return r.join('');
 }
@@ -935,7 +950,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.31.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.32.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -2650,6 +2665,82 @@ function anEditEnd(commit){ const ta=document.getElementById('an-ed'); if(!ta) r
   if(it){ if(!String(it.txt||'').trim()){ AN.items=AN.items.filter(x=>x!==it); if(anSel===it.id) anSel=null; } touch(); anFill(); } draw(); }
 svg.addEventListener('dblclick',e=>{ if(!anOn||!AN||document.getElementById('an-ed')) return; const [X,Y]=toModel(e); const it=AN.items.slice().reverse().find(x=>{ if(x.k!=='text') return false; const t=anTextBox(x); return X>=x.p[0]-t.fs*.4&&X<=x.p[0]+t.w&&Y<=x.p[1]+t.fs*1.1&&Y>=x.p[1]-t.h+t.fs*.6; }); if(it){ e.preventDefault(); e.stopPropagation(); anSel=it.id; anFill(); anEdit(it); } });
 svg.addEventListener('wheel',()=>anEditEnd(true),{passive:true});
+/* ====================== INTERFACE v1.32 : étapes repliables, panneaux d'outils à droite, annuler/rétablir, vérification ====================== */
+/* --- 1. barre des étapes repliable --- */
+var VF={res:null,show:true,foc:null};
+let STP=(()=>{ try{ return localStorage.getItem('l2c-steps')||'auto'; }catch(e){ return 'auto'; } })();
+function stepsMode(){ const empty=!PJ.hasPdf&&!PJ.hasF2k&&PJ.id!=='exemple', open=STP==='open'||empty; $('#steps').classList.toggle('compact',!open); $('#next').classList.toggle('compact',!open);
+  $('#st-tg').textContent=open?'Réduire ▴':'Détails ▾'; $('#st-tg').hidden=empty; $('#st-tg').setAttribute('aria-expanded',String(open)); $('#steps').title=open?'':$('#next').textContent; if(typeof tbEmpty==='function') tbEmpty(empty); }
+$('#st-tg').onclick=()=>{ STP=$('#steps').classList.contains('compact')?'open':'auto'; try{ localStorage.setItem('l2c-steps',STP); }catch(e){} stepsMode(); };
+{ const r0=renderSteps; renderSteps=function(){ r0.apply(this,arguments); stepsMode(); }; }
+function tbEmpty(empty){ const t=$('#toolbox'); if(t) t.hidden=!!empty; }
+/* --- 3. panneaux d'outils dans la colonne de droite --- */
+(()=>{ const aside=document.querySelector('aside'), tp=document.createElement('div'); tp.className='toolpane'; tp.id='toolpane'; aside.insertBefore(tp,aside.firstChild);
+  const ids=['edpanel','fpbox','msbox','anbox','rbbox','calbox','exbox']; ids.forEach(id=>{ const e=document.getElementById(id); if(e) tp.appendChild(e); });
+  const upd=()=>{ const on=ids.some(id=>{ const e=document.getElementById(id); return e&&!e.hidden; }); aside.classList.toggle('tool-on',on); };
+  const mo=new MutationObserver(upd); ids.forEach(id=>{ const e=document.getElementById(id); if(e) mo.observe(e,{attributes:true,attributeFilter:['hidden']}); }); upd(); })();
+/* --- 5. annuler / rétablir --- */
+const H={st:[],i:-1,t:null};
+function hSnap(){ try{ return JSON.stringify({lines:D.lines,gen:genState(),rbf:RBF,an:AN,meas:(typeof meas!=='undefined'?meas:[])}); }catch(e){ return null; } }
+function hInit(){ clearTimeout(H.t); H.t=null; const s=hSnap(); H.st=s?[s]:[]; H.i=H.st.length-1; hUi(); }
+function hPush(){ H.t=null; const s=hSnap(); if(!s||s===H.st[H.i]) return; H.st=H.st.slice(0,H.i+1); H.st.push(s); if(H.st.length>60) H.st.shift(); H.i=H.st.length-1; hUi(); }
+function hSched(){ if(ST.loading) return; clearTimeout(H.t); H.t=setTimeout(hPush,350); }
+function hFlush(){ if(H.t){ clearTimeout(H.t); hPush(); } }
+function hRestore(s){ const o=JSON.parse(s); D.lines=o.lines||[]; rebuildLIM(); vInit(o.gen); gen.seq=Math.max(gen.seq,(o.gen&&o.gen.seq)||1); gen.first=null; gen.ln1=null;
+  if(o.rbf&&o.rbf.list&&o.rbf.list.length){ RBF=o.rbf; RB=rbFileAct().rb; } rbSel=null; rbSel2=null; rbP1=null; AN=o.an||AN; anSel=null;
+  if(typeof meas!=='undefined'){ meas.length=0; (o.meas||[]).forEach(m=>meas.push(m)); } selId=null; edSel=null;
+  updateGen(true); if(rbOn) rbFill(); if(anOn) anFill(); if(typeof renderRev==='function') renderRev(); buildToggles(); renderSteps(); draw(); touch(); }
+function hUndo(){ hFlush(); if(H.i<=0){ pjMsg('Rien à annuler.'); return; } H.i--; hRestore(H.st[H.i]); H.t&&clearTimeout(H.t); H.t=null; hUi(); pjMsg('Annulé.'); }
+function hRedo(){ hFlush(); if(H.i>=H.st.length-1){ pjMsg('Rien à rétablir.'); return; } H.i++; hRestore(H.st[H.i]); clearTimeout(H.t); H.t=null; hUi(); pjMsg('Rétabli.'); }
+function hUi(){ const u=$('#h-undo'), r=$('#h-redo'); if(u) u.disabled=H.i<=0&&!H.t; if(r) r.disabled=H.i>=H.st.length-1; }
+let vfT=null; { const t0=touch; touch=function(){ t0.apply(this,arguments); hSched(); if($('#h-undo')) $('#h-undo').disabled=false; if(VF.res){ clearTimeout(vfT); vfT=setTimeout(()=>vfRun(true),700); } }; }
+{ const a0=applyProject; applyProject=function(){ const r=a0.apply(this,arguments); setTimeout(hInit,0); VF.res=null; vfRender(); return r; }; }
+document.addEventListener('keydown',e=>{ if(!(e.ctrlKey||e.metaKey)||e.altKey) return; if(/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||'')||document.querySelector('dialog[open]')||!$('#esp').hidden) return;
+  const k=e.key.toLowerCase(); if(k==='z'&&!e.shiftKey){ e.preventDefault(); hUndo(); } else if(k==='y'||(k==='z'&&e.shiftKey)){ e.preventDefault(); hRedo(); } });
+$('#h-undo').onclick=hUndo; $('#h-redo').onclick=hRedo;
+/* --- 9. vérification avant export --- */
+function vfRun(quiet){ if(typeof slabPrep==='function') slabPrep(); const S=(genObjs||[]).filter(o=>(o.layer==='A'||o.layer==='B')).map(o=>({o,r:o.rect||rectOf(o)}));
+  const res={unc:[],ovl:[],nar:[],col:[],cells:{A:[],B:[]},g:0.25,n:S.length,cov:{A:0,B:0}};
+  const inR=(r,x,y)=>x>=r.x&&x<=r.x+r.w&&-y>=r.y&&-y<=r.y+r.h;
+  if(S.length&&SLB&&SLB.on){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; SLB.P.forEach(q=>{ x0=Math.min(x0,q.x0); y0=Math.min(y0,q.y0); x1=Math.max(x1,q.x1); y1=Math.max(y1,q.y1); });
+    const g=(x1-x0)*(y1-y0)>40000?0.5:0.25; res.g=g; const nx=Math.ceil((x1-x0)/g), ny=Math.ceil((y1-y0)/g);
+    ['A','B'].forEach(L=>{ const R=S.filter(s=>s.o.layer===L).map(s=>s.r); if(!R.length) return; const U=new Uint8Array(nx*ny); let tot=0,un=0;
+      for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){ const x=x0+(i+.5)*g, y=y0+(j+.5)*g; if(!slabIn(x,y)) continue; tot++; if(!R.some(r=>inR(r,x,y))){ U[j*nx+i]=1; un++; } }
+      res.cov[L]=tot?1-un/tot:1;
+      const seen=new Uint8Array(nx*ny); for(let k=0;k<nx*ny;k++){ if(!U[k]||seen[k]) continue; const st=[k]; seen[k]=1; let n=0,bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9; const cells=[];
+        while(st.length){ const c=st.pop(), i=c%nx, j=(c-i)/nx; n++; cells.push(c); bx0=Math.min(bx0,i); bx1=Math.max(bx1,i); by0=Math.min(by0,j); by1=Math.max(by1,j);
+          [[1,0],[-1,0],[0,1],[0,-1]].forEach(([di,dj])=>{ const a=i+di,b=j+dj; if(a<0||b<0||a>=nx||b>=ny) return; const q=b*nx+a; if(U[q]&&!seen[q]){ seen[q]=1; st.push(q); } }); }
+        const A=n*g*g; if(A<0.75) continue; const it={t:'unc',L,A,x0:x0+bx0*g,y0:y0+by0*g,x1:x0+(bx1+1)*g,y1:y0+(by1+1)*g}; res.unc.push(it);
+        cells.forEach(c=>{ const i=c%nx, j=(c-i)/nx; res.cells[L].push([x0+i*g,y0+j*g]); }); } }); }
+  ['A','B'].forEach(L=>{ const T=S.filter(s=>s.o.layer===L); for(let a=0;a<T.length;a++) for(let b=a+1;b<T.length;b++){ const p=T[a].r,q=T[b].r, ix=Math.min(p.x+p.w,q.x+q.w)-Math.max(p.x,q.x), iy=Math.min(p.y+p.h,q.y+q.h)-Math.max(p.y,q.y);
+    if(ix>0.02&&iy>0.02&&ix*iy>0.1){ const X0=Math.max(p.x,q.x), Y0=Math.max(p.y,q.y); res.ovl.push({t:'ovl',L,A:ix*iy,ids:[T[a].o.id,T[b].o.id],x0:X0,x1:X0+ix,y0:-(Y0+iy),y1:-Y0}); } } });
+  S.forEach(s=>{ const o=s.o, w=(o.w1||0)+(o.w2||0), len=o.hi-o.lo; if((o.kind||'gc')==='gc'&&(w<0.6||len<1)||(o.kind==='gm'&&w<0.25)) res.nar.push({t:'nar',L:o.layer,id:o.id,w,len,x0:s.r.x,x1:s.r.x+s.r.w,y0:-(s.r.y+s.r.h),y1:-s.r.y}); });
+  ['A','B'].forEach(L=>{ const C=S.filter(s=>s.o.layer===L&&(s.o.kind||'gc')==='gc'); if(!C.length) return; (D.cols||[]).forEach((c,i)=>{ if(!C.some(s=>inR(s.r,c.x,c.y))) res.col.push({t:'col',L,i,x0:c.x-.4,x1:c.x+.4,y0:c.y-.4,y1:c.y+.4}); }); });
+  res.unc.sort((a,b)=>b.A-a.A); VF.res=res; VF.foc=null; vfRender(); draw(); if(!quiet) pjMsg('Vérification terminée.'); return res; }
+function vfCount(r){ return r?r.unc.length+r.ovl.length+r.nar.length+r.col.length:0; }
+function vfRender(){ const el=$('#vf-out'); if(!el||!VF) return; const r=VF.res; $('#vf-show').checked=VF.show;
+  if(!r){ el.innerHTML='<p class="mut">Lancez la vérification pour repérer les zones de dalle sans bande, les chevauchements, les bandes trop étroites et les colonnes hors bande.</p>'; vfBadge(); return; }
+  if(!r.n){ el.innerHTML='<p>Aucune bande dans la variante active.</p>'; vfBadge(); return; }
+  const m=v=>v.toFixed(1).replace('.',','), cov=['A','B'].map(L=>`${L} ${Math.round(r.cov[L]*100)} %`).join(' · ');
+  const row=(it,k,txt)=>`<button class="rvrow vfrow${VF.foc===k?' on':''}" type="button" data-vf="${k}"><b class="${it.t==='unc'?'del':it.t==='ovl'?'mod':'add'}">${{unc:'Non couverte',ovl:'Chevauchement',nar:'Bande étroite',col:'Colonne hors bande'}[it.t]}</b><span>${txt}</span></button>`;
+  const L=[]; r.unc.forEach((it,i)=>L.push(row(it,'unc'+i,`Couche ${it.L} · ≈ ${m(it.A)} m² · ${posRef((it.x0+it.x1)/2,(it.y0+it.y1)/2)}`)));
+  r.ovl.forEach((it,i)=>L.push(row(it,'ovl'+i,`Couche ${it.L} · ${it.ids.join(' / ')} · ${m(it.A)} m²`)));
+  r.nar.forEach((it,i)=>L.push(row(it,'nar'+i,`${it.id} · largeur ${Math.round(it.w*1000)} mm · L ${m(it.len)} m`)));
+  r.col.forEach((it,i)=>L.push(row(it,'col'+i,`Couche ${it.L} · colonne ${((D.cinfo||[]).find(q=>Math.hypot(q.x-D.cols[it.i].x,q.y-D.cols[it.i].y)<0.25)||{}).id||''} · ${posRef(D.cols[it.i].x,D.cols[it.i].y)}`)));
+  const n=vfCount(r); el.innerHTML=`<p class="${n?'':'ok'}"><b>${n?n+' point'+(n>1?'s':'')+' à vérifier':'Aucun problème détecté'}</b> · couverture de la dalle ${cov}${SLB&&SLB.on?'':' (contour de dalle inconnu : couverture non calculée)'}.</p><div class="vflist">${L.join('')}</div>`; vfBadge(); }
+function vfBadge(){ if(!VF) return; const n=vfCount(VF.res), b=$('#vf-badge'); if(b){ b.textContent=n; b.hidden=!n; } }
+function vfItem(k){ const r=VF.res; if(!r) return null; const m=k.match(/^(unc|ovl|nar|col)(\d+)$/); return m?r[m[1]][+m[2]]:null; }
+$('#vf-run').onclick=()=>vfRun(); $('#vf-show').onchange=e=>{ VF.show=e.target.checked; draw(); };
+$('#vf-out').addEventListener('click',e=>{ const b=e.target.closest('[data-vf]'); if(!b) return; const it=vfItem(b.dataset.vf); if(!it) return; VF.foc=b.dataset.vf; VF.show=true;
+  const cx=(it.x0+it.x1)/2, cy=(it.y0+it.y1)/2, w=Math.max(14,(it.x1-it.x0)*3,(it.y1-it.y0)*3*svg.clientWidth/Math.max(1,svg.clientHeight)); vb.w=w; vb.h=w*svg.clientHeight/Math.max(1,svg.clientWidth); vb.x=cx-vb.w/2; vb.y=-cy-vb.h/2; applyVB();
+  if(it.ids){ select(it.ids[0]); } else if(it.id) select(it.id); vfRender(); draw(); });
+function vfSVG(){ if(!VF) return ''; const r=VF.res; if(!r||!VF.show) return ''; const g=r.g, out=[`<defs><pattern id="vfA" width="0.6" height="0.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="0.6" stroke="#d6336c" stroke-width="0.12"/></pattern><pattern id="vfB" width="0.6" height="0.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="0.6" stroke="#1c7ed6" stroke-width="0.12"/></pattern></defs>`];
+  ['A','B'].forEach(L=>{ const rows={}; r.cells[L].forEach(([x,y])=>{ const k=y.toFixed(3); (rows[k]=rows[k]||[]).push(x); }); Object.keys(rows).forEach(k=>{ const xs=rows[k].sort((a,b)=>a-b), y=+k; let s=xs[0],p=xs[0];
+      for(let i=1;i<=xs.length;i++){ if(i<xs.length&&xs[i]-p<g*1.5){ p=xs[i]; continue; } out.push(`<rect x="${s}" y="${-(y+g)}" width="${p-s+g}" height="${g}" fill="url(#vf${L})" pointer-events="none"/>`); if(i<xs.length){ s=p=xs[i]; } } }); });
+  const f=VF.foc&&vfItem(VF.foc); [...r.ovl,...r.nar,...r.col,...r.unc].forEach(it=>{ const on=f===it; if(it.t==='unc'&&!on) return; out.push(`<rect x="${it.x0}" y="${-it.y1}" width="${it.x1-it.x0}" height="${it.y1-it.y0}" fill="none" stroke="${it.t==='ovl'?'#d6249f':it.t==='col'?'#e8590c':'#c92a2a'}" stroke-width="${on?3.5:1.6}" stroke-dasharray="${on?'none':'5 3'}" vector-effect="non-scaling-stroke" pointer-events="none"/>`); });
+  return out.join(''); }
+{ const s0=showTab; showTab=function(k){ s0.apply(this,arguments); if(k==='x'&&!VF.res&&typeof genObjs!=='undefined'&&genObjs.length) setTimeout(()=>vfRun(true),30); }; }
+vfRender(); stepsMode(); setTimeout(()=>{ if(!H.st.length) hInit(); },0);
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 $('#cl-st').onclick=()=>{ espOpen('projets'); };
 clAuthMode(); clLoadMe();
