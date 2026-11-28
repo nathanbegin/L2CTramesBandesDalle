@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const ROLES = ['viewer', 'editor', 'admin', 'owner'];
+const ROLE_LABEL = { viewer: 'lecteur', editor: 'éditeur', admin: 'administrateur', owner: 'propriétaire' };
 const rk = r => ROLES.indexOf(r);
 const SECRET = () => process.env.AUTH_SECRET || (process.env.L2C_LOCAL ? 'dev-secret' : '');
 const COOKIE = 'l2c_session';
@@ -50,7 +51,10 @@ const fail = (code, msg) => Object.assign(new Error(msg), { code });
 /* ---------- modèle ---------- */
 const uPath = id => `u/${id}.json`, ePath = e => `e/${sha(e)}.json`, tPath = id => `t/${id}.json`, pMeta = id => `p/${id}/meta.json`, pPart = (id, k) => `p/${id}/${k}.gz`;
 const getUser = id => getJ(uPath(id));
-const pubUser = u => ({ id: u.id, email: u.email, name: u.name, prefs: u.prefs || {} });
+const pubUser = u => ({ id: u.id, email: u.email, name: u.name, prefs: u.prefs || {}, sa: !!u.sa, mustChange: !!u.mustChange });
+async function idxAdd(p, id) { const m = (await getJ(p)) || { list: [] }; if (!m.list.includes(id)) m.list.push(id); await putJ(p, m); }
+async function idxDel(p, id) { const m = (await getJ(p)) || { list: [] }; m.list = m.list.filter(x => x !== id); await putJ(p, m); }
+const tempPwd = () => { const A = 'abcdefghjkmnpqrstuvwxyz23456789'; return Array.from(crypto.randomBytes(12), b => A[b % A.length]).join('').replace(/(.{4})(?=.)/g, '$1-'); };
 async function userTeams(u) { const out = []; for (const tid of u.teams || []) { const t = await getJ(tPath(tid)); if (t && t.members[u.id]) out.push({ id: t.id, name: t.name, role: t.members[u.id] }); } return out; }
 async function projectsOf(u) {
   const ids = new Map(); for (const id of u.projects || []) ids.set(id, null);
@@ -74,24 +78,27 @@ async function handle(req, res) {
   const raw = req.method === 'POST' || req.method === 'PUT' ? await readBody(req) : Buffer.alloc(0);
   const ctype = String(req.headers['content-type'] || '');
   const J = ctype.includes('json') && raw.length ? JSON.parse(raw.toString('utf8')) : {};
-  const uid = verify(cookies(req)[COOKIE]); const me = uid ? await getUser(uid) : null;
+  const uid = verify(cookies(req)[COOKIE]); let me = uid ? await getUser(uid) : null; if (me && me.disabled) me = null;
 
   if (r === 'register') {
     const email = normEmail(J.email), name = String(J.name || '').trim().slice(0, 80), pw = String(J.password || '');
     if (!okEmail(email)) throw fail(400, 'Courriel invalide.'); if (!name) throw fail(400, 'Nom requis.'); if (pw.length < 8) throw fail(400, 'Mot de passe : 8 caractères minimum.');
     if (await getJ(ePath(email))) throw fail(409, 'Un compte existe déjà avec ce courriel.');
-    const u = { id: rid(), email, name, pwd: hashPwd(pw), prefs: {}, teams: [], projects: [], created: Date.now() };
-    await putJ(uPath(u.id), u); await putJ(ePath(email), { id: u.id });
-    if (!(await getJ('meta/org.json'))) { // premier compte : crée l'équipe de l'entreprise, dont il est propriétaire
+    const first = !(await getJ('meta/org.json'));
+    const u = { id: rid(), email, name, pwd: hashPwd(pw), prefs: {}, teams: [], projects: [], created: Date.now(), sa: first };
+    await putJ(uPath(u.id), u); await putJ(ePath(email), { id: u.id }); await idxAdd('meta/users.json', u.id);
+    if (first) { // premier compte : crée l'équipe de l'entreprise, dont il est propriétaire
       const t = { id: rid(), name: 'L2C Experts conseils', members: { [u.id]: 'owner' }, invites: {}, projects: [], created: Date.now() };
-      await putJ(tPath(t.id), t); u.teams.push(t.id); await putJ(uPath(u.id), u); await putJ('meta/org.json', { team: t.id });
+      await putJ(tPath(t.id), t); await idxAdd('meta/teams.json', t.id); u.teams.push(t.id); await putJ(uPath(u.id), u); await putJ('meta/org.json', { team: t.id });
     }
     await applyInvites(u); setSession(req, res, u.id);
     return send(res, 200, { user: pubUser(u), teams: await userTeams(u), projects: await projectsOf(u) });
   }
+  if (r === 'forgot') { const e = normEmail(J.email); if (okEmail(e) && (await getJ(ePath(e)))) { const m = (await getJ('meta/resets.json')) || { list: [] }; if (!m.list.find(x => x.email === e)) { m.list.push({ email: e, at: Date.now() }); await putJ('meta/resets.json', m); } } return send(res, 200, { ok: true }); }
   if (r === 'login') {
     const e = await getJ(ePath(normEmail(J.email))), u = e && await getUser(e.id);
     if (!u || !checkPwd(String(J.password || ''), u.pwd)) throw fail(401, 'Courriel ou mot de passe incorrect.');
+    if (u.disabled) throw fail(403, 'Compte désactivé : contactez un administrateur.');
     await applyInvites(u); setSession(req, res, u.id);
     return send(res, 200, { user: pubUser(u), teams: await userTeams(u), projects: await projectsOf(u) });
   }
@@ -100,15 +107,38 @@ async function handle(req, res) {
 
   if (r === 'me') { if (await applyInvites(me)) { /* nouvelles équipes */ } return send(res, 200, { user: pubUser(me), teams: await userTeams(me), projects: await projectsOf(me) }); }
   if (r === 'prefs') { me.prefs = Object.assign(me.prefs || {}, J.prefs || {}); if (JSON.stringify(me.prefs).length > 20000) throw fail(413, 'Préférences trop volumineuses.'); if (typeof J.name === 'string' && J.name.trim()) me.name = J.name.trim().slice(0, 80); await putJ(uPath(me.id), me); return send(res, 200, { user: pubUser(me) }); }
-  if (r === 'password') { if (!checkPwd(String(J.old || ''), me.pwd)) throw fail(401, 'Mot de passe actuel incorrect.'); if (String(J.password || '').length < 8) throw fail(400, 'Mot de passe : 8 caractères minimum.'); me.pwd = hashPwd(J.password); await putJ(uPath(me.id), me); return send(res, 200, { ok: true }); }
+  if (r === 'password') { if (!checkPwd(String(J.old || ''), me.pwd)) throw fail(401, 'Mot de passe actuel incorrect.'); if (String(J.password || '').length < 8) throw fail(400, 'Mot de passe : 8 caractères minimum.'); me.pwd = hashPwd(J.password); me.mustChange = false; await putJ(uPath(me.id), me); return send(res, 200, { user: pubUser(me) }); }
+
+  /* administration (premier compte = administrateur de la plateforme) */
+  if (r.startsWith('admin_')) {
+    if (!me.sa) throw fail(403, 'Réservé aux administrateurs.');
+    if (r === 'admin_list') {
+      const ids = ((await getJ('meta/users.json')) || { list: [] }).list, users = [];
+      for (const id of ids) { const u = await getUser(id); if (!u) continue; const tn = []; for (const t of u.teams || []) { const x = await getJ(tPath(t)); if (x && x.members[u.id]) tn.push(x.name + ' (' + (ROLE_LABEL[x.members[u.id]] || '') + ')'); } users.push({ id: u.id, email: u.email, name: u.name, created: u.created, disabled: !!u.disabled, sa: !!u.sa, mustChange: !!u.mustChange, teams: tn }); }
+      const tids = ((await getJ('meta/teams.json')) || { list: [] }).list, teams = []; for (const id of tids) { const t = await getJ(tPath(id)); if (t) teams.push({ id: t.id, name: t.name, members: Object.keys(t.members).length, projects: (t.projects || []).length }); }
+      return send(res, 200, { users, teams, resets: ((await getJ('meta/resets.json')) || { list: [] }).list });
+    }
+    const tu = J.uid ? await getUser(J.uid) : null; if (!tu) throw fail(404, 'Utilisateur introuvable.');
+    if (r === 'admin_reset') { const temp = tempPwd(); tu.pwd = hashPwd(temp); tu.mustChange = true; await putJ(uPath(tu.id), tu); const m = (await getJ('meta/resets.json')) || { list: [] }; m.list = m.list.filter(x => x.email !== tu.email); await putJ('meta/resets.json', m); return send(res, 200, { temp }); }
+    if (r === 'admin_toggle') { if (tu.id === me.id) throw fail(400, 'Vous ne pouvez pas désactiver votre propre compte.'); tu.disabled = !!J.disabled; await putJ(uPath(tu.id), tu); return send(res, 200, { ok: true }); }
+    if (r === 'admin_grant') { const ids = ((await getJ('meta/users.json')) || { list: [] }).list; let n = 0; for (const id of ids) { const u = await getUser(id); if (u && u.sa) n++; } if (!J.sa && tu.sa && n < 2) throw fail(409, 'Il doit rester au moins un administrateur.'); tu.sa = !!J.sa; await putJ(uPath(tu.id), tu); return send(res, 200, { ok: true }); }
+    if (r === 'admin_delete') {
+      if (tu.id === me.id) throw fail(400, 'Vous ne pouvez pas supprimer votre propre compte.'); if (tu.sa) throw fail(409, 'Retirez d’abord le rôle d’administrateur à ce compte.');
+      for (const tid of tu.teams || []) { const t = await getJ(tPath(tid)); if (t) { if (t.members[tu.id] === 'owner' && Object.values(t.members).filter(x => x === 'owner').length < 2) throw fail(409, 'Cet utilisateur est le seul propriétaire de l’équipe « ' + t.name + ' » : nommez un autre propriétaire d’abord.'); delete t.members[tu.id]; await putJ(tPath(t.id), t); } }
+      for (const pid of tu.projects || []) { for (const k of ['state', 'ds', 'px']) await delBuf(pPart(pid, k)); await delBuf(pMeta(pid)); }
+      await delBuf(ePath(tu.email)); await delBuf(uPath(tu.id)); await idxDel('meta/users.json', tu.id); return send(res, 200, { ok: true });
+    }
+    throw fail(404, 'Route inconnue.');
+  }
 
   /* équipes */
-  if (r === 'team_new') { const name = String(J.name || '').trim().slice(0, 80); if (!name) throw fail(400, 'Nom requis.'); const t = { id: rid(), name, members: { [me.id]: 'owner' }, invites: {}, projects: [], created: Date.now() }; await putJ(tPath(t.id), t); me.teams.push(t.id); await putJ(uPath(me.id), me); return send(res, 200, { team: { id: t.id, name, role: 'owner' } }); }
+  if (r === 'team_new') { const name = String(J.name || '').trim().slice(0, 80); if (!name) throw fail(400, 'Nom requis.'); const t = { id: rid(), name, members: { [me.id]: 'owner' }, invites: {}, projects: [], created: Date.now() }; await putJ(tPath(t.id), t); await idxAdd('meta/teams.json', t.id); me.teams.push(t.id); await putJ(uPath(me.id), me); return send(res, 200, { team: { id: t.id, name, role: 'owner' } }); }
   const tid = url.searchParams.get('t') || J.team || '';
   if (r.startsWith('team_')) {
-    const t = await getJ(tPath(tid)); if (!t || !t.members[me.id]) throw fail(404, 'Équipe introuvable.'); const my = t.members[me.id];
+    const t = await getJ(tPath(tid)); if (!t || (!t.members[me.id] && !me.sa)) throw fail(404, 'Équipe introuvable.'); const my = me.sa ? 'owner' : t.members[me.id];
     if (r === 'team_get') { const ms = []; for (const [id, role] of Object.entries(t.members)) { const u = await getUser(id); if (u) ms.push({ id, role, name: u.name, email: u.email }); } return send(res, 200, { team: { id: t.id, name: t.name, role: my, members: ms, invites: Object.entries(t.invites || {}).map(([email, role]) => ({ email, role })) } }); }
     if (rk(my) < rk('admin')) throw fail(403, 'Droits insuffisants (administrateur requis).');
+    if (r === 'team_delete') { if (my !== 'owner') throw fail(403, 'Réservé au propriétaire.'); if ((t.projects || []).length) throw fail(409, 'L’équipe contient des projets : supprimez-les ou déplacez-les d’abord.'); for (const id of Object.keys(t.members)) { const u = await getUser(id); if (u) { u.teams = (u.teams || []).filter(x => x !== t.id); await putJ(uPath(u.id), u); } } await delBuf(tPath(t.id)); await idxDel('meta/teams.json', t.id); return send(res, 200, { ok: true }); }
     if (r === 'team_rename') { t.name = String(J.name || '').trim().slice(0, 80) || t.name; await putJ(tPath(t.id), t); return send(res, 200, { ok: true }); }
     if (r === 'team_invite') {
       const email = normEmail(J.email), role = ROLES.includes(J.role) ? J.role : 'editor'; if (!okEmail(email)) throw fail(400, 'Courriel invalide.'); if (rk(role) >= rk(my) && my !== 'owner') throw fail(403, 'Vous ne pouvez pas attribuer un rôle égal ou supérieur au vôtre.');

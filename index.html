@@ -312,7 +312,7 @@ header{display:block;padding:10px 16px 8px}
 <button type="button" id="pj-bk">Sauvegarder le projet (.json)</button><button type="button" id="pj-bko">Ouvrir une sauvegarde…</button><button type="button" id="pj-ex">Charger le projet exemple</button><button type="button" id="pj-del">Supprimer le projet</button></div></details>
 <details class="menu" id="acct"><summary class="btn" id="acct-sum" aria-label="Compte">☁ Se connecter</summary><div class="menupop" style="min-width:230px">
 <button type="button" id="acct-login">Se connecter / créer un compte</button>
-<div id="acct-menu" hidden><div id="acct-who" style="padding:6px 10px"></div><button type="button" id="acct-proj">Projets cloud…</button><button type="button" id="acct-team">Équipes et rôles…</button><button type="button" id="acct-out">Se déconnecter</button></div></div></details><span id="cl-st" class="clst" hidden></span>
+<div id="acct-menu" hidden><div id="acct-who" style="padding:6px 10px"></div><button type="button" id="acct-proj">Projets cloud…</button><button type="button" id="acct-team">Équipes et rôles…</button><button type="button" id="acct-adm" hidden>Administration (comptes)…</button><button type="button" id="acct-pw">Changer le mot de passe…</button><button type="button" id="acct-out">Se déconnecter</button></div></div></details><span id="cl-st" class="clst" hidden></span>
 <span id="pj-msg" role="status"></span>
 <input type="file" id="pj-file" accept=".f2k,.txt" hidden><input type="file" id="pj-pdf" accept=".pdf,application/pdf" hidden><input type="file" id="pj-bkf" accept=".json" hidden></div>
 </div>
@@ -555,7 +555,11 @@ header{display:block;padding:10px 16px 8px}
 <dialog id="authdlg" class="cdlg"><form id="authform" method="dialog" onsubmit="return false"><img class="logo" id="au-logo" alt="L2C" style="height:42px"><h2 id="au-t" style="margin:8px 0">Connexion</h2><p class="mut">Trame des bandes de dalle — L2C Experts conseils</p><input type="hidden" id="au-mode" value="login">
 <label id="au-name-l" hidden>Nom complet<input id="au-name" autocomplete="name"></label><label>Courriel<input id="au-email" type="email" autocomplete="username" required></label><label>Mot de passe (8 caractères minimum)<input id="au-pw" type="password" minlength="8" required></label>
 <p id="au-err" role="alert" style="color:#b3261e;min-height:1.2em"></p><p class="mut" id="au-note"></p>
-<div class="acts"><button class="btn pri" id="au-go" type="submit">Se connecter</button><button class="btn" id="au-sw" type="button">Créer un compte</button><button class="btn" id="au-x" type="button">Fermer</button></div></form></dialog>
+<div class="acts"><button class="btn pri" id="au-go" type="submit">Se connecter</button><button class="btn" id="au-fg" type="button">Mot de passe oublié ?</button><button class="btn" id="au-sw" type="button">Créer un compte</button><button class="btn" id="au-x" type="button">Fermer</button></div></form></dialog>
+<dialog id="pwdlg" class="cdlg"><form id="pwform" method="dialog" onsubmit="return false"><h2 style="margin-top:0">Changer le mot de passe</h2><p class="mut" id="pw-note"></p>
+<label>Mot de passe actuel (ou temporaire)<input id="pw-old" type="password" autocomplete="current-password" required></label><label>Nouveau mot de passe (8 caractères minimum)<input id="pw-new" type="password" minlength="8" autocomplete="new-password" required></label><label>Confirmer<input id="pw-new2" type="password" minlength="8" autocomplete="new-password" required></label>
+<p id="pw-err" role="alert" style="color:#b3261e;min-height:1.2em"></p><div class="acts"><button class="btn pri" type="submit">Enregistrer</button><button class="btn" id="pw-x" type="button">Annuler</button></div></form></dialog>
+<dialog id="admdlg" class="cdlg" style="max-width:860px"><h2 style="margin-top:0">Administration</h2><p class="mut">Le premier compte créé est administrateur : il gère les comptes, les équipes et la réinitialisation des mots de passe.</p><div id="adm-body"></div><div class="acts"><button class="btn pri" id="adm-x" type="button">Fermer</button></div></dialog>
 <dialog id="clouddlg" class="cdlg"><h2 style="margin-top:0">Projets cloud</h2><div id="cl-body"></div><div class="acts"><button class="btn pri" id="cl-x" type="button">Fermer</button></div></dialog>
 <dialog id="teamdlg" class="cdlg"><h2 style="margin-top:0">Équipes et rôles</h2><div id="tm-body"></div><div class="acts"><button class="btn pri" id="tm-x" type="button">Fermer</button></div></dialog>
 <dialog id="rbdlg"><form method="dialog"><h2>Armature : types, typique de l’étage et nomenclature</h2><div id="rbd-body"></div>
@@ -900,7 +904,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.24.1', APP_DATE='2026-11-25';
+const APP_VERSION='1.25.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -2345,6 +2349,7 @@ async function gunz(buf){ const s=new Blob([buf]).stream().pipeThrough(new Decom
 const clStatus=(s,t)=>{ CL.state=s; const e=$('#cl-st'); if(e){ e.textContent=t||''; e.dataset.s=s; e.hidden=!t; } };
 function clRender(){ const b=$('#acct-sum'); if(!b) return; b.textContent=CL.me?('☁ '+CL.me.name):'☁ Se connecter';
   $('#acct-menu').hidden=!CL.me; $('#acct-login').hidden=!!CL.me;
+  $('#acct-adm').hidden=!(CL.me&&CL.me.sa); if(CL.me&&CL.me.mustChange) clPwDlg(true);
   if(CL.me){ $('#acct-who').innerHTML='<b>'+esc2(CL.me.name)+'</b><br><span class="mut">'+esc2(CL.me.email)+'</span>'; }
   if(!CL.me) clStatus('off',''); else if(!PJ.cloud) clStatus('local','Projet local (non synchronisé)'); }
 async function clLoadMe(){ try{ const d=await api('me'); CL.avail=true; CL.me=d.user; CL.teams=d.teams||[]; CL.projects=d.projects||[]; if(CL.me) clPrefsPull(); }catch(e){ if(e.na||e.status===503) CL.avail=false; CL.me=null; } clRender(); }
@@ -2355,7 +2360,7 @@ let clPT=null; function clPrefsPush(){ if(!CL.me) return; clearTimeout(clPT); cl
 { const s0=setSave; setSave=function(){ s0(); clPrefsPush(); }; const u0=unApply; unApply=function(){ u0.apply(this,arguments); clPrefsPush(); }; }
 /* --- connexion / création de compte --- */
 function clAuthDlg(mode){ $('#au-mode').value=mode||'login'; clAuthMode(); $('#au-err').textContent=''; const d=$('#authdlg'); if(!d.open) d.showModal(); }
-function clAuthMode(){ const reg=$('#au-mode').value==='register'; $('#au-name-l').hidden=!reg; $('#au-go').textContent=reg?'Créer le compte':'Se connecter'; $('#au-sw').textContent=reg?'J’ai déjà un compte':'Créer un compte'; $('#au-t').textContent=reg?'Créer un compte':'Connexion'; $('#au-pw').autocomplete=reg?'new-password':'current-password';
+function clAuthMode(){ const reg=$('#au-mode').value==='register'; $('#au-name-l').hidden=!reg; $('#au-go').textContent=reg?'Créer le compte':'Se connecter'; $('#au-sw').textContent=reg?'J’ai déjà un compte':'Créer un compte'; $('#au-fg').hidden=reg; $('#au-t').textContent=reg?'Créer un compte':'Connexion'; $('#au-pw').autocomplete=reg?'new-password':'current-password';
   $('#au-note').textContent=CL.avail?(reg?'Le premier compte créé devient propriétaire de l’équipe « L2C Experts conseils ». Les autres comptes rejoignent l’équipe sur invitation d’un administrateur.':'Le service cloud est optionnel : l’outil fonctionne aussi hors connexion, avec sauvegarde locale.'):'Service cloud indisponible sur ce serveur (déploiement Vercel avec stockage Blob requis).'; }
 $('#au-sw').onclick=()=>{ $('#au-mode').value=$('#au-mode').value==='register'?'login':'register'; clAuthMode(); };
 $('#au-x').onclick=()=>$('#authdlg').close();
@@ -2407,8 +2412,8 @@ $('#cl-body').addEventListener('click',async e=>{ const b=e.target.closest('butt
 $('#cl-x').onclick=()=>$('#clouddlg').close(); $('#acct-proj').onclick=()=>{ $('#acct').open=false; clDlg(); };
 /* --- équipes et rôles --- */
 let clTeam=null;
-async function clTeamDlg(){ if(!CL.me) return clAuthDlg('login'); await clRefresh(); if(!clTeam||!CL.teams.find(t=>t.id===clTeam)) clTeam=CL.teams[0]&&CL.teams[0].id; await clTeamRender(); $('#teamdlg').showModal(); }
-async function clTeamRender(){ const sel=`<div class="acts"><select id="tm-sel">${CL.teams.map(t=>`<option value="${t.id}" ${t.id===clTeam?'selected':''}>${esc2(t.name)} (${ROLE_FR[t.role]})</option>`).join('')}</select></div>`; let h=sel;
+async function clTeamDlg(){ if(!CL.me) return clAuthDlg('login'); await clRefresh(); if(!clTeam||!(CL.teams.find(t=>t.id===clTeam)||(CL.extraTeams||[]).find(t=>t.id===clTeam))) clTeam=CL.teams[0]&&CL.teams[0].id; await clTeamRender(); $('#teamdlg').showModal(); }
+async function clTeamRender(){ const allT=[...CL.teams,...(CL.extraTeams||[]).filter(x=>!CL.teams.find(t=>t.id===x.id)).map(x=>({id:x.id,name:x.name,role:'owner'}))]; const sel=`<div class="acts"><select id="tm-sel">${allT.map(t=>`<option value="${t.id}" ${t.id===clTeam?'selected':''}>${esc2(t.name)} (${ROLE_FR[t.role]})</option>`).join('')}</select></div>`; let h=sel;
   if(clTeam){ try{ const t=(await api('team_get',{q:'t='+clTeam})).team, my=t.role, adm=clRk(my)>=2, roles=['viewer','editor','admin','owner'].filter(r=>my==='owner'||clRk(r)<clRk(my));
     h+=`<table class="rbt"><tr><th>Membre</th><th>Rôle</th><th></th></tr>${t.members.map(m=>{ const edit=adm&&m.id!==CL.me.id&&(my==='owner'||clRk(m.role)<clRk(my)); return `<tr><td>${esc2(m.name)}<br><span class="mut">${esc2(m.email)}</span></td><td>${edit?`<select data-mr="${m.id}">${roles.map(r=>`<option value="${r}" ${r===m.role?'selected':''}>${ROLE_FR[r]}</option>`).join('')}</select>`:esc2(ROLE_FR[m.role])}</td><td>${edit?`<button class="btn" data-mx="${m.id}" type="button">Retirer</button>`:''}</td></tr>`; }).join('')}${t.invites.map(i=>`<tr><td>${esc2(i.email)}<br><span class="mut">invitation en attente</span></td><td>${esc2(ROLE_FR[i.role])}</td><td>${adm?`<button class="btn" data-mu="${esc2(i.email)}" type="button">Annuler</button>`:''}</td></tr>`).join('')}</table>`;
     if(adm) h+=`<h3>Inviter un membre</h3><div class="acts"><input id="tm-em" type="email" placeholder="courriel@l2c.ca" style="flex:1"><select id="tm-rl">${roles.filter(r=>r!=='owner'||my==='owner').map(r=>`<option value="${r}" ${r==='editor'?'selected':''}>${ROLE_FR[r]}</option>`).join('')}</select><button class="btn pri" id="tm-inv" type="button">Inviter</button></div><p class="mut">Si la personne a déjà un compte, elle est ajoutée tout de suite; sinon elle rejoint l’équipe en créant un compte avec ce courriel.</p>`;
@@ -2421,6 +2426,33 @@ $('#tm-body').addEventListener('click',async e=>{ const b=e.target.closest('butt
     else if(b.dataset.mx){ if(!confirm('Retirer ce membre de l’équipe ?')) return; await api('team_remove',{q:'t='+clTeam,json:{uid:b.dataset.mx}}); clTeamRender(); }
     else if(b.dataset.mu){ await api('team_uninvite',{q:'t='+clTeam,json:{email:b.dataset.mu}}); clTeamRender(); } }catch(er){ err(er.message); } });
 $('#tm-x').onclick=()=>$('#teamdlg').close(); $('#acct-team').onclick=()=>{ $('#acct').open=false; clTeamDlg(); };
+/* --- mot de passe, réinitialisation, administration --- */
+let pwForced=false;
+function clPwDlg(forced){ pwForced=!!forced; $('#pw-note').textContent=forced?'Un administrateur a réinitialisé votre mot de passe : choisissez-en un nouveau pour continuer.':''; $('#pw-x').hidden=!!forced; $('#pw-err').textContent=''; const d=$('#pwdlg'); if(!d.open) d.showModal(); }
+$('#pwdlg').addEventListener('cancel',e=>{ if(pwForced) e.preventDefault(); });
+$('#pw-x').onclick=()=>$('#pwdlg').close(); $('#acct-pw').onclick=()=>{ $('#acct').open=false; $('#pw-old').value=$('#pw-new').value=$('#pw-new2').value=''; clPwDlg(false); };
+$('#pwform').addEventListener('submit',async e=>{ e.preventDefault(); if($('#pw-new').value!==$('#pw-new2').value){ $('#pw-err').textContent='Les deux mots de passe ne correspondent pas.'; return; }
+  try{ const d=await api('password',{json:{old:$('#pw-old').value,password:$('#pw-new').value}}); CL.me=d.user; $('#pw-old').value=$('#pw-new').value=$('#pw-new2').value=''; pwForced=false; $('#pwdlg').close(); clRender(); pjMsg('Mot de passe modifié.'); }catch(er){ $('#pw-err').textContent=er.message; } });
+$('#au-fg').onclick=async()=>{ const em=$('#au-email').value.trim(); if(!em){ $('#au-err').textContent='Entrez votre courriel, puis cliquez « Mot de passe oublié ».'; return; } try{ await api('forgot',{json:{email:em}}); $('#au-err').style.color='#2b8a3e'; $('#au-err').textContent='Demande transmise : un administrateur vous remettra un mot de passe temporaire.'; }catch(er){ $('#au-err').textContent=er.message; } };
+let admTab='users', admData=null;
+async function clAdmDlg(){ $('#acct').open=false; await admLoad(); $('#admdlg').showModal(); }
+async function admLoad(){ try{ admData=await api('admin_list'); admRender(); }catch(e){ $('#adm-body').innerHTML='<p>'+esc2(e.message)+'</p>'; } }
+function admRender(msg){ const d=admData; if(!d) return; const tabs=[['users','Utilisateurs ('+d.users.length+')'],['teams','Équipes ('+d.teams.length+')'],['resets','Demandes de réinitialisation ('+d.resets.length+')']];
+  let h=`<div class="acts">${tabs.map(([k,t])=>`<button class="btn" data-at="${k}" aria-pressed="${k===admTab}">${t}</button>`).join('')}</div>${msg?`<div class="clpub" style="margin-bottom:8px">${msg}</div>`:''}`;
+  if(admTab==='users') h+=`<table class="rbt"><tr><th>Utilisateur</th><th>Équipes</th><th>État</th><th></th></tr>${d.users.map(u=>`<tr><td><b>${esc2(u.name)}</b>${u.sa?' <span class="mut">(administrateur)</span>':''}<br><span class="mut">${esc2(u.email)}</span></td><td class="mut">${u.teams.map(esc2).join('<br>')||'—'}</td><td>${u.disabled?'Désactivé':u.mustChange?'Mot de passe temporaire':'Actif'}</td><td>
+    <button class="btn" data-ar="${u.id}" type="button">Réinitialiser le mot de passe</button> ${u.id===CL.me.id?'':`<button class="btn" data-ad="${u.id}" data-v="${u.disabled?0:1}" type="button">${u.disabled?'Réactiver':'Désactiver'}</button> `}<button class="btn" data-ag="${u.id}" data-v="${u.sa?0:1}" type="button">${u.sa?'Retirer admin':'Nommer admin'}</button>${u.id===CL.me.id||u.sa?'':` <button class="btn" data-ax="${u.id}" type="button" style="color:#b3261e">Supprimer</button>`}</td></tr>`).join('')}</table>`;
+  if(admTab==='teams') h+=`<table class="rbt"><tr><th>Équipe</th><th>Membres</th><th>Projets</th><th></th></tr>${d.teams.map(t=>`<tr><td><b>${esc2(t.name)}</b></td><td>${t.members}</td><td>${t.projects}</td><td><button class="btn" data-am="${t.id}" type="button">Gérer les membres et rôles</button> <button class="btn" data-at2="${t.id}" type="button" style="color:#b3261e">Supprimer</button></td></tr>`).join('')}</table>`;
+  if(admTab==='resets') h+=d.resets.length?`<table class="rbt">${d.resets.map(r=>{ const u=d.users.find(x=>x.email===r.email); return `<tr><td>${esc2(r.email)}<br><span class="mut">${new Date(r.at).toLocaleString('fr-CA')}</span></td><td>${u?`<button class="btn pri" data-ar="${u.id}" type="button">Générer un mot de passe temporaire</button>`:''}</td></tr>`; }).join('')}</table>`:'<p class="mut">Aucune demande en attente.</p>';
+  $('#adm-body').innerHTML=h; }
+$('#adm-body').addEventListener('click',async e=>{ const b=e.target.closest('button'); if(!b) return; const D=b.dataset;
+  try{ if(D.at){ admTab=D.at; admRender(); return; }
+    if(D.ar){ const u=admData.users.find(x=>x.id===D.ar); if(!confirm('Réinitialiser le mot de passe de '+u.name+' ? Son mot de passe actuel cessera de fonctionner.')) return; const r=await api('admin_reset',{json:{uid:D.ar}}); await admLoad(); admRender('Mot de passe temporaire pour <b>'+esc2(u.name)+'</b> : <code style="font-size:15px;user-select:all">'+esc2(r.temp)+'</code><br><span class="mut">Transmettez-le de façon sécuritaire : la personne devra le changer à sa prochaine connexion. Il n’est affiché qu’une fois.</span>'); return; }
+    if(D.ad){ await api('admin_toggle',{json:{uid:D.ad,disabled:D.v==='1'}}); await admLoad(); return; }
+    if(D.ag){ await api('admin_grant',{json:{uid:D.ag,sa:D.v==='1'}}); await admLoad(); return; }
+    if(D.ax){ const u=admData.users.find(x=>x.id===D.ax); if(!confirm('Supprimer le compte de '+u.name+' (et ses projets personnels) ? Cette action est définitive.')) return; await api('admin_delete',{json:{uid:D.ax}}); await admLoad(); return; }
+    if(D.am){ clTeam=D.am; CL.extraTeams=admData.teams; $('#admdlg').close(); clTeamDlg(); return; }
+    if(D.at2){ const t=admData.teams.find(x=>x.id===D.at2); if(!confirm('Supprimer l’équipe « '+t.name+' » ?')) return; await api('team_delete',{q:'t='+t.id,json:{}}); await clRefresh(); await admLoad(); } }catch(er){ admRender('<b style="color:#b3261e">'+esc2(er.message)+'</b>'); } });
+$('#adm-x').onclick=()=>$('#admdlg').close(); $('#acct-adm').onclick=clAdmDlg;
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 clAuthMode(); clLoadMe();
 
