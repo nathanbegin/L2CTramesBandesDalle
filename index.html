@@ -777,7 +777,7 @@ $('#toggles').addEventListener('click',e=>{ const b=e.target.closest('[data-src]
 function srcView(m){ const set=(o)=>Object.keys(o).forEach(k=>show[k]=o[k]);
   if(m==='safe') set({pdfbg:false,foot:false,lnV:false,lnH:false,col:true,wl:true,sl:true,op:true});
   else if(m==='pdf') set({pdfbg:true,foot:true,lnV:true,lnH:true,col:!PJ.hasF2k,wl:false,sl:false,op:false,fc:false,fm:false,gc:false,gm:false,rc:false,rm:false,ctr:false});
-  else set({pdfbg:true,foot:false,lnV:true,lnH:true,col:true,wl:true,sl:false,op:false,gc:true,gm:true});
+  else set({pdfbg:true,foot:true,lnV:true,lnH:true,col:true,wl:true,sl:false,op:false,gc:true,gm:true});
   const go=()=>{ buildToggles(); draw(); };
   if(show.pdfbg) bgEnsure().then(ok=>{ if(!ok) show.pdfbg=false; go(); }); else go(); }
 
@@ -875,7 +875,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.21.3', APP_DATE='2026-11-25';
+const APP_VERSION='1.21.4', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1716,7 +1716,7 @@ const PJ={id:'exemple',name:SEED_NAME,hasF2k:false,fname:'',Z:47.244,maxPt:847,O
 const ST={ok:false,id:null,col:null,dcol:null,timer:null,chain:Promise.resolve(),loading:false,list:[]};
 PJ.levels=[44450,47244,50038]; setZUI();
 function pjMsg(s){ const e=$('#pj-msg'); if(e) e.textContent=s||''; }
-function resetShow(sl){ Object.assign(show,{A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,wl:true,mk:true}); }
+function resetShow(sl){ Object.assign(show,{A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:true,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:!!sl,wl:true,mk:true}); }
 function setZUI(){ const z=$('#x-z'); if(!z) return; z.value=Math.round(PJ.zsel||PJ.Z*1000);
   $('#x-zl').innerHTML=(PJ.levels||[]).map(v=>`<option value="${v}">${v}</option>`).join('');
   $('#x-zh').textContent=`Niveau des dalles du modèle : Z = ${Math.round(PJ.Z*1000)} mm.`+((PJ.levels||[]).length>1?` Autres niveaux détectés (colonnes, étages) : ${PJ.levels.filter(v=>v!==Math.round(PJ.Z*1000)).join(', ')} mm.`:''); }
@@ -1737,6 +1737,7 @@ function applyProject(d,meta,state){
   setOrigin(gxm?gxm.l:'?',gym?gym.l:'?');
   $('#x-pt').value=Math.max(2000,(PJ.maxPt||0)+1000);
   buildToggles(); buildList(); updateGen(true); fit(); renderLegend(); renderPj();
+  if(PJ.px&&D.pmap&&typeof bgEnsure==='function') bgEnsure().then(ok=>{ if(ok){ show.pdfbg=true; buildToggles(); draw(); } });
   ST.loading=false;
 }
 function renderPj(){
