@@ -328,7 +328,7 @@ header{display:block;padding:10px 16px 8px}
     <svg id="plan" role="img" aria-label="Plan de la trame avec colonnes, bandes colonnes et bandes milieu"></svg>
     <div class="btns">
       <button class="btn" id="fit" type="button">Ajuster</button>
-<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="vm" type="button" aria-haspopup="menu" aria-expanded="false" title="Menu Affichage : réafficher les bandes masquées">Affichage ▾</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="rb" type="button" aria-pressed="false" title="Poser, déplacer et supprimer l’armature (barres, repères, chevauchements)">Armature</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
+<button class="btn" id="fp" type="button" aria-pressed="false" hidden title="Choisir les traits du PDF qui forment l’empreinte du bâtiment">Empreinte</button><button class="btn" id="vm" type="button" aria-haspopup="menu" aria-expanded="false" title="Menu Affichage : réafficher les bandes masquées">Affichage ▾</button><button class="btn" id="cal" type="button" aria-pressed="false" hidden title="Caler manuellement le PDF sur le modèle .f2k">Calage</button><button class="btn" id="ms" type="button" aria-pressed="false" title="Prendre une mesure entre deux points ou déplacer une bande (ΔX, ΔY)">Mesurer / Déplacer</button><button class="btn" id="rb" type="button" aria-pressed="false" title="Poser, déplacer et supprimer l’armature (barres, repères, chevauchements)">Armature</button><button class="btn" id="an" type="button" aria-pressed="false" title="Texte, lignes, flèches, rectangles et ellipses avec accrochage">Dessin</button><button class="btn" id="l4" type="button" aria-pressed="false" title="Mesurer une portée entre deux parois et la diviser en 4">Portée L/4</button><button class="btn" id="ed-lim" type="button" aria-pressed="false">Éditer les limites</button><button class="btn" id="ed-reset" type="button" hidden>Rétablir</button>
       <button class="btn" id="zin" type="button" aria-label="Zoom avant">+</button>
       <button class="btn" id="zout" type="button" aria-label="Zoom arrière">−</button>
     </div>
@@ -359,6 +359,17 @@ header{display:block;padding:10px 16px 8px}
 <div class="acts"><button class="btn" id="ms-pick" type="button">Choisir 2 points sur le plan</button></div>
 <div class="acts"><button class="btn pri" id="ms-ok" type="button">Appliquer</button><button class="btn" id="ms-undo" type="button">Annuler le dernier</button></div></div>
 <div class="acts"><button class="btn" id="ms-done" type="button">Terminer</button></div></div>
+<div class="fpbox msbox rbbox" id="anbox" hidden><b>Dessin</b>
+<p id="an-msg"></p>
+<div class="acts"><button class="btn" id="an-t-sel" type="button" aria-pressed="true">Sélection</button><button class="btn" id="an-t-text" type="button" aria-pressed="false">Texte</button><button class="btn" id="an-t-line" type="button" aria-pressed="false">Ligne</button><button class="btn" id="an-t-arrow" type="button" aria-pressed="false">Flèche</button><button class="btn" id="an-t-rect" type="button" aria-pressed="false">Rectangle</button><button class="btn" id="an-t-ellipse" type="button" aria-pressed="false">Ellipse</button></div>
+<div id="an-ctx" style="font-weight:600;margin:9px 0 4px"></div>
+<div class="rbf"><label id="an-txt-l">Texte<textarea id="an-txt" rows="3"></textarea></label><label id="an-s-l">Taille du texte (%)<input id="an-s" type="number" min="30" max="600" step="10"></label>
+<label class="ck" id="an-bold-l"><input id="an-bold" type="checkbox">Gras</label><label class="ck" id="an-frame-l"><input id="an-frame" type="checkbox">Cadre blanc autour du texte</label>
+<label>Couleur<input id="an-col" type="color" value="#1b1b1b"></label><label id="an-w-l">Épaisseur<input id="an-w" type="number" min="0.5" max="8" step="0.5"></label><label class="ck" id="an-dash-l"><input id="an-dash" type="checkbox">Pointillé</label>
+<label id="an-fill-l">Remplissage<span style="display:flex;gap:6px;align-items:center"><input id="an-fill" type="color" value="#ffffff"><label class="ck" style="margin:0"><input id="an-nofill" type="checkbox" checked>Aucun</label></span></label>
+<label id="an-head-l">Pointe<select id="an-head"><option value="end">À la fin</option><option value="start">Au début</option><option value="both">Aux deux bouts</option></select></label></div>
+<div id="an-sel" hidden><div class="acts"><button class="btn" id="an-dup" type="button">Dupliquer</button><button class="btn" id="an-del" type="button" style="color:#b3261e">Supprimer</button></div></div>
+<div class="acts"><button class="btn pri" id="an-done" type="button">Terminer</button></div></div>
 <div class="fpbox msbox rbbox" id="rbbox" hidden><b>Armature</b>
 <p id="rb-msg"></p>
 <div class="acts"><button class="btn" id="rb-tool-sel" type="button" aria-pressed="true">Sélection</button><button class="btn" id="rb-tool-draw" type="button" aria-pressed="false">Tracer une barre</button><button class="btn" id="rb-tool-mark" type="button" aria-pressed="false">Repère</button></div>
@@ -484,7 +495,7 @@ header{display:block;padding:10px 16px 8px}
       <section class="sec"><h2>Export DXF : bords de bande</h2>
       <p>Dessin des bords de chaque bande (contour fermé) pour AutoCAD, Bluebeam ou Revit. Un calque par variante, couche (A/B) et type (colonne / milieu).</p>
       <div class="frm" style="grid-template-columns:1fr"><label class="ck"><input id="dx-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="dx-oth" type="checkbox">Autres variantes de l’outil</label><label class="ck"><input id="dx-f2k" type="checkbox">Bandes du .f2k importé</label>
-      <label class="ck"><input id="dx-lab" type="checkbox" checked>Étiquettes (noms de bandes)</label><label class="ck"><input id="dx-axe" type="checkbox">Axes des bandes (calque *_AXE)</label><label class="ck"><input id="dx-rb" type="checkbox" checked>Armature (calques ARM_*)</label>
+      <label class="ck"><input id="dx-lab" type="checkbox" checked>Étiquettes (noms de bandes)</label><label class="ck"><input id="dx-axe" type="checkbox">Axes des bandes (calque *_AXE)</label><label class="ck"><input id="dx-rb" type="checkbox" checked>Armature (calques ARM_*)</label><label class="ck"><input id="dx-an" type="checkbox" checked>Dessin (calques DESSIN_*)</label>
       <label>Unités du dessin<select id="dx-u"><option value="1000">mm</option><option value="1">m</option></select></label>
       <label>Origine<select id="dx-o"><option value="safe">Coordonnées SAFE</option><option value="loc">Locales de l’outil (origine = 1er axe)</option></select></label></div>
       <div class="acts"><button class="btn pri" id="g-dxf" type="button">Télécharger le DXF</button></div></section>
@@ -495,7 +506,7 @@ header{display:block;padding:10px 16px 8px}
       <label class="ck"><input type="radio" name="pdm" value="solo" id="pdm-solo" checked> PDF seul (annotations uniquement)</label>
       <div class="mut" id="pdm-note"></div>
       <label class="ck"><input id="pf-gc" type="checkbox" checked>Bandes colonnes</label><label class="ck"><input id="pf-gm" type="checkbox" checked>Bandes milieu</label><label class="ck"><input id="pf-lab" type="checkbox" checked>Étiquettes (noms de bandes)</label>
-      <label class="ck"><input id="pf-lim" type="checkbox" checked>Limites pointillées</label><label class="ck"><input id="pf-mes" type="checkbox" checked>Cotes (mesures)</label><label class="ck" id="pf-rb-l"><input id="pf-rb" type="checkbox" checked>Armature (barres, repères, chevauchements)</label>
+      <label class="ck"><input id="pf-lim" type="checkbox" checked>Limites pointillées</label><label class="ck"><input id="pf-mes" type="checkbox" checked>Cotes (mesures)</label><label class="ck" id="pf-an-l"><input id="pf-an" type="checkbox" checked>Dessin (texte, lignes, formes)</label><label class="ck" id="pf-rb-l"><input id="pf-rb" type="checkbox" checked>Armature (barres, repères, chevauchements)</label>
       <label class="ck" id="pf-grid-l"><input id="pf-grid" type="checkbox" checked>Trame (axes et bulles)</label><label class="ck" id="pf-col-l"><input id="pf-col" type="checkbox" checked>Colonnes et empreinte du bâtiment</label><label class="ck" id="pf-cart-l"><input id="pf-cart" type="checkbox" checked>Cartouche (projet, échelle, légende)</label>
       <label class="ck" id="pf-f2k-l"><input id="pf-f2k" type="checkbox" checked>Bandes du .f2k importé</label><label class="ck"><input id="pf-act" type="checkbox" checked>Variante active</label><label class="ck"><input id="pf-oth" type="checkbox">Autres variantes de l’outil</label>
       <label id="pf-pg-l">Pages exportées<select id="pf-pg"><option value="one">Seulement la page du plan aligné</option><option value="all">Tout le jeu de plans</option></select></label>
@@ -569,10 +580,10 @@ const SEED_JSON = JSON.stringify(D);
 const $ = s => document.querySelector(s);
 const f2 = v => v.toFixed(2);
 const lk=l=>l==='A'||l==='B'?l:'O';
-let rbOn=false; let RB=null; let exOn=false, exPick=0, exPairs=[], exCur=null; const BG={key:null,url:null,w:0,h:0,s:1,vx0:0,vy1:0,busy:false};
+let rbOn=false; let RB=null; let AN=null, anOn=false, anTool='sel', anSel=null, anP1=null, anDrag=null; let exOn=false, exPick=0, exPairs=[], exCur=null; const BG={key:null,url:null,w:0,h:0,s:1,vx0:0,vy1:0,busy:false};
 function exCentre(){ const gx=(D.gx||[]).map(g=>g.m), gy=(D.gy||[]).map(g=>g.m); return gx.length&&gy.length?[(Math.min(...gx)+Math.max(...gx))/2,(Math.min(...gy)+Math.max(...gy))/2]:[0,0]; }
 function exAB(){ const e=PJ.pm&&PJ.pm.ex; if(!e) return {ar:1,ai:0,br:0,bi:0}; const k=(e.k||100)/100, t=(e.rot||0)*Math.PI/180, ar=k*Math.cos(t), ai=k*Math.sin(t), cx=e.c[0], cy=e.c[1]; return {ar,ai,br:cx-(ar*cx-ai*cy)+(e.dx||0)/1000,bi:cy-(ai*cx+ar*cy)+(e.dy||0)/1000}; }
-const show = {rb:true,pdfbg:false,A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
+const show = {an:true,rb:true,pdfbg:false,A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
 let selId = null;
 
 /* ---------- géométrie : y du plan vers y écran (inversé) ---------- */
@@ -735,6 +746,7 @@ function planSVG(){
     }
   }
   if(show.rb&&RB&&RB.bars.length&&typeof rbSVG==='function') r.push(rbSVG());
+  if(show.an&&typeof AN!=='undefined'&&AN&&AN.items.length) r.push(anSVG());
   return r.join('');
 }
 
@@ -766,15 +778,15 @@ function draw(){ $('#plan').innerHTML = planSVG(); if(typeof updateSB==='functio
 /* ---------- calques ---------- */
 const TG = [
   ['A','Bandes · couche A (verticales)','A'],['B','Bandes · couche B (horizontales)','B'],['O','Bandes · autres couches','O'],
-  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G'],['pdfbg','Fond : plan PDF importé','F'],['rb','Armature (barres et repères)','F']
+  ['foot','Empreinte du bâtiment','F'],['det','Ouvertures et détails','G'],['sl','Dalles du .f2k (par charge)','SL'],['wl','Murs de refend du .f2k','SL'],['op','Ouvertures du modèle .f2k','G'],['ctr','Axes centraux des bandes générées','G'],['mk','Markup des révisions (vs PDF)','MK'],['lnV','Limites PDF verticales (couche A)','LN'],['lnH','Limites PDF horizontales (couche B)','LN'],['gc','Générées · colonnes (A rouge, B bleu)','GC'],['gm','Générées · milieu (A jaune, B turquoise)','GM'],['rc','Reconstruction v2 · colonnes','RC'],['rm','Reconstruction v2 · milieu','RM'],['fc','.f2k · bandes colonnes','FC'],['fm','.f2k · bandes milieu','FM'],['col','Colonnes','C'],['grid','Trame','G'],['pdfbg','Fond : plan PDF importé','F'],['rb','Armature (barres et repères)','F'],['an','Dessin (texte, lignes, formes)','F']
 ];
 function buildToggles(){
   const L=D.lines||[], nV=L.filter(l=>l.o==='V'&&!l.del).length, nH=L.filter(l=>l.o==='H'&&!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0;
   const nl=k=>[strips,mids,(typeof gen!=='undefined'?gen.list:[]),D.f2k||[],D.recon||[]].reduce((a,L)=>a+(L||[]).filter(x=>lk(x.layer)===k).length,0);
   const cnt={wl:(D.walls||[]).length,col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
-    pdfbg:(PJ.px&&D.pmap)?1:0,rb:(RB&&RB.bars)?RB.bars.length:0,A:nl('A'),B:nl('B'),O:nl('O'),
+    pdfbg:(PJ.px&&D.pmap)?1:0,rb:(RB&&RB.bars)?RB.bars.length:0,an:(AN&&AN.items)?AN.items.length:0,A:nl('A'),B:nl('B'),O:nl('O'),
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
-  const G=[['Plan',['pdfbg','col','grid','foot','det']],['Armature',['rb']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
+  const G=[['Plan',['pdfbg','col','grid','foot','det']],['Armature',['rb','an']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
   const short={A:'Couche A (verticales)',B:'Couche B (horizontales)',O:'Autres couches',col:'Colonnes',grid:'Trame (axes)',foot:'Empreinte du bâtiment',det:'Ouvertures et détails',lnV:'Limites verticales (A)',lnH:'Limites horizontales (B)',mk:'Révisions <span style="letter-spacing:1px"><b style="color:var(--rvA)">●</b><b style="color:var(--rvM)">●</b><b style="color:var(--rvD)">●</b></span>',gc:'Bandes colonnes (A rouge, B bleu)',gm:'Bandes milieu (A jaune, B turquoise)',ctr:'Axes centraux',sl:'Dalles par charge',op:'Ouvertures du modèle',fc:'Bandes colonnes',fm:'Bandes milieu',rc:'Colonnes v2',rm:'Milieu v2'};
   grrBuild();
@@ -888,7 +900,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.23.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.24.1', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -912,12 +924,16 @@ let drag=null, moved=false;
 svg.addEventListener('pointerdown',e=>{
   if(e.button===2) return;
   if(rbOn&&rbDown(e)) return;
+  if(anOn&&anDown(e)) return;
+  if(anOn&&anTool==='sel'&&anSel){ anSel=null; anFill(); draw(); }
   if(rbOn&&rbTool==='sel'&&(rbSel||rbSel2)){ rbSel=null; rbSel2=null; rbFill(); draw(); }
   const h=edLim&&e.target.closest&&e.target.closest('[data-h]');
   if(h){ hdrag={i:+h.dataset.h,e:h.dataset.e}; moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} draw(); return; }
   drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y}; moved=false; svg.setPointerCapture(e.pointerId); });
 svg.addEventListener('pointermove',e=>{
   if(rbDrag){ rbMove(e); return; }
+  if(anDrag){ anMove(e); return; }
+  if(anOn&&!drag&&anTool!=='sel'){ anPreview(e); return; }
   if(rbOn&&!drag&&rbTool!=='sel'){ rbPreview(e); return; }
   if(hdrag){ const r=svg.getBoundingClientRect(), l=D.lines[hdrag.i];
     const X=vb.x+(e.clientX-r.left)*vb.w/r.width, Y=-(vb.y+(e.clientY-r.top)*vb.h/r.height);
@@ -936,11 +952,13 @@ svg.addEventListener('pointermove',e=>{
 svg.addEventListener('pointerup',e=>{
   if(e.button===2) return;
   if(rbDrag){ rbUp(); return; }
+  if(anDrag){ anUp(); return; }
   if(hdrag){ hdrag=null; moved=false; draw(); touch(); return; }
   const wasMoved=moved; drag=null; svg.classList.remove('drag');
   if(wasMoved) return;
   const t=document.elementFromPoint(e.clientX,e.clientY), el=t&&t.closest&&t.closest('[data-id],[data-col],[data-ln],[data-le],[data-fp],[data-obj]');
   if(rbOn&&(rbTool==='draw'||rbTool==='mark')){ rbClick(e); return; }
+  if(anOn&&anTool!=='sel'){ anClick(e); return; }
   if(rbOn&&rbTool==='sel'&&rbSel&&!(t&&t.closest&&t.closest('[data-rb]'))){ rbSel=null; rbSel2=null; rbFill(); }
   if(fpOn){ if(el&&el.dataset.fp!==undefined) fpClick(el.dataset.fp); return; }
   if(exOn&&exPick){ exClick(e); return; }
@@ -1191,7 +1209,7 @@ function fpRows(){ const px=PJ.px, pm=PJ.pm||{}, en=pm.fs||fpAuto(px), S=D.pmap?
   $('#fpmsg').textContent=`${n} traits retenus${x?` · ${x} exclus à la main`:''}${(pm.fi||[]).length?` · ${pm.fi.length} ajoutés à la main`:''}. Vert = retenu, rouge pointillé = exclu, gris = non retenu.`; $('#fp-min').value=pm.fm!=null?pm.fm:4; }
 function fpApply(){ if(!PJ.px||!D.pmap) return; D.foot=mapFoot(PJ.px,PJ.pm||{},D.pmap); if(!PJ.hasF2k){ const fl=fillOf(D); if(fl) D.fill=fl; } deriveAll(); rebuildLIM(); ring=D.fill[0][0]; touch(); fpRows(); draw(); }
 function fpSet(k,v){ PJ.pm=Object.assign({},PJ.pm||{},{[k]:v}); }
-function fpToggle(on){ if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
+function fpToggle(on){ if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); if(on&&anOn) anToggle(false); fpOn=!!on; fpHov=null; $('#fp').setAttribute('aria-pressed',String(fpOn)); $('#fpbox').hidden=!fpOn;
   if(fpOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); if(!(PJ.pm&&PJ.pm.fs)){ fpSet('fs',fpAuto(PJ.px)); if(PJ.hasF2k) fpApply(); } show.foot=true; syncToggle('foot'); fpRows(); } draw(); }
 function fpClick(id){ const [i,j]=id.split(':').map(Number), px=PJ.px, pm=PJ.pm||{}, g=px.styles[i], mode=document.querySelector('input[name=fpm]:checked').value;
   if(mode==='style'){ const en=(pm.fs||fpAuto(px)).slice(), a=en.indexOf(g.k); if(a>=0) en.splice(a,1); else en.push(g.k); fpSet('fs',en); }
@@ -1216,7 +1234,7 @@ function calMove(ddx,ddy){ if(!ddx&&!ddy) return; const sh=(l)=>{ if(l.o==='V'){
   if(D.pmap){ D.pmap.xb+=ddx; D.pmap.yb+=ddy; if(PJ.pm&&PJ.pm.fs&&PJ.px&&PJ.px.styles) D.foot=mapFoot(PJ.px,PJ.pm,D.pmap); }
   rebuildLIM(); touch(); calRows(); draw(); }
 function calSetPm(o){ PJ.pm=Object.assign({},PJ.pm||{},o); }
-function calToggle(on){ if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); calOn=!!on; $('#cal').setAttribute('aria-pressed',String(calOn)); $('#calbox').hidden=!calOn; calPick=0; calP1=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+function calToggle(on){ if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); if(on&&anOn) anToggle(false); calOn=!!on; $('#cal').setAttribute('aria-pressed',String(calOn)); $('#calbox').hidden=!calOn; calPick=0; calP1=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(calOn){ if(msOn) msToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); $('#cal-msg').innerHTML='Décale le <b>PDF</b> (limites, empreinte) par rapport au modèle. Entrez ΔX / ΔY ou choisissez un point du PDF puis le point correspondant du modèle.'; calRows(); } draw(); }
 function calClick(e){ const [X,Y]=toModel(e), sp=snapPt(X,Y,-1), ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(!calP1){ calP1={x:sp.x,y:sp.y}; $('#cal-msg').innerHTML='Point du PDF : <b>'+(sp.k||'libre')+'</b>. Cliquez le point correspondant du modèle.'; return; }
@@ -1245,7 +1263,7 @@ function msKset(k){ msK=k>0?k:1; msCal=0; $('#ms-kin').hidden=true; msRows(); dr
 function msSet(){ const mv=msMode==='move'; msScBuild(); msCal=0; $('#ms-kin').hidden=true; $('#ms-meas').hidden=mv; $('#ms-move').hidden=!mv; if(!msOn) return; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(!mv){ msP1=null; $('#ms-msg').innerHTML='Cliquez le <b>point 1</b>, puis le <b>point 2</b>. Cliquez une cote pour la sélectionner (accrochage aux axes, colonnes, empreinte, limites). <b>Shift</b> maintenu : bloque à l’horizontale ou à la verticale. Échap pour quitter.'; msRows(); }
   else { mvPick=0; mvP1=null; const t=msTarget(); $('#ms-msg').innerHTML=t?`Bande <b>${(t.s||t.f).id}</b> (couche ${(t.s||t.f).layer})${t.copy?' du .f2k : « Appliquer » crée une <b>copie</b> générée déplacée.':'.'} Entrez ΔX, ΔY ou choisissez 2 points.`:'Sélectionnez une <b>bande colonne</b> sur le plan ou dans la liste (générée ou du .f2k).'; } draw(); }
-function msToggle(on){ if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
+function msToggle(on){ if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); if(on&&anOn) anToggle(false); msOn=!!on; $('#ms').setAttribute('aria-pressed',String(msOn)); $('#msbox').hidden=!msOn; const o=svg.querySelector('#ov'); if(o) o.remove();
   if(msOn){ if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); msSet(); } else { mvPick=0; mvP1=null; msP1=null; draw(); } }
 function msPoint(e){ const [X,Y]=toModel(e); let sp=snapPt(X,Y,-1); const a=msMode==='meas'?msP1:mvP1;
   if(e.shiftKey&&a){ if(Math.abs(sp.x-a.x)>=Math.abs(sp.y-a.y)) sp={x:sp.x,y:a.y,k:'horizontal (Shift)'}; else sp={x:a.x,y:sp.y,k:'vertical (Shift)'}; } return sp; }
@@ -1290,7 +1308,7 @@ $('#ms-ok').onclick=msApply; $('#ms-undo').onclick=msUndo;
 ['#ms-dx','#ms-dy'].forEach(q=>$(q).addEventListener('input',()=>draw()));
 let l4on=false, l4=null, l4p=null;
 function l4Msg(t){ $('#l4msg').innerHTML=t; $('#l4box').hidden=!(l4on||l4); }
-function l4Set(on){ if(on&&msOn) msToggle(false); if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
+function l4Set(on){ if(on&&msOn) msToggle(false); if(on&&calOn) calToggle(false); if(on&&exOn) exToggle(false); if(on&&rbOn) rbToggle(false); if(on&&anOn) anToggle(false); l4on=!!on; l4p=null; $('#l4').setAttribute('aria-pressed',String(l4on)); const o=svg.querySelector('#ov'); if(o) o.remove();
   if(l4on){ if(edLim&&edAdd){ edAdd=false; updEd(); } l4Msg(l4?l4txt():'Cliquez une <b>paroi</b> (face de colonne, mur, axe), puis la <b>paroi opposée</b>. Échap pour annuler.'); } else l4Msg(l4?l4txt():''); $('#l4-copy').hidden=!l4; }
 function l4txt(){ const P=l4.o==='V'?OXm:OYm, f=v=>(v+P).toFixed(3), g=l4.g;
   return `Portée <b>L = ${l4.L.toFixed(3)} m</b> (${l4.o==='V'?'x':'y'} de ${f(g[0])} à ${f(g[4])} SAFE) · <b>L/4 = ${(l4.L/4*1000).toFixed(0)} mm</b>.<br>Repères à ${g.slice(1,4).map(f).join(' · ')} m. Ils servent d’accrochage pour tracer les limites (« Éditer les limites » → « + Nouvelle ligne »).`; }
@@ -1338,11 +1356,12 @@ $('#ed-del').onclick=delSel;
 document.querySelectorAll('[data-sn]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sn]=c.checked; });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ if(document.querySelector('dialog[open]')||!$('#vmm').hidden||!$('#ctxm').hidden||!$('#unm').hidden) return;
+    if(anOn){ anToggle(false); return; }
     if(rbOn){ rbToggle(false); return; }
     if(calOn){ calToggle(false); return; } if(msOn){ msToggle(false); return; } if(exOn){ exToggle(false); return; } if(fpOn){ fpToggle(false); return; } if(l4on){ l4Set(false); return; }
     if(edLim){ $('#ed-lim').click(); return; } if(gen.mode){ setMode(gen.mode); return; } return; }
   if(!edLim) return; if((e.key==='Delete'||e.key==='Backspace')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) delSel(); });
-$('#ed-lim').onclick=()=>{ if(!edLim&&exOn) exToggle(false); if(!edLim&&rbOn) rbToggle(false); edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
+$('#ed-lim').onclick=()=>{ if(!edLim&&exOn) exToggle(false); if(!edLim&&rbOn) rbToggle(false); if(!edLim&&anOn) anToggle(false); edLim=!edLim; $('#ed-lim').setAttribute('aria-pressed',String(edLim)); $('#ed-reset').hidden=!edLim; $('#edpanel').hidden=!edLim; if(!edLim){ edAdd=false; edP1=null; edSel=null; }
   if(edLim){ if(gen.mode){ const m=gen.mode; edLim=false; setMode(m); edLim=true; $('#ed-lim').setAttribute('aria-pressed','true'); $('#ed-reset').hidden=false; } show.lnV=show.lnH=true; syncToggle('lnV'); syncToggle('lnH'); msg('Édition des limites : glissez une extrémité (point bleu) pour étirer ou raccourcir la ligne.'); }
   draw(); };
 $('#ed-reset').onclick=()=>{ touch(); D.lines.splice(N0); rebuildLIM(); edSel=null; updEd(); JSON.parse(LIM0).forEach((o,i)=>{ delete D.lines[i].del; Object.assign(D.lines[i],o); }); rebuildLIM(); msg('Limites PDF rétablies (révisions effacées).'); draw(); };
@@ -1534,6 +1553,12 @@ $('#g-dxf').onclick=()=>{
     pl(ly,[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]);
     if($('#dx-axe').checked){ const al=lay(ly+'_AXE',8); if(o.layer==='A') ln(al,[o.axis,o.lo],[o.axis,o.hi]); else ln(al,[o.lo,o.axis],[o.hi,o.axis]); }
     if($('#dx-lab').checked){ const tl=lay(ly+'_TXT',7), nm=o.id||(o.between?o.between.join('-'):'M'), cx=(x0+x1)/2+ox, cy=(y0+y1)/2+oy; E.push('0','TEXT','8',tl,'10',f(cx),'20',f(cy),'30','0','40',th,'1',nm,'72','1','73','2','11',f(cx),'21',f(cy),'31','0'); } }));
+  if($('#dx-an')&&$('#dx-an').checked&&AN&&AN.items.length){ const tx2=(ly,t,x,y,h)=>E.push('0','TEXT','8',ly,'10',f(x+ox),'20',f(y+oy),'30','0','40',h,'1',t,'72','0','73','0','11',f(x+ox),'21',f(y+oy),'31','0');
+    AN.items.filter(it=>it.k==='text'?it.p.every(isFinite):(it.a.every(isFinite)&&it.b.every(isFinite))).forEach(it=>{ const ly=lay('DESSIN_'+({text:'TEXTE',line:'LIGNE',arrow:'FLECHE',rect:'RECT',ellipse:'ELLIPSE'}[it.k]),aci(it.col||'#1b1b1b'));
+      if(it.k==='text'){ const t=anTextBox(it); t.ls.forEach((l,i)=>tx2(ly,l.normalize('NFD').replace(/[\u0300-\u036f]/g,''),it.p[0],it.p[1]-t.fs*(1+i*1.2),t.fs*U)); return; }
+      if(it.k==='rect'){ const [x1,y1]=it.a,[x2,y2]=it.b; pl(ly,[[x1,y1],[x2,y1],[x2,y2],[x1,y2],[x1,y1]]); return; }
+      if(it.k==='ellipse'){ const [x1,y1]=it.a,[x2,y2]=it.b, pts=[]; for(let i=0;i<=48;i++){ const a=i*Math.PI/24; pts.push([(x1+x2)/2+Math.cos(a)*(x2-x1)/2,(y1+y2)/2+Math.sin(a)*(y2-y1)/2]); } pl(ly,pts); return; }
+      ln(ly,it.a,it.b); if(it.k==='arrow'){ const head=(p0,q0)=>{ const a=Math.atan2(q0[1]-p0[1],q0[0]-p0[0]), L=0.5; [-.4,.4].forEach(d=>ln(ly,q0,[q0[0]-Math.cos(a+d)*L,q0[1]-Math.sin(a+d)*L])); }; if(it.head!=='start') head(it.a,it.b); if(it.head==='both'||it.head==='start') head(it.b,it.a); } }); }
   if($('#dx-rb')&&$('#dx-rb').checked&&RB&&RB.bars.length){ const tx=(ly,t,x,y,h,rot)=>E.push('0','TEXT','8',ly,'10',f(x+ox),'20',f(y+oy),'30','0','40',h,'1',t,'72','1','73','2','11',f(x+ox),'21',f(y+oy),'31','0',...(rot?['50','90']:[]));
     RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const ty=rbType(b.t)||{}, nm=String(ty.name||'TYPE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24).toUpperCase(), ly=lay('ARM_'+nm,aci(rbCol(b)));
       if(b.p){ const r=0.45; const N=24, pts=[]; if(ty.shape==='box') pts.push([b.p[0]-.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]-.38]); else for(let i=0;i<=N;i++) pts.push([b.p[0]+r*Math.cos(i*2*Math.PI/N),b.p[1]+r*Math.sin(i*2*Math.PI/N)]); pl(ly,pts); tx(ly,b.txt||ty.text||'',b.p[0],b.p[1],0.55*U*rbTx().k/100); return; }
@@ -1746,6 +1771,7 @@ function applyProject(d,meta,state){
   $('#g-man').setAttribute('aria-pressed','false'); $('#g-lim').setAttribute('aria-pressed','false');
   selId=null; resetShow(!(d.strips.length||d.lines.length)&&d.slabs.length);
   PJ.cloud=(state&&state.cloud)||null; PJ.heavy=false; if(typeof clLinkState==='function') clLinkState();
+  AN=(state&&state.an&&Array.isArray(state.an.items))?state.an:anDefault(); anSel=null; anP1=null; if(anOn) anToggle(false);
   RB=(state&&state.rb&&state.rb.types)?state.rb:rbDefault(); rbSel=null; RB.bars=RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)); rbP1=null; if(rbOn) rbToggle(false);
   const gl=l=>l.length?l[0].l:'?'; const gxm=D.gx.slice().sort((a,b)=>a.m-b.m)[0], gym=D.gy.slice().sort((a,b)=>a.m-b.m)[0];
   setOrigin(gxm?gxm.l:'?',gym?gym.l:'?');
@@ -1795,7 +1821,7 @@ function renderLegend(){
 function touch(){ if(ST.loading) return; if(!ST.ok){ return; } clearTimeout(ST.timer); ST.timer=setTimeout(saveNow,1200); pjMsg('Modifications en attente…'); }
 function saveNow(){
   if(!ST.ok) return Promise.resolve();
-  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,cloud:PJ.cloud||null};
+  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,an:AN,cloud:PJ.cloud||null};
   const id=PJ.id;
   ST.chain=ST.chain.then(()=>ST.col.doc(id).set(body)).then(()=>{ pjMsg('Enregistré.'); if(typeof clAfterSave==='function') clAfterSave(); const p=ST.list.find(x=>x.id===id); if(p) p.name=PJ.name; else ST.list.push({id,name:PJ.name}); }).catch(e=>pjMsg('Échec de la sauvegarde ('+((e&&e.code)||'erreur')+').'));
   return ST.chain;
@@ -2064,6 +2090,14 @@ async function buildAnnotPdf(o,srcBuf){
     rbLaps().forEach(l=>{ const c=l.ok?[0.17,0.54,0.24]:[0.84,0.19,0.15], nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok){ L([l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],0.8,c); L(l.a,[l.a[0]+nx,l.a[1]+ny],0.8,c); L(l.b,[l.b[0]+nx,l.b[1]+ny],0.8,c); }
       if(RB.showLap===false&&l.ok) return; const q=T((l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8); TX(l.ok?'1.3 ld = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' < '+Math.round(l.req*1000),q[0],q[1],6*K,rf,tc(c),Math.abs(l.uy)>Math.abs(l.ux)); });
     if(o.over||o.cart){ const S=rbSummary(); let ty=page.getHeight()-36; const lx=28; page.drawText(pdWA('Armature - typique : '+RB.typ.bar+' @ '+RB.typ.s+' c/c (As min)'),{x:lx,y:ty,size:8,font:f2,color:rgb(0.1,0.1,0.1)}); S.forEach(e=>{ ty-=10; page.drawText(pdWA(e.tn+' : '+e.bar+', '+e.bars+' barres, '+e.len.toFixed(1)+' m'),{x:lx,y:ty,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); }); } }
+  // dessin (texte, lignes, formes)
+  if(o.an&&AN&&AN.items.length){ const okp=q=>q&&q.every(isFinite), hex=pdHex, fb=await doc.embedFont(StandardFonts.Helvetica), fbb=await doc.embedFont(StandardFonts.HelveticaBold);
+    AN.items.filter(it=>it.k==='text'?okp(it.p):(okp(it.a)&&okp(it.b))).forEach(it=>{ const c=hex(it.col||'#1b1b1b'), w=Math.max(0.4,(it.w||2)*0.5), da=it.dash?[5,3]:undefined, seg=(a,b)=>{ const p=T(a[0],a[1]), q=T(b[0],b[1]); page.drawLine({start:{x:p[0],y:p[1]},end:{x:q[0],y:q[1]},thickness:w,color:C(c),dashArray:da}); };
+      if(it.k==='text'){ const t=anTextBox(it), fs=Math.max(4,t.fs*sc), p=T(it.p[0],it.p[1]), f=it.bold?fbb:fb; if(it.frame) page.drawRectangle({x:p[0]-fs*.3,y:p[1]-t.ls.length*fs*1.2-fs*.1,width:Math.max(...t.ls.map(l=>f.widthOfTextAtSize(pdWA(l),fs)),1)+fs*.6,height:t.ls.length*fs*1.2+fs*.3,color:rgb(1,1,1),opacity:.85,borderColor:C(c),borderWidth:.6}); t.ls.forEach((l,i)=>page.drawText(pdWA(l),{x:p[0],y:p[1]-fs*(1+i*1.2)+fs*.15,size:fs,font:f,color:C(c)})); return; }
+      if(it.k==='rect'||it.k==='ellipse'){ const [x1,y1]=it.a,[x2,y2]=it.b; let pts; if(it.k==='rect') pts=[[x1,y1],[x2,y1],[x2,y2],[x1,y2],[x1,y1]]; else { pts=[]; for(let i=0;i<=48;i++){ const a=i*Math.PI/24; pts.push([(x1+x2)/2+Math.cos(a)*(x2-x1)/2,(y1+y2)/2+Math.sin(a)*(y2-y1)/2]); } }
+        if(it.fill){ const P=pts.map(q=>T(q[0],q[1])); page.drawSvgPath('M'+P.map(q=>q[0].toFixed(2)+' '+(-q[1]).toFixed(2)).join(' L')+' Z',{x:0,y:0,color:C(hex(it.fill)),opacity:.25,borderWidth:0}); }
+        for(let i=0;i<pts.length-1;i++) seg(pts[i],pts[i+1]); return; }
+      seg(it.a,it.b); if(it.k==='arrow'){ const head=(p0,q0)=>{ const a=Math.atan2(q0[1]-p0[1],q0[0]-p0[0]), L=9/sc; [-.4,.4].forEach(d=>seg(q0,[q0[0]-Math.cos(a+d)*L,q0[1]-Math.sin(a+d)*L])); }; if(it.head!=='start') head(it.a,it.b); if(it.head==='both'||it.head==='start') head(it.b,it.a); } }); }
   // cartouche
   if(!o.over&&o.cart){ const x=28, w=W-56, y=28; page.drawRectangle({x,y,width:w,height:46,borderColor:rgb(0.2,0.2,0.2),borderWidth:0.8});
     const vn=sets.map(s=>s.v.name).join(', ')||'—', nb=strips.filter(q=>q.kind==='gc').length, d=new Date().toISOString().slice(0,10);
@@ -2076,7 +2110,7 @@ async function buildAnnotPdf(o,srcBuf){
 }
 $('#g-pdf').onclick=async()=>{ const msgEl=$('#pf-msg'), over=$('#pdm-over').checked&&!$('#pdm-over').disabled; msgEl.textContent='Génération du PDF…';
   try{ let src=null; if(over){ src=await pdfBufGet(PJ.id); if(!src){ msgEl.textContent='Le PDF d’origine n’est pas conservé dans ce projet : choisissez-le dans la fenêtre qui s’ouvre.'; src=await pdfPickFile(); if(!src){ msgEl.textContent='Export annulé (PDF d’origine non fourni).'; return; } await pdfBufPut(PJ.id,src); } }
-    const o={over,gc:$('#pf-gc').checked,gm:$('#pf-gm').checked,lab:$('#pf-lab').checked,lim:$('#pf-lim').checked,mes:$('#pf-mes').checked,rb:$('#pf-rb').checked,f2k:$('#pf-f2k').checked,grid:$('#pf-grid').checked,col:$('#pf-col').checked,cart:$('#pf-cart').checked,act:$('#pf-act').checked,oth:$('#pf-oth').checked,fmt:$('#pf-fmt').value,pages:$('#pf-pg').value,sc:$('#pf-sc').value};
+    const o={over,gc:$('#pf-gc').checked,gm:$('#pf-gm').checked,lab:$('#pf-lab').checked,lim:$('#pf-lim').checked,mes:$('#pf-mes').checked,rb:$('#pf-rb').checked,an:$('#pf-an').checked,f2k:$('#pf-f2k').checked,grid:$('#pf-grid').checked,col:$('#pf-col').checked,cart:$('#pf-cart').checked,act:$('#pf-act').checked,oth:$('#pf-oth').checked,fmt:$('#pf-fmt').value,pages:$('#pf-pg').value,sc:$('#pf-sc').value};
     const r=await buildAnnotPdf(o,src); const nm=(PJ.name||'L2C').replace(/[^\w\-]+/g,'_')+(over?(o.pages==='one'?'_p'+r.info.pg:'')+'_bandes_annotees.pdf':'_bandes.pdf');
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([r.bytes],{type:'application/pdf'})); a.download=nm; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
     msgEl.textContent=`PDF téléchargé : ${r.n} bandes, ${r.nl} limites, ${r.nm} cotes`+(over?(o.pages==='one'?' ajoutées à la page '+r.info.pg+' du PDF (page seule).':' ajoutées au PDF du plan (jeu complet).'):` · page ${Math.round(r.info.W)}×${Math.round(r.info.H)} pt à ≈ 1:${Math.round(r.info.N)}.`)+(r.info.over?' Attention : le plan dépasse la page à cette échelle.':'');
@@ -2095,7 +2129,7 @@ async function bgEnsure(){ if(!(PJ.px&&D.pmap)) return false; const key=bgKey();
 function exFields(){ const e=(PJ.pm&&PJ.pm.ex)||{}; $('#ex-dx').value=Math.round(e.dx||0); $('#ex-dy').value=Math.round(e.dy||0); $('#ex-rot').value=(e.rot||0).toFixed(3).replace(/\.?0+$/,'')||'0'; $('#ex-k').value=(e.k||100).toFixed(3).replace(/\.?0+$/,''); $('#ex-bgo').value=(PJ.pm&&PJ.pm.bgo)||60; }
 function exSet(o){ const e=Object.assign({k:100,rot:0,dx:0,dy:0,c:exCentre()},(PJ.pm&&PJ.pm.ex)||{},o); calSetPm({ex:e}); exFields(); exStatus(); touch(); draw(); }
 function exStatus(){ const e=PJ.pm&&PJ.pm.ex, t=e&&(e.dx||e.dy||e.rot||(e.k&&e.k!==100))?`Alignement d’export : ΔX ${Math.round(e.dx||0)} mm · ΔY ${Math.round(e.dy||0)} mm · rotation ${(e.rot||0).toFixed(3)}° · échelle ${(e.k||100).toFixed(3)} %.`:'Alignement d’export : aucun (le modèle est supposé bien calé sur le PDF).'; const el=$('#pf-exst'); if(el) el.textContent=t; }
-async function exToggle(on){ if(on&&rbOn) rbToggle(false); exOn=!!on; $('#exbox').hidden=!exOn; exPick=0; exCur=null; exPairs=[]; $('#ex-pick').setAttribute('aria-pressed','false'); $('#ex-apply').hidden=true; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+async function exToggle(on){ if(on&&rbOn) rbToggle(false); if(on&&anOn) anToggle(false); if(on&&anOn) anToggle(false); exOn=!!on; $('#exbox').hidden=!exOn; exPick=0; exCur=null; exPairs=[]; $('#ex-pick').setAttribute('aria-pressed','false'); $('#ex-apply').hidden=true; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(exOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(edLim) $('#ed-lim').click(); exFields();
     $('#ex-msg').innerHTML='Le <b>PDF</b> (fond) se superpose au <b>modèle</b>. Le modèle ne bouge pas : ces réglages ne servent qu’à l’export par-dessus le PDF. Corrigez ΔX/ΔY, rotation, échelle, ou utilisez « Aligner par points ».';
     if(!show.pdfbg){ const ok=await bgEnsure(); if(ok){ show.pdfbg=true; syncToggle('pdfbg'); } else { $('#ex-msg').innerHTML+=' <b>Le fond PDF n’est pas disponible.</b>'; } } }
@@ -2187,7 +2221,7 @@ function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.cl
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* --- outil : états, panneau --- */
-const rbSnap=(e,from)=>{ const [X,Y]=toModel(e); let sp=snapPt(X,Y,-1); if(e.shiftKey&&from){ if(Math.abs(sp.x-from.x)>=Math.abs(sp.y-from.y)) sp={x:sp.x,y:from.y,k:'horizontal (Shift)'}; else sp={x:from.x,y:sp.y,k:'vertical (Shift)'}; } return sp; };
+const rbSnap=(e,from)=>{ const [X,Y]=toModel(e); let sp=snapEx(X,Y,from||null); if(e.shiftKey&&from){ if(Math.abs(sp.x-from.x)>=Math.abs(sp.y-from.y)) sp={x:sp.x,y:from.y,k:'horizontal (Shift)'}; else sp={x:from.x,y:sp.y,k:'vertical (Shift)'}; } return sp; };
 function rbSelect(id){ rbSel=id||null; rbSel2=null; rbFill(); draw(); }
 function rbCtx(){ const b=rbSel&&RB.bars.find(x=>x.id===rbSel); return b||null; }
 function rbTypeOpts(sel,kind){ return RB.types.filter(t=>!kind||t.kind===kind).map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${esc2(t.name)}</option>`).join(''); }
@@ -2205,7 +2239,7 @@ function rbInfoHtml(b){ const bi=rbInfo(rbBarName(b)), L=rbL(b); if(!bi) return 
   return h; }
 function rbSet(key,val){ const b=rbCtx(); if(b){ if(val===''||val==null) delete b[key]; else b[key]=val; touch(); draw(); rbFill(); } else { rbCur[key]=val; } }
 function rbToggle(on){ rbOn=!!on; if(!on){ rbSel=null; rbSel2=null; } $('#rb').setAttribute('aria-pressed',String(rbOn)); $('#rbbox').hidden=!rbOn; rbP1=null; rbDrag=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
-  if(rbOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(exOn) exToggle(false); if(edLim) $('#ed-lim').click(); show.rb=true; syncToggle('rb'); rbSetTool('sel'); rbFill(); }
+  if(rbOn){ if(anOn) anToggle(false); if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(exOn) exToggle(false); if(edLim) $('#ed-lim').click(); show.rb=true; syncToggle('rb'); rbSetTool('sel'); rbFill(); }
   draw(); }
 function rbSetTool(t){ rbTool=t; rbP1=null; ['sel','draw','mark'].forEach(k=>$('#rb-tool-'+k).setAttribute('aria-pressed',String(k===t))); const ov=svg.querySelector('#ov'); if(ov) ov.remove();
   $('#rb-msg').innerHTML=t==='sel'?'Cliquez une barre pour la sélectionner, glissez-la pour la déplacer. <b>Shift + clic</b> sur une 2e barre adjacente puis « Chevaucher les 2 barres ».':t==='draw'?'Cliquez le <b>point de départ</b>, puis le <b>point d’arrivée</b> (<b>Shift</b> = horizontal / vertical). Échap pour quitter.':'Cliquez où placer le <b>repère</b>.'; if(rbOn) draw(); }
@@ -2218,7 +2252,7 @@ function rbClick(e){ if(rbTool==='mark'){ const sp=rbSnap(e), t=(rbType(rbCur.t)
   const t=rbType(rbCur.t); if(!t||t.kind!=='bar'){ $('#rb-msg').textContent='Choisissez un type de barre (pas un repère).'; rbP1=null; return; }
   const b=rbNewBar(rbP1,sp); rbP1=null; rbSel=b.id; rbFill(); draw(); $('#rb-msg').innerHTML='Barre '+b.id+' posée ('+(rbL(b)*1000).toFixed(0)+' mm). Cliquez un nouveau point de départ ou Échap.'; }
 function rbPreview(e){ if(rbTool==='sel') return; const sp=rbSnap(e,rbTool==='draw'?rbP1:null), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
-  let h=`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke"/>`, t=rbP1?'Point 2 : ':'Point 1 : ';
+  let h=guideSVG(sp)+`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke"/>`, t=rbP1?'Point 2 : ':'Point 1 : ';
   if(rbTool==='draw'&&rbP1){ h+=`<line x1="${rbP1.x}" y1="${-rbP1.y}" x2="${sp.x}" y2="${-sp.y}" stroke="${rbCur.col||((rbType(rbCur.t)||{}).color)||'#111'}" stroke-width="2.5" stroke-dasharray="6 3" vector-effect="non-scaling-stroke"/>`; t+=fmtL(Math.hypot(sp.x-rbP1.x,sp.y-rbP1.y))+' · '; }
   svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#rb-msg').innerHTML=(rbTool==='mark'?'Repère : ':t)+(sp.k||'libre'); }
 function rbDown(e){ if(rbTool!=='sel') return false; const t=e.target.closest&&e.target.closest('[data-rbh],[data-rb]'); if(!t) return false; const id=t.dataset.rb, b=RB.bars.find(x=>x.id===id); if(!b) return false;
@@ -2316,8 +2350,8 @@ function clRender(){ const b=$('#acct-sum'); if(!b) return; b.textContent=CL.me?
 async function clLoadMe(){ try{ const d=await api('me'); CL.avail=true; CL.me=d.user; CL.teams=d.teams||[]; CL.projects=d.projects||[]; if(CL.me) clPrefsPull(); }catch(e){ if(e.na||e.status===503) CL.avail=false; CL.me=null; } clRender(); }
 /* --- préférences d'utilisateur (réglages, unités, armature) --- */
 function clPrefsPull(){ const p=(CL.me&&CL.me.prefs)||{}; let ch=false; if(p.setv&&JSON.stringify(p.setv)!==JSON.stringify(SETV)){ SETV=p.setv; try{ localStorage.setItem('l2c-reglages',JSON.stringify(SETV)); }catch(e){} setApply(); ch=true; }
-  if(p.un&&UNITS[p.un.u]&&JSON.stringify(p.un)!==JSON.stringify(UN)){ UN=p.un; try{ localStorage.setItem('l2c-units',JSON.stringify(UN)); }catch(e){} ch=true; } if(ch&&typeof draw==='function') draw(); }
-let clPT=null; function clPrefsPush(){ if(!CL.me) return; clearTimeout(clPT); clPT=setTimeout(()=>api('prefs',{json:{prefs:{setv:SETV,un:UN}}}).catch(()=>{}),1500); }
+  if(p.un&&UNITS[p.un.u]&&JSON.stringify(p.un)!==JSON.stringify(UN)){ UN=p.un; try{ localStorage.setItem('l2c-units',JSON.stringify(UN)); }catch(e){} ch=true; } if(p.snap){ Object.assign(SNAP,p.snap); try{ localStorage.setItem('l2c-snap',JSON.stringify(SNAP)); }catch(e){} if(typeof snUI==='function') snUI(); } if(ch&&typeof draw==='function') draw(); }
+let clPT=null; function clPrefsPush(){ if(!CL.me) return; clearTimeout(clPT); clPT=setTimeout(()=>api('prefs',{json:{prefs:{setv:SETV,un:UN,snap:SNAP}}}).catch(()=>{}),1500); }
 { const s0=setSave; setSave=function(){ s0(); clPrefsPush(); }; const u0=unApply; unApply=function(){ u0.apply(this,arguments); clPrefsPush(); }; }
 /* --- connexion / création de compte --- */
 function clAuthDlg(mode){ $('#au-mode').value=mode||'login'; clAuthMode(); $('#au-err').textContent=''; const d=$('#authdlg'); if(!d.open) d.showModal(); }
@@ -2340,7 +2374,7 @@ async function clPublish(team){ if(!CL.me) return clAuthDlg('login'); clStatus('
     PJ.cloud={id:pr.id,rev:0,team:pr.team,role:pr.role}; const body=clBody(); const r=await clPutPart(pr.id,'state',body,'&base=0&name='+encodeURIComponent(PJ.name)); PJ.cloud.rev=r.project.rev; CLSIG[pr.id]=clSig(); PJ.heavy=false; await saveNow(); await clRefresh(); clLinkState(); pjMsg('Projet publié dans le cloud.'); }
   catch(e){ PJ.cloud=null; clStatus('err','☁ '+e.message); } }
 const CLSIG={}; const clSig=()=>JSON.stringify(Object.assign(clBody(),{updated:0}));
-function clBody(){ return {name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB}; }
+function clBody(){ return {name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,an:AN}; }
 async function clAfterSave(){ if(!CL.me||!PJ.cloud) return; if(clRk(PJ.cloud.role||'editor')<1){ clLinkState(); return; } clearTimeout(CL.pend); CL.pend=setTimeout(clPush,800); }
 async function clPush(){ CL.pend=null; if(CL.pushing){ CL.pend=setTimeout(clPush,1500); return; } if(!CL.me||!PJ.cloud) return; const sg=clSig(); if(CLSIG[PJ.cloud.id]===sg&&!PJ.heavy){ clLinkState(); return; } CL.pushing=true; const c=PJ.cloud, id=PJ.id; clStatus('busy','☁ Synchronisation…');
   try{ if(PJ.heavy){ const parts=await clParts(id); if(parts.ds) await clPutPart(c.id,'ds',parts.ds); if(parts.px) await clPutPart(c.id,'px',parts.px); PJ.heavy=false; }
@@ -2389,6 +2423,102 @@ $('#tm-body').addEventListener('click',async e=>{ const b=e.target.closest('butt
 $('#tm-x').onclick=()=>$('#teamdlg').close(); $('#acct-team').onclick=()=>{ $('#acct').open=false; clTeamDlg(); };
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 clAuthMode(); clLoadMe();
+
+/* ====================== ACCROCHAGE : guides d'alignement, parallèle, longueur égale ====================== */
+Object.assign(SNAP,{obj:true,guides:true,par:true,eq:true,tol:10}); try{ Object.assign(SNAP,JSON.parse(localStorage.getItem('l2c-snap')||'{}')); }catch(e){}
+function snSave(){ try{ localStorage.setItem('l2c-snap',JSON.stringify(SNAP)); }catch(e){} if(typeof clPrefsPush==='function') clPrefsPush(); }
+function anCorners(it){ const [x1,y1]=it.a,[x2,y2]=it.b; return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]; }
+function snRefs(){ const P=[], S=[];
+  if(typeof AN!=='undefined'&&AN) AN.items.forEach(it=>{ if(it.k==='text') P.push(it.p); else if(it.k==='rect'||it.k==='ellipse'){ anCorners(it).forEach(c=>P.push(c)); } else { P.push(it.a,it.b); S.push([it.a,it.b]); } });
+  if(RB) RB.bars.forEach(b=>{ if(b.p) P.push(b.p); else { P.push(b.a,b.b); S.push([b.a,b.b]); } });
+  (meas||[]).forEach(m=>{ P.push(m.a,m.b); S.push([m.a,m.b]); });
+  if(SNAP.obj) Object.values(byId||{}).forEach(o=>{ try{ const q=rectOf(o); P.push([q.x,-(q.y+q.h)],[q.x+q.w,-(q.y+q.h)],[q.x+q.w,-q.y],[q.x,-q.y]); }catch(e){} });
+  return {P,S}; }
+// snapEx : accrochage complet. from = premier point (pour parallèle / longueur égale). Retourne {x,y,k,g:[guides],eq:[segments égaux]}
+function snapEx(X,Y,from,opt){ opt=opt||{}; const tol=(SNAP.tol||10)*vb.w/(svg.clientWidth||800), R=snRefs(), out={g:[],eq:[]};
+  let bp=null,bd=tol; if(SNAP.obj) R.P.forEach(p=>{ const d=Math.hypot(p[0]-X,p[1]-Y); if(d<bd){ bd=d; bp=p; } });
+  if(bp){ return Object.assign(out,{x:bp[0],y:bp[1],k:'point · objet'}); }
+  const sp=snapPt(X,Y,-1); if(sp.k&&sp.k.startsWith('point')) return Object.assign(out,sp);
+  let x=sp.x,y=sp.y,k=sp.k?[sp.k]:[]; const hard={x:/^x/.test(sp.k||'')||/, x ·/.test(sp.k||''),y:/y ·/.test(sp.k||'')};
+  if(SNAP.guides){ const pts=R.P.slice(); if(from) pts.push([from.x,from.y]); let bx=null,by=null;
+    pts.forEach(p=>{ const dx=Math.abs(p[0]-X), dy=Math.abs(p[1]-Y); if(!hard.x&&dx<tol&&(!bx||dx<bx.d)) bx={d:dx,p}; if(!hard.y&&dy<tol&&(!by||dy<by.d)) by={d:dy,p}; });
+    if(bx){ x=bx.p[0]; out.g.push({t:'v',x:bx.p[0],y1:bx.p[1],y2:y}); k.push('aligné x'); } if(by){ y=by.p[1]; out.g.push({t:'h',y:by.p[1],x1:by.p[0],x2:x}); k.push('aligné y'); }
+    out.g.forEach(g=>{ if(g.t==='v') g.y2=y; else g.x2=x; }); }
+  if(from&&!opt.noRel){ let dx=x-from.x, dy=y-from.y, L=Math.hypot(dx,dy);
+    if(L>1e-6&&SNAP.par&&!out.g.length){ const th=Math.atan2(dy,dx); let best=null,bdA=2*Math.PI/180; R.S.forEach(s=>{ const t2=Math.atan2(s[1][1]-s[0][1],s[1][0]-s[0][0]); [t2,t2+Math.PI].forEach(t=>{ let d=Math.atan2(Math.sin(th-t),Math.cos(th-t)); if(Math.abs(d)<bdA){ bdA=Math.abs(d); best={t,s}; } }); });
+      if(best){ x=from.x+Math.cos(best.t)*L; y=from.y+Math.sin(best.t)*L; dx=x-from.x; dy=y-from.y; k.push('parallèle'); out.par=best.s; } }
+    if(SNAP.eq&&L>1e-6&&!out.g.length){ let bl=null,bdL=tol; R.S.forEach(s=>{ const Ls=Math.hypot(s[1][0]-s[0][0],s[1][1]-s[0][1]), d=Math.abs(Ls-L); if(Ls>0.05&&d<bdL){ bdL=d; bl=Ls; } });
+      if(bl){ const u=[dx/L,dy/L]; x=from.x+u[0]*bl; y=from.y+u[1]*bl; k.push('longueur égale'); R.S.forEach(s=>{ if(Math.abs(Math.hypot(s[1][0]-s[0][0],s[1][1]-s[0][1])-bl)<1e-3) out.eq.push(s); }); out.eqL=bl; } } }
+  return Object.assign(out,{x,y,k:k.join(' · ')}); }
+function guideSVG(sp){ if(!sp) return ''; let h=''; const c='#e0218a';
+  (sp.g||[]).forEach(g=>{ h+=g.t==='v'?`<line x1="${g.x}" y1="${-g.y1}" x2="${g.x}" y2="${-g.y2}" stroke="${c}" stroke-width="1.2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>`:`<line x1="${g.x1}" y1="${-g.y}" x2="${g.x2}" y2="${-g.y}" stroke="${c}" stroke-width="1.2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>`; });
+  (sp.eq||[]).forEach(s=>{ h+=`<line x1="${s[0][0]}" y1="${-s[0][1]}" x2="${s[1][0]}" y2="${-s[1][1]}" stroke="${c}" stroke-width="2.4" vector-effect="non-scaling-stroke" opacity=".7"/>`; });
+  if(sp.par) h+=`<line x1="${sp.par[0][0]}" y1="${-sp.par[0][1]}" x2="${sp.par[1][0]}" y2="${-sp.par[1][1]}" stroke="${c}" stroke-width="2.4" vector-effect="non-scaling-stroke" opacity=".6"/>`; return h; }
+
+/* ====================== DESSIN : texte, ligne, flèche, rectangle, ellipse ====================== */
+let anCur={col:'#1b1b1b',w:2,dash:false,fill:'',txt:'Texte',s:100,bold:false,frame:false,head:'end'};
+const anDefault=()=>({items:[],seq:1});
+const anDraw=()=>{ if(show.an&&AN&&AN.items.length&&typeof draw==='function') draw(); };
+function anTextBox(it){ const fs=.8*(it.s||100)/100, ls=String(it.txt||'').split('\n'), w=Math.max(...ls.map(l=>l.length),1)*fs*.6+fs*.6, h=ls.length*fs*1.2+fs*.3; return {fs,ls,w,h}; }
+function anSVG(){ if(!AN||!AN.items.length) return ''; const r=[], act=anOn&&anTool==='sel', u=vb.w/(svg.clientWidth||800);
+  AN.items.forEach(it=>{ const sel=anOn&&it.id===anSel, col=sel?'#fb8f37':(it.col||'#1b1b1b'), w=(it.w||2)+(sel?1.2:0), hit=`pointer-events:${act?'all':'none'};cursor:${act?'move':'default'}`, da=it.dash?'stroke-dasharray="8 5"':'';
+    if(it.k==='text'){ const t=anTextBox(it), [x,y]=it.p; r.push(`<g data-an="${it.id}" style="${hit}">`+(it.frame||sel?`<rect x="${x-t.fs*.3}" y="${-y-t.fs}" width="${t.w}" height="${t.h}" fill="${it.frame?'#fff':'none'}" fill-opacity=".85" stroke="${col}" stroke-width="${sel?2:1.2}" vector-effect="non-scaling-stroke"/>`:'')+`<text x="${x}" y="${-y}" style="font:${it.bold?700:500} ${t.fs}px var(--font-sans,system-ui,sans-serif);fill:${it.col||'#1b1b1b'}">${t.ls.map((l,i)=>`<tspan x="${x}" dy="${i?t.fs*1.2:0}">${esc2(l)||' '}</tspan>`).join('')}</text></g>`); return; }
+    if(it.k==='rect'||it.k==='ellipse'){ const [x1,y1]=it.a,[x2,y2]=it.b, x=Math.min(x1,x2), y=-Math.max(y1,y2), ww=Math.abs(x2-x1), hh=Math.abs(y2-y1), fl=it.fill?`fill="${it.fill}" fill-opacity=".25"`:'fill="none"';
+      r.push(`<g data-an="${it.id}" style="${hit.replace('all',it.fill?'all':'stroke')}">`+(it.k==='rect'?`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" ${fl} stroke="${col}" stroke-width="${w}" ${da} vector-effect="non-scaling-stroke"/>`:`<ellipse cx="${x+ww/2}" cy="${y+hh/2}" rx="${ww/2}" ry="${hh/2}" ${fl} stroke="${col}" stroke-width="${w}" ${da} vector-effect="non-scaling-stroke"/>`)+'</g>'); }
+    else { const [x1,y1]=it.a,[x2,y2]=it.b; let h=`<line data-an="${it.id}" x1="${x1}" y1="${-y1}" x2="${x2}" y2="${-y2}" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" style="${hit.replace('all','stroke')}"/><line x1="${x1}" y1="${-y1}" x2="${x2}" y2="${-y2}" stroke="${col}" stroke-width="${w}" ${da} vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+      const hd=(p,q)=>{ const a=Math.atan2(q[1]-p[1],q[0]-p[0]), L=11*u; return `<polygon points="${q[0]},${-q[1]} ${q[0]-Math.cos(a-.4)*L},${-(q[1]-Math.sin(a-.4)*L)} ${q[0]-Math.cos(a+.4)*L},${-(q[1]-Math.sin(a+.4)*L)}" fill="${col}" pointer-events="none"/>`; };
+      if(it.k==='arrow'){ if(it.head!=='start') h+=hd(it.a,it.b); if(it.head==='both'||it.head==='start') h+=hd(it.b,it.a); } r.push(h); }
+    if(sel&&act&&it.k!=='text') [['a',it.a],['b',it.b]].forEach(([k,p])=>r.push(`<circle data-anh="${k}" data-an="${it.id}" cx="${p[0]}" cy="${-p[1]}" r="${6*u}" fill="#fff" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`)); });
+  return r.join(''); }
+/* --- panneau --- */
+const anCtx=()=>AN&&anSel?AN.items.find(x=>x.id===anSel)||null:null;
+function anFill(){ const it=anCtx(), v=it||anCur, txt=(it?it.k==='text':anTool==='text');
+  $('#an-ctx').textContent=it?({text:'Texte',line:'Ligne',arrow:'Flèche',rect:'Rectangle',ellipse:'Ellipse'}[it.k])+' '+it.id+' sélectionné':'Nouveaux objets (valeurs par défaut)';
+  $('#an-col').value=v.col||'#1b1b1b'; $('#an-w').value=v.w||2; $('#an-dash').checked=!!v.dash; $('#an-fill').value=v.fill||'#ffffff'; $('#an-nofill').checked=!v.fill; $('#an-txt').value=v.txt==null?'':v.txt; $('#an-s').value=v.s||100; $('#an-bold').checked=!!v.bold; $('#an-frame').checked=!!v.frame; $('#an-head').value=v.head||'end';
+  const k=it?it.k:anTool; $('#an-txt-l').hidden=!(txt); $('#an-s-l').hidden=$('#an-bold-l').hidden=$('#an-frame-l').hidden=!txt; $('#an-w-l').hidden=$('#an-dash-l').hidden=txt; $('#an-fill-l').hidden=!(k==='rect'||k==='ellipse'); $('#an-head-l').hidden=k!=='arrow'; $('#an-sel').hidden=!it; }
+function anSet(key,val){ const it=anCtx(); if(it){ it[key]=val; touch(); anDraw(); anFill(); } else anCur[key]=val; }
+function anToggle(on){ anOn=!!on; $('#an').setAttribute('aria-pressed',String(anOn)); $('#anbox').hidden=!anOn; anP1=null; anDrag=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove(); if(!anOn){ anSel=null; }
+  if(anOn){ if(rbOn) rbToggle(false); if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(exOn) exToggle(false); if(edLim) $('#ed-lim').click(); show.an=true; syncToggle('an'); anSetTool('sel'); anFill(); } draw(); }
+function anSetTool(t){ anTool=t; anP1=null; ['sel','text','line','arrow','rect','ellipse'].forEach(k=>$('#an-t-'+k).setAttribute('aria-pressed',String(k===t))); const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  $('#an-msg').innerHTML={sel:'Cliquez un objet pour le sélectionner, glissez-le pour le déplacer (poignées = extrémités).',text:'Écrivez le texte ci-dessous puis cliquez pour le placer.',line:'Cliquez le départ puis l’arrivée. <b>Shift</b> = 90°; guides roses = alignement, parallèle, longueur égale.',arrow:'Cliquez le départ puis la pointe de la flèche. <b>Shift</b> = 90°.',rect:'Cliquez deux coins opposés.',ellipse:'Cliquez deux coins du cadre de l’ellipse.'}[t]; if(anOn){ anFill(); draw(); } }
+const anSnap=(e,from)=>{ const [X,Y]=toModel(e); let sp=snapEx(X,Y,from); if(e.shiftKey&&from){ const dx=X-from.x, dy=Y-from.y; sp=Math.abs(dx)>=Math.abs(dy)?{x:snapEx(X,Y,null).x,y:from.y,k:'horizontal (Shift)',g:[],eq:[]}:{x:from.x,y:snapEx(X,Y,null).y,k:'vertical (Shift)',g:[],eq:[]}; } return sp; };
+function anAdd(o){ o.id='A'+(AN.seq++); AN.items.push(o); touch(); return o; }
+function anClick(e){ const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+  if(anTool==='text'){ const sp=anSnap(e,null), txt=($('#an-txt').value||'Texte'); const it=anAdd({k:'text',p:[sp.x,sp.y],txt,col:anCur.col,s:+anCur.s||100,bold:!!anCur.bold,frame:!!anCur.frame}); anSel=it.id; anSetTool('sel'); return; }
+  const sp=anSnap(e,anP1); if(!anP1){ anP1={x:sp.x,y:sp.y}; $('#an-msg').innerHTML='Départ : <b>'+(sp.k||'libre')+'</b>. Cliquez le point d’arrivée.'; return; }
+  if(Math.hypot(sp.x-anP1.x,sp.y-anP1.y)<0.02){ $('#an-msg').textContent='Objet trop petit.'; return; }
+  const o={k:anTool,a:[anP1.x,anP1.y],b:[sp.x,sp.y],col:anCur.col,w:+anCur.w||2}; if(anCur.dash) o.dash=true; if((anTool==='rect'||anTool==='ellipse')&&anCur.fill) o.fill=anCur.fill; if(anTool==='arrow') o.head=anCur.head||'end';
+  const it=anAdd(o); anP1=null; anSel=it.id; const t=anTool; anSetTool('sel'); anSel=it.id; anFill(); draw(); }
+function anPreview(e){ if(anTool==='sel') return; const sp=anSnap(e,anTool==='text'?null:anP1), u=vb.w/(svg.clientWidth||800); let g=svg.querySelector('#ov'); if(g) g.remove();
+  let h=guideSVG(sp)+`<circle cx="${sp.x}" cy="${-sp.y}" r="${6*u}" fill="none" stroke="#fb8f37" stroke-width="2" vector-effect="non-scaling-stroke"/>`, t=anP1?'Point 2 : ':'Point 1 : ';
+  if(anP1){ const c=anCur.col||'#222', a=anP1, b=sp; if(anTool==='rect') h+=`<rect x="${Math.min(a.x,b.x)}" y="${-Math.max(a.y,b.y)}" width="${Math.abs(b.x-a.x)}" height="${Math.abs(b.y-a.y)}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="6 3" vector-effect="non-scaling-stroke"/>`; else if(anTool==='ellipse') h+=`<ellipse cx="${(a.x+b.x)/2}" cy="${-(a.y+b.y)/2}" rx="${Math.abs(b.x-a.x)/2}" ry="${Math.abs(b.y-a.y)/2}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="6 3" vector-effect="non-scaling-stroke"/>`; else h+=`<line x1="${a.x}" y1="${-a.y}" x2="${b.x}" y2="${-b.y}" stroke="${c}" stroke-width="2.5" stroke-dasharray="6 3" vector-effect="non-scaling-stroke"/>`; t+=fmtL(Math.hypot(b.x-a.x,b.y-a.y))+' · '; }
+  svg.insertAdjacentHTML('beforeend',`<g id="ov" pointer-events="none">${h}</g>`); $('#an-msg').innerHTML=(anTool==='text'?'Texte : ':t)+(sp.k||'libre'); }
+function anDown(e){ if(anTool!=='sel') return false; const t=e.target.closest&&e.target.closest('[data-anh],[data-an]'); if(!t) return false; const id=t.dataset.an, it=AN.items.find(x=>x.id===id); if(!it) return false;
+  const [X,Y]=toModel(e); anDrag={id,mode:t.dataset.anh||'move',x0:X,y0:Y,cx:e.clientX,cy:e.clientY,o:JSON.parse(JSON.stringify(it)),moved:false}; if(anSel!==id){ anSel=id; anFill(); } try{ svg.setPointerCapture(e.pointerId); }catch(_){} return true; }
+function anMove(e){ const d=anDrag, it=AN.items.find(x=>x.id===d.id); if(!it) return; if(!d.moved&&Math.hypot(e.clientX-d.cx,e.clientY-d.cy)<4) return; d.moved=true; const [X,Y]=toModel(e); let dx=X-d.x0, dy=Y-d.y0;
+  if(d.mode==='move'){ if(e.shiftKey){ if(Math.abs(dx)>=Math.abs(dy)) dy=0; else dx=0; } const ref=d.o.p||d.o.a, sp=snapEx(ref[0]+dx,ref[1]+dy,null,{noRel:true}); dx=sp.x-ref[0]; dy=sp.y-ref[1]; if(it.p) it.p=[d.o.p[0]+dx,d.o.p[1]+dy]; else { it.a=[d.o.a[0]+dx,d.o.a[1]+dy]; it.b=[d.o.b[0]+dx,d.o.b[1]+dy]; } }
+  else { const other=d.mode==='a'?d.o.b:d.o.a, sp=anSnap(e,{x:other[0],y:other[1]}); it[d.mode]=[sp.x,sp.y]; }
+  draw(); }
+function anUp(){ const d=anDrag; anDrag=null; if(d&&d.moved) touch(); draw(); anFill(); }
+function anDelete(){ const it=anCtx(); if(!it) return; AN.items=AN.items.filter(x=>x!==it); anSel=null; touch(); anFill(); draw(); }
+function anDup(){ const it=anCtx(); if(!it) return; const c=JSON.parse(JSON.stringify(it)); c.id='A'+(AN.seq++); if(c.p) c.p=[c.p[0]+.5,c.p[1]-.5]; else { c.a=[c.a[0]+.5,c.a[1]-.5]; c.b=[c.b[0]+.5,c.b[1]-.5]; } AN.items.push(c); anSel=c.id; touch(); anFill(); draw(); }
+$('#an').onclick=()=>anToggle(!anOn); $('#an-done').onclick=()=>anToggle(false);
+['sel','text','line','arrow','rect','ellipse'].forEach(k=>$('#an-t-'+k).onclick=()=>anSetTool(k));
+$('#an-col').oninput=e=>anSet('col',e.target.value); $('#an-w').onchange=e=>anSet('w',Math.max(.5,Math.min(8,+e.target.value||2))); $('#an-dash').onchange=e=>anSet('dash',e.target.checked);
+$('#an-fill').oninput=e=>{ $('#an-nofill').checked=false; anSet('fill',e.target.value); }; $('#an-nofill').onchange=e=>anSet('fill',e.target.checked?'':$('#an-fill').value);
+$('#an-txt').oninput=e=>anSet('txt',e.target.value); $('#an-s').onchange=e=>anSet('s',Math.max(30,Math.min(600,+e.target.value||100))); $('#an-bold').onchange=e=>anSet('bold',e.target.checked); $('#an-frame').onchange=e=>anSet('frame',e.target.checked); $('#an-head').onchange=e=>anSet('head',e.target.value);
+$('#an-del').onclick=anDelete; $('#an-dup').onclick=anDup;
+window.addEventListener('keydown',e=>{ if(!anOn||/INPUT|SELECT|TEXTAREA/.test(document.activeElement&&document.activeElement.tagName)) return; if((e.key==='Delete'||e.key==='Backspace')&&anCtx()){ e.preventDefault(); anDelete(); } });
+/* --- préférences d'accrochage dans Réglages --- */
+$('#set-rows').insertAdjacentHTML('afterend',`<div id="snap-set"><h3 style="margin:10px 0 4px">Accrochage et guides d’alignement</h3>
+<label class="ck"><input type="checkbox" data-sk="obj"> Points des objets (bandes, barres, dessins, cotes)</label><label class="ck"><input type="checkbox" data-sk="guides"> Lignes-guides d’alignement (x / y avec les points proches)</label>
+<label class="ck"><input type="checkbox" data-sk="par"> Parallèle aux lignes proches (angle identique)</label><label class="ck"><input type="checkbox" data-sk="eq"> Longueur égale aux lignes proches</label>
+<label class="ck"><input type="checkbox" data-sk="grid"> Trame</label><label class="ck"><input type="checkbox" data-sk="col"> Colonnes</label><label class="ck"><input type="checkbox" data-sk="foot"> Empreinte du bâtiment</label><label class="ck"><input type="checkbox" data-sk="lim"> Limites pointillées</label>
+<label class="srow"><span>Rayon d’accrochage (px)</span><input type="range" id="sk-tol" min="4" max="24" step="1"><output id="sk-tolo"></output></label></div>`);
+function snUI(){ document.querySelectorAll('[data-sk]').forEach(c=>c.checked=!!SNAP[c.dataset.sk]); document.querySelectorAll('[data-sn]').forEach(c=>c.checked=!!SNAP[c.dataset.sn]); $('#sk-tol').value=SNAP.tol; $('#sk-tolo').textContent=SNAP.tol; }
+document.querySelectorAll('[data-sk]').forEach(c=>c.onchange=()=>{ SNAP[c.dataset.sk]=c.checked; snSave(); snUI(); });
+document.querySelectorAll('[data-sn]').forEach(c=>{ const o=c.onchange; c.onchange=()=>{ if(o) o.call(c); snSave(); snUI(); }; });
+$('#sk-tol').oninput=e=>{ SNAP.tol=+e.target.value; $('#sk-tolo').textContent=SNAP.tol; snSave(); }; $('#pj-set').addEventListener('click',snUI); snUI();
 </script>
 </body>
 </html>
