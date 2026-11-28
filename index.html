@@ -384,6 +384,7 @@ header{display:block;padding:10px 16px 8px}
 <div id="an-sel" hidden><div class="acts"><button class="btn" id="an-dup" type="button">Dupliquer</button><button class="btn" id="an-del" type="button" style="color:#b3261e">Supprimer</button></div></div>
 <div class="acts"><button class="btn pri" id="an-done" type="button">Terminer</button></div></div>
 <div class="fpbox msbox rbbox" id="rbbox" hidden><b>Armature</b>
+<div id="rb-files"></div>
 <p id="rb-msg"></p>
 <div class="acts"><button class="btn" id="rb-tool-sel" type="button" aria-pressed="true">Sélection</button><button class="btn" id="rb-tool-draw" type="button" aria-pressed="false">Tracer une barre</button><button class="btn" id="rb-tool-mark" type="button" aria-pressed="false">Repère</button></div>
 <div class="acts"><button class="btn" id="rb-instrip" type="button">Poser dans la bande sélectionnée</button></div>
@@ -565,6 +566,7 @@ header{display:block;padding:10px 16px 8px}
   <details><summary>Où sont mes données ?</summary><p>Dans le navigateur de cet appareil seulement (IndexedDB). Pour les conserver ou les transférer, utilisez la sauvegarde .json du menu « ⋯ ».</p></details>
   <div class="acts"><button class="btn pri" id="faq-ok" value="ok">Fermer</button></div>
 </form></dialog>
+<div id="gate" style="position:fixed;inset:0;z-index:150;background:var(--paper,#f4f4f4)"></div>
 <dialog id="authdlg" class="cdlg"><form id="authform" method="dialog" onsubmit="return false"><img class="logo" id="au-logo" alt="L2C" style="height:42px"><h2 id="au-t" style="margin:8px 0">Connexion</h2><p class="mut">Trame des bandes de dalle — L2C Experts conseils</p><input type="hidden" id="au-mode" value="login">
 <label id="au-name-l" hidden>Nom complet<input id="au-name" autocomplete="name"></label><label>Courriel<input id="au-email" type="email" autocomplete="username" required></label><label>Mot de passe (8 caractères minimum)<input id="au-pw" type="password" minlength="8" required></label>
 <p id="au-err" role="alert" style="color:#b3261e;min-height:1.2em"></p><p class="mut" id="au-note"></p>
@@ -600,7 +602,7 @@ const SEED_JSON = JSON.stringify(D);
 const $ = s => document.querySelector(s);
 const f2 = v => v.toFixed(2);
 const lk=l=>l==='A'||l==='B'?l:'O';
-let rbOn=false; let RB=null; let AN=null, anOn=false, anTool='sel', anSel=null, anP1=null, anDrag=null; let exOn=false, exPick=0, exPairs=[], exCur=null; const BG={key:null,url:null,w:0,h:0,s:1,vx0:0,vy1:0,busy:false};
+let rbOn=false; let RB=null; let RBF=null; let rbOth=false; let AN=null, anOn=false, anTool='sel', anSel=null, anP1=null, anDrag=null; let exOn=false, exPick=0, exPairs=[], exCur=null; const BG={key:null,url:null,w:0,h:0,s:1,vx0:0,vy1:0,busy:false};
 function exCentre(){ const gx=(D.gx||[]).map(g=>g.m), gy=(D.gy||[]).map(g=>g.m); return gx.length&&gy.length?[(Math.min(...gx)+Math.max(...gx))/2,(Math.min(...gy)+Math.max(...gy))/2]:[0,0]; }
 function exAB(){ const e=PJ.pm&&PJ.pm.ex; if(!e) return {ar:1,ai:0,br:0,bi:0}; const k=(e.k||100)/100, t=(e.rot||0)*Math.PI/180, ar=k*Math.cos(t), ai=k*Math.sin(t), cx=e.c[0], cy=e.c[1]; return {ar,ai,br:cx-(ar*cx-ai*cy)+(e.dx||0)/1000,bi:cy-(ai*cx+ar*cy)+(e.dy||0)/1000}; }
 const show = {an:true,rb:true,pdfbg:false,A:true,B:true,O:true,cs:false,ms:false,col:true,grid:true,foot:false,det:false,op:false,fc:false,fm:false,rc:false,rm:false,gc:true,gm:true,lnV:true,lnH:true,ctr:false,sl:false,wl:true,mk:true};
@@ -765,7 +767,7 @@ function planSVG(){
       r.push(`<text class="dim" x="${q.x+q.w/2}" y="${q.y+q.h/2+.17}">${f2(s.w)}</text>`);
     }
   }
-  if(show.rb&&RB&&RB.bars.length&&typeof rbSVG==='function') r.push(rbSVG());
+  if(show.rb&&RBF&&typeof rbSVGAll==='function') r.push(rbSVGAll());
   if(show.an&&typeof AN!=='undefined'&&AN&&AN.items.length) r.push(anSVG());
   return r.join('');
 }
@@ -804,7 +806,7 @@ function buildToggles(){
   const L=D.lines||[], nV=L.filter(l=>l.o==='V'&&!l.del).length, nH=L.filter(l=>l.o==='H'&&!l.del).length, ng=(typeof gen!=='undefined'&&gen.list)?gen.list.length:0;
   const nl=k=>[strips,mids,(typeof gen!=='undefined'?gen.list:[]),D.f2k||[],D.recon||[]].reduce((a,L)=>a+(L||[]).filter(x=>lk(x.layer)===k).length,0);
   const cnt={wl:(D.walls||[]).length,col:(D.cols||[]).length,grid:(D.gx||[]).length+(D.gy||[]).length,foot:(D.foot||[]).length,det:(D.detail||[]).length,lnV:nV,lnH:nH,mk:(typeof revs==='function'?revs().length:0),
-    pdfbg:(PJ.px&&D.pmap)?1:0,rb:(RB&&RB.bars)?RB.bars.length:0,an:(AN&&AN.items)?AN.items.length:0,A:nl('A'),B:nl('B'),O:nl('O'),
+    pdfbg:(PJ.px&&D.pmap)?1:0,rb:RBF?RBF.list.reduce((n,f)=>n+f.rb.bars.length,0):0,an:(AN&&AN.items)?AN.items.length:0,A:nl('A'),B:nl('B'),O:nl('O'),
     gc:ng,gm:ng,ctr:ng,sl:(D.slabs||[]).length,op:(D.open||[]).length,fc:(D.f2k||[]).filter(f=>f.kind==='fc').length,fm:(D.f2k||[]).filter(f=>f.kind==='fm').length,rc:(D.recon||[]).filter(f=>f.kind==='rc').length,rm:(D.recon||[]).filter(f=>f.kind==='rm').length};
   const G=[['Plan',['pdfbg','col','grid','foot','det']],['Armature',['rb','an']],['Limites',['lnV','lnH','mk']],['Bandes à créer',['gc','gm','ctr']],['Bandes par couche',['A','B','O']],['Modèle SAFE (.f2k)',['sl','op','fc','fm']],['Reconstruction v2',['rc','rm']]];
   const T=Object.fromEntries(TG.map(([k,t,c])=>[k,[t,c]]));
@@ -920,7 +922,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.27.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.29.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -1579,11 +1581,11 @@ $('#g-dxf').onclick=()=>{
       if(it.k==='rect'){ const [x1,y1]=it.a,[x2,y2]=it.b; pl(ly,[[x1,y1],[x2,y1],[x2,y2],[x1,y2],[x1,y1]]); return; }
       if(it.k==='ellipse'){ const [x1,y1]=it.a,[x2,y2]=it.b, pts=[]; for(let i=0;i<=48;i++){ const a=i*Math.PI/24; pts.push([(x1+x2)/2+Math.cos(a)*(x2-x1)/2,(y1+y2)/2+Math.sin(a)*(y2-y1)/2]); } pl(ly,pts); return; }
       ln(ly,it.a,it.b); if(it.k==='arrow'){ const head=(p0,q0)=>{ const a=Math.atan2(q0[1]-p0[1],q0[0]-p0[0]), L=0.5; [-.4,.4].forEach(d=>ln(ly,q0,[q0[0]-Math.cos(a+d)*L,q0[1]-Math.sin(a+d)*L])); }; if(it.head!=='start') head(it.a,it.b); if(it.head==='both'||it.head==='start') head(it.b,it.a); } }); }
-  if($('#dx-rb')&&$('#dx-rb').checked&&RB&&RB.bars.length){ const tx=(ly,t,x,y,h,rot)=>E.push('0','TEXT','8',ly,'10',f(x+ox),'20',f(y+oy),'30','0','40',h,'1',t,'72','1','73','2','11',f(x+ox),'21',f(y+oy),'31','0',...(rot?['50','90']:[]));
-    RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const ty=rbType(b.t)||{}, nm=String(ty.name||'TYPE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24).toUpperCase(), ly=lay('ARM_'+nm,aci(rbCol(b)));
+  if($('#dx-rb')&&$('#dx-rb').checked) rbEach(()=>{ if(!RB.bars.length) return; const tx=(ly,t,x,y,h,rot)=>E.push('0','TEXT','8',ly,'10',f(x+ox),'20',f(y+oy),'30','0','40',h,'1',t,'72','1','73','2','11',f(x+ox),'21',f(y+oy),'31','0',...(rot?['50','90']:[]));
+    RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const ty=rbType(b.t)||{}, nm=String(ty.name||'TYPE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24).toUpperCase(), ly=lay('ARM_'+rbTag()+nm,aci(rbCol(b)));
       if(b.p){ const r=0.45; const N=24, pts=[]; if(ty.shape==='box') pts.push([b.p[0]-.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]-.38],[b.p[0]+.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]+.38],[b.p[0]-.55,b.p[1]-.38]); else for(let i=0;i<=N;i++) pts.push([b.p[0]+r*Math.cos(i*2*Math.PI/N),b.p[1]+r*Math.sin(i*2*Math.PI/N)]); pl(ly,pts); tx(ly,b.txt||ty.text||'',b.p[0],b.p[1],0.55*U*rbTx().k/100); return; }
       const g=rbGeom(b); pl(ly,rbPath(b)); g.hooks.forEach(h=>pl(ly,[h[0],h[1]])); const t=rbTxt(b); if(t){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1); tx(ly,t,b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off,0.5*U*rbTx().k/100*(b.ts||100)/100,Math.abs(g.uy)>Math.abs(g.ux)); } });
-    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok) pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U*rbTx().k/100,Math.abs(l.uy)>Math.abs(l.ux)); }); }
+    rbLaps().forEach(l=>{ const ly=lay('ARM_CHEVAUCHEMENT',l.ok?3:1), nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok) pl(ly,[l.a,[l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],l.b]); if(RB.showLap===false&&l.ok) return; tx(ly,(l.ok?'1.3ld = ':'chev. '+Math.round(l.len*1000)+' < ')+Math.round(l.req*1000),(l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8,0.4*U*rbTx().k/100,Math.abs(l.uy)>Math.abs(l.ux)); }); });
   const H=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','9','$INSBASE','10','0','20','0','30','0','0','ENDSEC','0','SECTION','2','TABLES','0','TABLE','2','LTYPE','70','1','0','LTYPE','2','CONTINUOUS','70','0','3','Solid line','72','65','73','0','40','0','0','ENDTAB','0','TABLE','2','LAYER','70',String(layers.size+1),'0','LAYER','2','0','70','0','62','7','6','CONTINUOUS'];
   layers.forEach((c,nm)=>H.push('0','LAYER','2',nm,'70','0','62',String(c),'6','CONTINUOUS')); H.push('0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES');
   const txt=[...H,...E,'0','ENDSEC','0','EOF',''].join('\r\n');
@@ -1792,7 +1794,11 @@ function applyProject(d,meta,state){
   selId=null; resetShow(!(d.strips.length||d.lines.length)&&d.slabs.length);
   PJ.cloud=(state&&state.cloud)||null; PJ.heavy=false; if(typeof clLinkState==='function') clLinkState();
   AN=(state&&state.an&&Array.isArray(state.an.items))?state.an:anDefault(); anSel=null; anP1=null; if(anOn) anToggle(false);
-  RB=(state&&state.rb&&state.rb.types)?state.rb:rbDefault(); rbSel=null; RB.bars=RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)); rbP1=null; if(rbOn) rbToggle(false);
+  { const ok=r=>r&&r.types&&Array.isArray(r.bars); let L=(state&&state.rbf&&Array.isArray(state.rbf.list))?state.rbf.list.filter(f=>ok(f.rb)):[];
+    if(!L.length) L=[{id:'F1',name:'Armature 1',vis:true,rb:ok(state&&state.rb)?state.rb:rbDefault()}];
+    L.forEach(f=>{ f.vis=f.vis!==false; f.rb.bars=f.rb.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)); });
+    RBF={act:(state&&state.rbf&&L.some(f=>f.id===state.rbf.act))?state.rbf.act:L[0].id,list:L}; RB=rbFileAct().rb; }
+  rbSel=null; rbSel2=null; rbP1=null; if(rbOn) rbToggle(false);
   const gl=l=>l.length?l[0].l:'?'; const gxm=D.gx.slice().sort((a,b)=>a.m-b.m)[0], gym=D.gy.slice().sort((a,b)=>a.m-b.m)[0];
   setOrigin(gxm?gxm.l:'?',gym?gym.l:'?');
   $('#x-pt').value=Math.max(2000,(PJ.maxPt||0)+1000);
@@ -1841,7 +1847,7 @@ function renderLegend(){
 function touch(){ if(ST.loading) return; if(!ST.ok){ return; } clearTimeout(ST.timer); ST.timer=setTimeout(saveNow,1200); pjMsg('Modifications en attente…'); }
 function saveNow(){
   if(!ST.ok) return Promise.resolve();
-  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,an:AN,cloud:PJ.cloud||null};
+  const body={name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,rbf:RBF,an:AN,cloud:PJ.cloud||null};
   const id=PJ.id;
   ST.chain=ST.chain.then(()=>ST.col.doc(id).set(body)).then(()=>{ pjMsg('Enregistré.'); if(typeof clAfterSave==='function') clAfterSave(); const p=ST.list.find(x=>x.id===id); if(p) p.name=PJ.name; else ST.list.push({id,name:PJ.name}); }).catch(e=>pjMsg('Échec de la sauvegarde ('+((e&&e.code)||'erreur')+').'));
   return ST.chain;
@@ -2102,14 +2108,14 @@ async function buildAnnotPdf(o,srcBuf){
   // cotes
   ms.forEach(m=>{ const c=[0.49,0.3,1]; L(m.a,m.b,1,c); [m.a,m.b].forEach(pt=>{ const p=T(pt[0],pt[1]); page.drawCircle({x:p[0],y:p[1],size:2,color:C(c)}); }); const p=T((m.a[0]+m.b[0])/2,(m.a[1]+m.b[1])/2); TX(fmtL(m.d*msK),p[0],p[1]+6,8,f2,c); });
   // armature
-  if(o.rb&&RB&&RB.bars.length){ const X=rbTx(), K=X.k/100, SF=StandardFonts, fam={mono:['Courier','CourierBold'],sans:['Helvetica','HelveticaBold'],serif:['TimesRoman','TimesRomanBold']}[X.font]||['Helvetica','HelveticaBold'], rf=await doc.embedFont(SF[fam[X.bold?1:0]]), tc=(c)=>X.black?[0.07,0.07,0.07]:c; const bw=(b)=>((rbType(b.t)||{}).w||2)*0.5;
+  { const _sv=RB; let _ly=0; if(o.rb&&RBF) for(const _f of rbVis()){ RB=_f.rb; if(!RB.bars.length) continue; { const X=rbTx(), K=X.k/100, SF=StandardFonts, fam={mono:['Courier','CourierBold'],sans:['Helvetica','HelveticaBold'],serif:['TimesRoman','TimesRomanBold']}[X.font]||['Helvetica','HelveticaBold'], rf=await doc.embedFont(SF[fam[X.bold?1:0]]), tc=(c)=>X.black?[0.07,0.07,0.07]:c; const bw=(b)=>((rbType(b.t)||{}).w||2)*0.5;
     RB.bars.filter(b=>b.p?b.p.every(isFinite):[...b.a,...b.b].every(isFinite)).forEach(b=>{ const c=pdHex(rbCol(b));
       if(b.p){ const p=T(b.p[0],b.p[1]), shp=(rbType(b.t)||{}).shape, r=7; if(shp==='box') page.drawRectangle({x:p[0]-r*1.3,y:p[1]-r*0.9,width:r*2.6,height:r*1.8,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); else page.drawCircle({x:p[0],y:p[1],size:r,borderColor:C(c),borderWidth:1,color:rgb(1,1,1)}); TX(b.txt||(rbType(b.t)||{}).text||'',p[0],p[1],8*K,rf,tc(c)); return; }
       const g=rbGeom(b), pp=rbPath(b); for(let i=0;i<pp.length-1;i++) L(pp[i],pp[i+1],bw(b),c); g.hooks.forEach(h=>L(h[0],h[1],bw(b),c));
       const tx=rbTxt(b); if(tx){ const k=(b.tg==null?25:b.tg)/100, off=.42*(b.side===-1?-1:1), q=T(b.a[0]+(b.b[0]-b.a[0])*k+g.nx*off,b.a[1]+(b.b[1]-b.a[1])*k+g.ny*off); TX(tx,q[0],q[1],7*K*(b.ts||100)/100,rf,tc(c),Math.abs(g.uy)>Math.abs(g.ux)); } });
     rbLaps().forEach(l=>{ const c=l.ok?[0.17,0.54,0.24]:[0.84,0.19,0.15], nx=-l.uy*.22, ny=l.ux*.22; if(!l.ok){ L([l.a[0]+nx,l.a[1]+ny],[l.b[0]+nx,l.b[1]+ny],0.8,c); L(l.a,[l.a[0]+nx,l.a[1]+ny],0.8,c); L(l.b,[l.b[0]+nx,l.b[1]+ny],0.8,c); }
       if(RB.showLap===false&&l.ok) return; const q=T((l.a[0]+l.b[0])/2+nx*1.8,(l.a[1]+l.b[1])/2+ny*1.8); TX(l.ok?'1.3 ld = '+Math.round(l.req*1000):'chev. '+Math.round(l.len*1000)+' < '+Math.round(l.req*1000),q[0],q[1],6*K,rf,tc(c),Math.abs(l.uy)>Math.abs(l.ux)); });
-    if(o.over||o.cart){ const S=rbSummary(); let ty=page.getHeight()-36; const lx=28; page.drawText(pdWA('Armature - typique : '+RB.typ.bar+' @ '+RB.typ.s+' c/c (As min)'),{x:lx,y:ty,size:8,font:f2,color:rgb(0.1,0.1,0.1)}); S.forEach(e=>{ ty-=10; page.drawText(pdWA(e.tn+' : '+e.bar+', '+e.bars+' barres, '+e.len.toFixed(1)+' m'),{x:lx,y:ty,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); }); } }
+    if(o.over||o.cart){ const S=rbSummary(); let ty=page.getHeight()-36-_ly; _ly+=10*(S.length+2); const lx=28; page.drawText(pdWA((RBF.list.length>1?_f.name+' - ':'Armature - ')+'typique : '+RB.typ.bar+' @ '+RB.typ.s+' c/c (As min)'),{x:lx,y:ty,size:8,font:f2,color:rgb(0.1,0.1,0.1)}); S.forEach(e=>{ ty-=10; page.drawText(pdWA(e.tn+' : '+e.bar+', '+e.bars+' barres, '+e.len.toFixed(1)+' m'),{x:lx,y:ty,size:7,font:f1,color:rgb(0.2,0.2,0.2)}); }); } } } RB=_sv; }
   // dessin (texte, lignes, formes)
   if(o.an&&AN&&AN.items.length){ const okp=q=>q&&q.every(isFinite), hex=pdHex, fb=await doc.embedFont(StandardFonts.Helvetica), fbb=await doc.embedFont(StandardFonts.HelveticaBold);
     AN.items.filter(it=>it.k==='text'?okp(it.p):(okp(it.a)&&okp(it.b))).forEach(it=>{ const c=hex(it.col||'#1b1b1b'), w=Math.max(0.4,(it.w||2)*0.5), da=it.dash?[5,3]:undefined, seg=(a,b)=>{ const p=T(a[0],a[1]), q=T(b[0],b[1]); page.drawLine({start:{x:p[0],y:p[1]},end:{x:q[0],y:q[1]},thickness:w,color:C(c),dashArray:da}); };
@@ -2221,8 +2227,8 @@ function rbLaps(all){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
     const pr=pt=>(pt[0]-p.a[0])*gp.ux+(pt[1]-p.a[1])*gp.uy, a1=0,a2=gp.L, b1=pr(q.a), b2=pr(q.b), lo=Math.max(Math.min(a1,a2),Math.min(b1,b2)), hi=Math.min(Math.max(a1,a2),Math.max(b1,b2)); if(hi-lo<0.05) continue;
     const req=rbLap(p)/1000, key=[p.id,q.id].sort().join('|'), ign=(RB.nolap||[]).includes(key); if(ign&&!all) continue; out.push({ign,a:[p.a[0]+gp.ux*lo,p.a[1]+gp.uy*lo],b:[p.a[0]+gp.ux*hi,p.a[1]+gp.uy*hi],len:hi-lo,req,ok:hi-lo>=req*0.98,ux:gp.ux,uy:gp.uy,ids:[p.id,q.id],bar:rbBarName(p)}); } return out; }
 const rbInk=()=>({ink:getComputedStyle(document.documentElement).getPropertyValue('--ink')||'#111'});
-function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.clientWidth||800), act=rbOn&&rbTool==='sel';
-  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=rbOn&&(b.id===rbSel||b.id===rbSel2), hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
+function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.clientWidth||800), act=rbOn&&rbTool==='sel'&&!rbOth;
+  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=rbOn&&!rbOth&&(b.id===rbSel||b.id===rbSel2), hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
     if(b.p){ const [x,y]=b.p, txt=b.txt||(t&&t.text)||'', shp=(t&&t.shape)||'circle';
       r.push(`<g data-rb="${b.id}" style="${hit.replace('stroke','all')}">`+(shp==='box'?`<rect x="${x-.55}" y="${-y-.38}" width="1.1" height="0.76" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`:`<circle cx="${x}" cy="${-y}" r=".45" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`)
         +`<text x="${x}" y="${-y+.22}" text-anchor="middle" style="${rbTs(.62,col,600)}">${esc2(txt)}</text></g>`);
@@ -2247,7 +2253,7 @@ function rbCtx(){ const b=rbSel&&RB.bars.find(x=>x.id===rbSel); return b||null; 
 function rbTypeOpts(sel,kind){ return RB.types.filter(t=>!kind||t.kind===kind).map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${esc2(t.name)}</option>`).join(''); }
 function rbBarOpts(sel,blank){ const sets=RB.sys==='M'?[['Métrique (CSA G30.18)',RB_SETS.M]]:RB.sys==='I'?[['Impérial (CSA G30.18)',RB_SETS.I]]:[['Métrique',RB_SETS.M],['Impérial',RB_SETS.I]];
   return `<option value="">${blank}</option>`+sets.map(([l,a])=>`<optgroup label="${l}">${a.map(x=>`<option value="${x[0]}" ${x[0]===sel?'selected':''}>${x[0]} · ⌀${x[1]} · ${x[2]} mm²</option>`).join('')}</optgroup>`).join(''); }
-function rbFill(){ const b=rbCtx(), v=b||rbCur, isMark=b?!!b.p:(rbType(rbCur.t)||{}).kind==='mark';
+function rbFill(){ rbFileUI(); const b=rbCtx(), v=b||rbCur, isMark=b?!!b.p:(rbType(rbCur.t)||{}).kind==='mark';
   $('#rb-ctx').textContent=b?(b.p?'Repère ':'Barre ')+b.id+' sélectionné'+(b.p?'':' · '+(rbL(b)*1000).toFixed(0)+' mm'):'Nouvelle pose (valeurs par défaut)';
   $('#rb-t').innerHTML=rbTypeOpts(v.t); $('#rb-bar').innerHTML=rbBarOpts(v.bar||'','Selon le type / typique ('+(((rbType(v.t)||{}).bar)||RB.typ.bar)+')');
   $('#rb-n').value=v.n||''; $('#rb-nc').value=v.nc||''; $('#rb-hook').value=v.hook||''; $('#rb-side').value=String(v.side===-1?-1:1); $('#rb-tg').value=v.tg==null?25:v.tg; $('#rb-col').value=v.col||(rbType(v.t)||{}).color||'#111111'; $('#rb-txt').value=v.txt||''; $('#rb-ts').value=v.ts||'';
@@ -2368,7 +2374,7 @@ function clRender(){ const b=$('#acct-sum'); if(!b) return; b.textContent=CL.me?
   $('#acct-adm').hidden=!(CL.me&&CL.me.sa); if(CL.me&&CL.me.mustChange) clPwDlg(true);
   if(CL.me){ $('#acct-who').innerHTML='<b>'+esc2(CL.me.name)+'</b><br><span class="mut">'+esc2(CL.me.email)+'</span>'; }
   if(!CL.me) clStatus('off',''); else if(!PJ.cloud) clStatus('local','Projet local (non synchronisé) — cliquer pour migrer'); }
-async function clLoadMe(){ try{ const d=await api('me'); CL.avail=true; CL.me=d.user; CL.teams=d.teams||[]; CL.projects=d.projects||[]; if(CL.me) clPrefsPull(); }catch(e){ if(e.na||e.status===503) CL.avail=false; CL.me=null; } clRender(); }
+async function clLoadMe(){ CL.loaded=false; try{ const d=await api('me'); CL.avail=true; CL.me=d.user; CL.teams=d.teams||[]; CL.projects=d.projects||[]; if(CL.me) clPrefsPull(); }catch(e){ if(e.na||e.status===503) CL.avail=false; CL.me=null; } CL.loaded=true; clRender(); }
 /* --- préférences d'utilisateur (réglages, unités, armature) --- */
 function clPrefsPull(){ const p=(CL.me&&CL.me.prefs)||{}; let ch=false; if(p.setv&&JSON.stringify(p.setv)!==JSON.stringify(SETV)){ SETV=p.setv; try{ localStorage.setItem('l2c-reglages',JSON.stringify(SETV)); }catch(e){} setApply(); ch=true; }
   if(p.un&&UNITS[p.un.u]&&JSON.stringify(p.un)!==JSON.stringify(UN)){ UN=p.un; try{ localStorage.setItem('l2c-units',JSON.stringify(UN)); }catch(e){} ch=true; } if(p.snap){ Object.assign(SNAP,p.snap); try{ localStorage.setItem('l2c-snap',JSON.stringify(SNAP)); }catch(e){} if(typeof snUI==='function') snUI(); } if(ch&&typeof draw==='function') draw(); }
@@ -2377,12 +2383,15 @@ let clPT=null; function clPrefsPush(){ if(!CL.me) return; clearTimeout(clPT); cl
 /* --- connexion / création de compte --- */
 function clAuthDlg(mode){ $('#au-mode').value=mode||'login'; clAuthMode(); $('#au-err').textContent=''; const d=$('#authdlg'); if(!d.open) d.showModal(); }
 function clAuthMode(){ const reg=$('#au-mode').value==='register'; $('#au-name-l').hidden=!reg; $('#au-go').textContent=reg?'Créer le compte':'Se connecter'; $('#au-sw').textContent=reg?'J’ai déjà un compte':'Créer un compte'; $('#au-fg').hidden=reg; $('#au-t').textContent=reg?'Créer un compte':'Connexion'; $('#au-pw').autocomplete=reg?'new-password':'current-password';
-  $('#au-note').textContent=CL.avail?(reg?'Le premier compte créé devient propriétaire de l’équipe « L2C Experts conseils ». Les autres comptes rejoignent l’équipe sur invitation d’un administrateur.':'Le service cloud est optionnel : l’outil fonctionne aussi hors connexion, avec sauvegarde locale.'):'Service cloud indisponible sur ce serveur (déploiement Vercel avec stockage Blob requis).'; }
+  $('#au-note').textContent=CL.avail?(reg?'Le premier compte créé devient administrateur. Les comptes suivants doivent être approuvés par un administrateur avant la première connexion.':'Connexion obligatoire. Un nouveau compte doit d’abord être approuvé par un administrateur.'):'Service cloud indisponible sur ce serveur (déploiement Vercel avec stockage Blob requis).'; }
 $('#au-sw').onclick=()=>{ $('#au-mode').value=$('#au-mode').value==='register'?'login':'register'; clAuthMode(); };
-$('#au-x').onclick=()=>$('#authdlg').close();
+$('#au-x').onclick=()=>{ if(!clGated()) $('#authdlg').close(); };
+$('#authdlg').addEventListener('cancel',e=>{ if(clGated()) e.preventDefault(); });
+function clGated(){ return !!(CL.loaded&&!CL.me&&CL.avail!==false); }
+{ const r0=clRender; clRender=function(){ r0.apply(this,arguments); const g=clGated(); $('#gate').hidden=CL.loaded?!g:false; $('#au-x').hidden=g; if(g){ document.body.style.overflow='hidden'; $('#esp').hidden=true; ['#clouddlg','#teamdlg','#admdlg','#pwdlg'].forEach(i=>{ try{ if($(i).open) $(i).close(); }catch(e){} }); if(!$('#authdlg').open) clAuthDlg($('#au-mode').value||'login'); } else if($('#esp').hidden) document.body.style.overflow=''; }; }
 $('#authform').addEventListener('submit',async e=>{ e.preventDefault(); const reg=$('#au-mode').value==='register'; $('#au-err').textContent=''; $('#au-go').disabled=true;
-  try{ const d=await api(reg?'register':'login',{json:{email:$('#au-email').value,password:$('#au-pw').value,name:$('#au-name').value}}); CL.me=d.user; CL.teams=d.teams; CL.projects=d.projects; $('#au-pw').value=''; $('#authdlg').close(); clPrefsPull(); clRender(); clLinkState(); pjMsg('Connecté : '+CL.me.name); }
-  catch(er){ $('#au-err').textContent=er.message; } $('#au-go').disabled=false; });
+  try{ const d=await api(reg?'register':'login',{json:{email:$('#au-email').value,password:$('#au-pw').value,name:$('#au-name').value}}); if(d.pending){ $('#au-pw').value=''; $('#au-mode').value='login'; clAuthMode(); $('#au-err').style.color='#2b8a3e'; $('#au-err').textContent='Compte créé. Un administrateur doit l’approuver avant que vous puissiez vous connecter.'; $('#au-go').disabled=false; return; } $('#au-err').style.color=''; CL.me=d.user; CL.teams=d.teams; CL.projects=d.projects; $('#au-pw').value=''; $('#authdlg').close(); clPrefsPull(); clRender(); clLinkState(); pjMsg('Connecté : '+CL.me.name); }
+  catch(er){ $('#au-err').style.color=''; $('#au-err').textContent=er.message; } $('#au-go').disabled=false; });
 $('#acct-login').onclick=()=>{ $('#acct').open=false; clAuthDlg('login'); };
 $('#acct-out').onclick=async()=>{ try{ await api('logout',{method:'POST',json:{}}); }catch(e){} CL.me=null; CL.teams=[]; CL.projects=[]; $('#acct').open=false; clRender(); clStatus('off',''); pjMsg('Déconnecté.'); };
 /* --- projets cloud --- */
@@ -2399,7 +2408,7 @@ async function clMigrate(id,team){ if(id===PJ.id) return clPublish(team); const 
   const pr=(await api('proj_new',{json:{name:st.name||id,team:team||null}})).project; if(parts.ds) await clPutPart(pr.id,'ds',parts.ds); if(parts.px) await clPutPart(pr.id,'px',parts.px);
   const r=await clPutPart(pr.id,'state',st,'&base=0&name='+encodeURIComponent(st.name||id)); st.cloud={id:pr.id,rev:r.project.rev,team:pr.team,role:pr.role}; await ST.col.doc(id).set(st); }
 async function clLocals(){ const out=[]; for(const p of ST.list){ if(p.id==='exemple'||String(p.id).startsWith('_')) continue; try{ const d=await ST.col.doc(p.id).get(); if(d.exists&&!d.data().cloud) out.push({id:p.id,name:d.data().name||p.name||p.id}); }catch(e){} } return out; }
-function clBody(){ return {name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,an:AN}; }
+function clBody(){ return {name:PJ.name,updated:Date.now(),OXm,OYm,hasF2k:PJ.hasF2k,fname:PJ.fname,Z:PJ.Z,zsel:PJ.zsel,maxPt:PJ.maxPt,hasPdf:PJ.hasPdf,pm:PJ.pm,lines:D.lines,gen:genState(),rb:RB,rbf:RBF,an:AN}; }
 async function clAfterSave(){ if(!CL.me||!PJ.cloud) return; if(clRk(PJ.cloud.role||'editor')<1){ clLinkState(); return; } clearTimeout(CL.pend); CL.pend=setTimeout(clPush,800); }
 async function clPush(){ CL.pend=null; if(CL.pushing){ CL.pend=setTimeout(clPush,1500); return; } if(!CL.me||!PJ.cloud) return; const sg=clSig(); if(CLSIG[PJ.cloud.id]===sg&&!PJ.heavy){ clLinkState(); return; } CL.pushing=true; const c=PJ.cloud, id=PJ.id; clStatus('busy','☁ Synchronisation…');
   try{ if(PJ.heavy){ const parts=await clParts(id); if(parts.ds) await clPutPart(c.id,'ds',parts.ds); if(parts.px) await clPutPart(c.id,'px',parts.px); PJ.heavy=false; }
@@ -2458,16 +2467,17 @@ $('#au-fg').onclick=async()=>{ const em=$('#au-email').value.trim(); if(!em){ $(
 let admTab='users', admData=null;
 async function clAdmDlg(){ $('#acct').open=false; await admLoad(); $('#admdlg').showModal(); }
 async function admLoad(){ try{ admData=await api('admin_list'); admRender(); }catch(e){ $('#adm-body').innerHTML='<p>'+esc2(e.message)+'</p>'; } }
-function admRender(msg){ const d=admData; if(!d) return; const tabs=[['users','Utilisateurs ('+d.users.length+')'],['teams','Équipes ('+d.teams.length+')'],['resets','Demandes de réinitialisation ('+d.resets.length+')']];
+function admRender(msg){ const d=admData; if(!d) return; const tabs=[['users','Utilisateurs ('+d.users.length+')'+(d.users.some(u=>u.pending)?' — '+d.users.filter(u=>u.pending).length+' à approuver':'')],['teams','Équipes ('+d.teams.length+')'],['resets','Demandes de réinitialisation ('+d.resets.length+')']];
   let h=`<div class="acts">${tabs.map(([k,t])=>`<button class="btn" data-at="${k}" aria-pressed="${k===admTab}">${t}</button>`).join('')}</div>${msg?`<div class="clpub" style="margin-bottom:8px">${msg}</div>`:''}`;
-  if(admTab==='users') h+=`<table class="rbt"><tr><th>Utilisateur</th><th>Équipes</th><th>État</th><th></th></tr>${d.users.map(u=>`<tr><td><b>${esc2(u.name)}</b>${u.sa?' <span class="mut">(administrateur)</span>':''}<br><span class="mut">${esc2(u.email)}</span></td><td class="mut">${u.teams.map(esc2).join('<br>')||'—'}</td><td>${u.disabled?'Désactivé':u.mustChange?'Mot de passe temporaire':'Actif'}</td><td>
-    <button class="btn" data-ar="${u.id}" type="button">Réinitialiser le mot de passe</button> ${u.id===CL.me.id?'':`<button class="btn" data-ad="${u.id}" data-v="${u.disabled?0:1}" type="button">${u.disabled?'Réactiver':'Désactiver'}</button> `}<button class="btn" data-ag="${u.id}" data-v="${u.sa?0:1}" type="button">${u.sa?'Retirer admin':'Nommer admin'}</button>${u.id===CL.me.id||u.sa?'':` <button class="btn" data-ax="${u.id}" type="button" style="color:#b3261e">Supprimer</button>`}</td></tr>`).join('')}</table>`;
+  if(admTab==='users') h+=`<table class="rbt"><tr><th>Utilisateur</th><th>Équipes</th><th>État</th><th></th></tr>${d.users.map(u=>`<tr><td><b>${esc2(u.name)}</b>${u.sa?' <span class="mut">(administrateur)</span>':''}<br><span class="mut">${esc2(u.email)}</span></td><td class="mut">${u.teams.map(esc2).join('<br>')||'—'}</td><td>${u.pending?'<b style="color:#b26a00">En attente d’approbation</b>':u.disabled?'Désactivé':u.mustChange?'Mot de passe temporaire':'Actif'}</td><td>${u.pending?`<button class="btn pri" data-aa="${u.id}" type="button">Approuver</button> <button class="btn" data-ax="${u.id}" type="button" style="color:#b3261e">Refuser</button>`:`
+    <button class="btn" data-ar="${u.id}" type="button">Réinitialiser le mot de passe</button> ${u.id===CL.me.id?'':`<button class="btn" data-ad="${u.id}" data-v="${u.disabled?0:1}" type="button">${u.disabled?'Réactiver':'Désactiver'}</button> `}<button class="btn" data-ag="${u.id}" data-v="${u.sa?0:1}" type="button">${u.sa?'Retirer admin':'Nommer admin'}</button>${u.id===CL.me.id||u.sa?'':` <button class="btn" data-ax="${u.id}" type="button" style="color:#b3261e">Supprimer</button>`}`}</td></tr>`).join('')}</table>`;
   if(admTab==='teams') h+=`<table class="rbt"><tr><th>Équipe</th><th>Membres</th><th>Projets</th><th></th></tr>${d.teams.map(t=>`<tr><td><b>${esc2(t.name)}</b></td><td>${t.members}</td><td>${t.projects}</td><td><button class="btn" data-am="${t.id}" type="button">Gérer les membres et rôles</button> <button class="btn" data-at2="${t.id}" type="button" style="color:#b3261e">Supprimer</button></td></tr>`).join('')}</table>`;
   if(admTab==='resets') h+=d.resets.length?`<table class="rbt">${d.resets.map(r=>{ const u=d.users.find(x=>x.email===r.email); return `<tr><td>${esc2(r.email)}<br><span class="mut">${new Date(r.at).toLocaleString('fr-CA')}</span></td><td>${u?`<button class="btn pri" data-ar="${u.id}" type="button">Générer un mot de passe temporaire</button>`:''}</td></tr>`; }).join('')}</table>`:'<p class="mut">Aucune demande en attente.</p>';
   $('#adm-body').innerHTML=h; }
 $('#adm-body').addEventListener('click',async e=>{ if(e.target.closest('[data-am]')){ clTeam=e.target.closest('[data-am]').dataset.am; CL.extraTeams=admData.teams; espTab('equipes'); return; } const b=e.target.closest('button'); if(!b) return; const D=b.dataset;
   try{ if(D.at){ admTab=D.at; admRender(); return; }
     if(D.ar){ const u=admData.users.find(x=>x.id===D.ar); if(!confirm('Réinitialiser le mot de passe de '+u.name+' ? Son mot de passe actuel cessera de fonctionner.')) return; const r=await api('admin_reset',{json:{uid:D.ar}}); await admLoad(); admRender('Mot de passe temporaire pour <b>'+esc2(u.name)+'</b> : <code style="font-size:15px;user-select:all">'+esc2(r.temp)+'</code><br><span class="mut">Transmettez-le de façon sécuritaire : la personne devra le changer à sa prochaine connexion. Il n’est affiché qu’une fois.</span>'); return; }
+    if(D.aa){ await api('admin_approve',{json:{uid:D.aa}}); await admLoad(); return; }
     if(D.ad){ await api('admin_toggle',{json:{uid:D.ad,disabled:D.v==='1'}}); await admLoad(); return; }
     if(D.ag){ await api('admin_grant',{json:{uid:D.ag,sa:D.v==='1'}}); await admLoad(); return; }
     if(D.ax){ const u=admData.users.find(x=>x.id===D.ax); if(!confirm('Supprimer le compte de '+u.name+' (et ses projets personnels) ? Cette action est définitive.')) return; await api('admin_delete',{json:{uid:D.ax}}); await admLoad(); return; }
@@ -2544,6 +2554,24 @@ function espPrefs(){ $('#esp-prefs').innerHTML=`<h2>Préférences</h2><div class
 $('#esp-prefs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.id==='eg-set'){ $('#pj-set').click(); } if(b.id==='eg-faq'){ $('#pj-faq').click(); } });
 try{ $('#esp-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 if(location.hash.indexOf('#espace')===0) setTimeout(()=>{ espOpen((location.hash.split('/')[1])||'projets'); },600);
+/* ====================== PLUSIEURS FICHIERS D'ARMATURE PAR PROJET ====================== */
+function rbFileAct(){ return RBF.list.find(f=>f.id===RBF.act)||RBF.list[0]; }
+function rbVis(){ return RBF?RBF.list.filter(f=>f.vis||f.id===RBF.act):[]; }
+function rbEach(fn){ if(!RBF) return; const sv=RB; try{ rbVis().forEach(f=>{ RB=f.rb; fn(f); }); } finally{ RB=sv; } }
+function rbTag(){ if(!RBF||RBF.list.length<2) return ''; const f=rbFileAct(); return String(f.name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,14).toUpperCase()+'_'; }
+function rbSVGAll(){ const sv=RB, so=rbOth, out=[]; try{ rbVis().forEach(f=>{ RB=f.rb; rbOth=f.id!==RBF.act; out.push(rbSVG()); }); } finally{ RB=sv; rbOth=so; } return out.join(''); }
+function rbFileNew(copy){ const a=rbFileAct(); let r; if(copy){ r=JSON.parse(JSON.stringify(a.rb)); } else { r=JSON.parse(JSON.stringify(a.rb)); r.bars=[]; r.nolap=[]; }
+  const n=RBF.list.length+1; let id='F'+n; while(RBF.list.some(f=>f.id===id)) id='F'+(Math.random()*1e6|0);
+  const f={id,name:(copy?a.name+' (copie)':'Armature '+n),vis:true,rb:r}; RBF.list.push(f); rbFileSwitch(id); }
+function rbFileSwitch(id){ const f=RBF.list.find(x=>x.id===id); if(!f) return; RBF.act=id; RB=f.rb; rbSel=null; rbSel2=null; rbP1=null; rbPart=null; if(!rbType(rbCur.t)) rbCur.t=RB.types[0].id; touch(); rbFileUI(); rbFill(); draw(); }
+function rbFileUI(){ const el=$('#rb-files'); if(!el||!RBF) return; const a=rbFileAct();
+  el.innerHTML=`<div class="rbrow"><label style="flex:1">Fichier d’armature<select id="rbf-sel">${RBF.list.map(f=>`<option value="${f.id}" ${f.id===a.id?'selected':''}>${esc2(f.name)} (${f.rb.bars.length})${f.vis?'':' — masqué'}</option>`).join('')}</select></label><label style="flex-direction:row;align-items:center;gap:4px"><input id="rbf-vis" type="checkbox" ${a.vis?'checked':''}>Visible</label></div>
+  <div class="acts"><button class="btn" id="rbf-new" type="button" title="Nouveau fichier vide, avec les mêmes types et réglages">Nouveau</button><button class="btn" id="rbf-dup" type="button">Dupliquer</button><button class="btn" id="rbf-ren" type="button">Renommer</button><button class="btn" id="rbf-del" type="button" style="color:#b3261e" ${RBF.list.length<2?'disabled':''}>Supprimer</button></div>`; }
+document.addEventListener('change',e=>{ if(!RBF) return; if(e.target.id==='rbf-sel') rbFileSwitch(e.target.value); if(e.target.id==='rbf-vis'){ rbFileAct().vis=e.target.checked; touch(); rbFileUI(); draw(); } });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#rb-files button'); if(!b||!RBF) return; const a=rbFileAct();
+  if(b.id==='rbf-new') rbFileNew(false); else if(b.id==='rbf-dup') rbFileNew(true);
+  else if(b.id==='rbf-ren'){ const n=prompt('Nom du fichier d’armature :',a.name); if(n&&n.trim()){ a.name=n.trim(); touch(); rbFileUI(); } }
+  else if(b.id==='rbf-del'){ if(RBF.list.length<2||!confirm('Supprimer le fichier « '+a.name+' » et ses '+a.rb.bars.length+' élément(s) ?')) return; RBF.list=RBF.list.filter(f=>f!==a); rbFileSwitch(RBF.list[0].id); } });
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 $('#cl-st').onclick=()=>{ espOpen('projets'); };
 clAuthMode(); clLoadMe();
@@ -2554,7 +2582,7 @@ function snSave(){ try{ localStorage.setItem('l2c-snap',JSON.stringify(SNAP)); }
 function anCorners(it){ const [x1,y1]=it.a,[x2,y2]=it.b; return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]; }
 function snRefs(){ const P=[], S=[];
   if(typeof AN!=='undefined'&&AN) AN.items.forEach(it=>{ if(it.k==='text') P.push(it.p); else if(it.k==='rect'||it.k==='ellipse'){ anCorners(it).forEach(c=>P.push(c)); } else { P.push(it.a,it.b); S.push([it.a,it.b]); } });
-  if(RB) RB.bars.forEach(b=>{ if(b.p) P.push(b.p); else { P.push(b.a,b.b); S.push([b.a,b.b]); } });
+  if(RBF) RBF.list.filter(f=>f.vis||f.id===RBF.act).forEach(f=>f.rb.bars.forEach(b=>{ if(b.p) P.push(b.p); else { P.push(b.a,b.b); S.push([b.a,b.b]); } }));
   (meas||[]).forEach(m=>{ P.push(m.a,m.b); S.push([m.a,m.b]); });
   if(SNAP.obj) Object.values(byId||{}).forEach(o=>{ try{ const q=rectOf(o); P.push([q.x,-(q.y+q.h)],[q.x+q.w,-(q.y+q.h)],[q.x+q.w,-q.y],[q.x,-q.y]); }catch(e){} });
   return {P,S}; }
