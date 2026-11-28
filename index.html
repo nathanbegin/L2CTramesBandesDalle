@@ -875,7 +875,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.21.2', APP_DATE='2026-11-25';
+const APP_VERSION='1.21.3', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -899,6 +899,7 @@ let drag=null, moved=false;
 svg.addEventListener('pointerdown',e=>{
   if(e.button===2) return;
   if(rbOn&&rbDown(e)) return;
+  if(rbOn&&rbTool==='sel'&&(rbSel||rbSel2)){ rbSel=null; rbSel2=null; rbFill(); draw(); }
   const h=edLim&&e.target.closest&&e.target.closest('[data-h]');
   if(h){ hdrag={i:+h.dataset.h,e:h.dataset.e}; moved=true; try{svg.setPointerCapture(e.pointerId);}catch(_){} draw(); return; }
   drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y}; moved=false; svg.setPointerCapture(e.pointerId); });
@@ -2152,7 +2153,7 @@ function rbLaps(all){ const out=[], B=RB.bars.filter(b=>!b.p&&rbL(b)>0.05);
     const req=rbLap(p)/1000, key=[p.id,q.id].sort().join('|'), ign=(RB.nolap||[]).includes(key); if(ign&&!all) continue; out.push({ign,a:[p.a[0]+gp.ux*lo,p.a[1]+gp.uy*lo],b:[p.a[0]+gp.ux*hi,p.a[1]+gp.uy*hi],len:hi-lo,req,ok:hi-lo>=req*0.98,ux:gp.ux,uy:gp.uy,ids:[p.id,q.id],bar:rbBarName(p)}); } return out; }
 const rbInk=()=>({ink:getComputedStyle(document.documentElement).getPropertyValue('--ink')||'#111'});
 function rbSVG(){ if(!RB||!RB.bars.length) return ''; const r=[], u=vb.w/(svg.clientWidth||800), act=rbOn&&rbTool==='sel';
-  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=b.id===rbSel||b.id===rbSel2, hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
+  RB.bars.forEach(b=>{ const t=rbType(b.t), col=rbCol(b), sel=rbOn&&(b.id===rbSel||b.id===rbSel2), hit=`pointer-events:${act?'stroke':'none'};cursor:${act?'move':'default'}`;
     if(b.p){ const [x,y]=b.p, txt=b.txt||(t&&t.text)||'', shp=(t&&t.shape)||'circle';
       r.push(`<g data-rb="${b.id}" style="${hit.replace('stroke','all')}">`+(shp==='box'?`<rect x="${x-.55}" y="${-y-.38}" width="1.1" height="0.76" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`:`<circle cx="${x}" cy="${-y}" r=".45" fill="#fff" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`)
         +`<text x="${x}" y="${-y+.22}" text-anchor="middle" style="${rbTs(.62,col,600)}">${esc2(txt)}</text></g>`);
@@ -2188,7 +2189,7 @@ function rbInfoHtml(b){ const bi=rbInfo(rbBarName(b)), L=rbL(b); if(!bi) return 
   const o=b.strip&&byId[b.strip]; if(o&&n){ const rq=rectOf(o), wmm=(o.layer==='A'?rq.w:rq.h)*1000, ti=rbInfo(RB.typ.bar); if(ti&&wmm&&RB.typ.s){ const req=ti.ab*wmm/RB.typ.s, got=n*bi.ab; h+=`<br>Bande ${esc2(b.strip)} : largeur ${Math.round(wmm)} mm · As min typique ${RB.typ.bar} @ ${RB.typ.s} ≈ ${Math.round(req)} mm² · fournie ${got} mm² `+(got>=req*0.99?'<b style="color:#2b8a3e">✓</b>':'<b style="color:#d73027">⚠ inférieure à l’As min</b>'); } }
   return h; }
 function rbSet(key,val){ const b=rbCtx(); if(b){ if(val===''||val==null) delete b[key]; else b[key]=val; touch(); draw(); rbFill(); } else { rbCur[key]=val; } }
-function rbToggle(on){ rbOn=!!on; $('#rb').setAttribute('aria-pressed',String(rbOn)); $('#rbbox').hidden=!rbOn; rbP1=null; rbDrag=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
+function rbToggle(on){ rbOn=!!on; if(!on){ rbSel=null; rbSel2=null; } $('#rb').setAttribute('aria-pressed',String(rbOn)); $('#rbbox').hidden=!rbOn; rbP1=null; rbDrag=null; const ov=svg.querySelector('#ov'); if(ov) ov.remove();
   if(rbOn){ if(msOn) msToggle(false); if(calOn) calToggle(false); if(fpOn) fpToggle(false); if(l4on) l4Set(false); if(exOn) exToggle(false); if(edLim) $('#ed-lim').click(); show.rb=true; syncToggle('rb'); rbSetTool('sel'); rbFill(); }
   draw(); }
 function rbSetTool(t){ rbTool=t; rbP1=null; ['sel','draw','mark'].forEach(k=>$('#rb-tool-'+k).setAttribute('aria-pressed',String(k===t))); const ov=svg.querySelector('#ov'); if(ov) ov.remove();
