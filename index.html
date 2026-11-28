@@ -570,7 +570,7 @@ header{display:block;padding:10px 16px 8px}
 <dialog id="authdlg" class="cdlg"><form id="authform" method="dialog" onsubmit="return false"><img class="logo" id="au-logo" alt="L2C" style="height:42px"><h2 id="au-t" style="margin:8px 0">Connexion</h2><p class="mut">Trame des bandes de dalle — L2C Experts conseils</p><input type="hidden" id="au-mode" value="login">
 <label id="au-name-l" hidden>Nom complet<input id="au-name" autocomplete="name"></label><label>Courriel<input id="au-email" type="email" autocomplete="username" required></label><label>Mot de passe (8 caractères minimum)<input id="au-pw" type="password" minlength="8" required></label>
 <p id="au-err" role="alert" style="color:#b3261e;min-height:1.2em"></p><p class="mut" id="au-note"></p>
-<div class="acts"><button class="btn pri" id="au-go" type="submit">Se connecter</button><button class="btn" id="au-fg" type="button">Mot de passe oublié ?</button><button class="btn" id="au-sw" type="button">Créer un compte</button><button class="btn" id="au-x" type="button">Fermer</button></div></form></dialog>
+<div class="acts"><button class="btn pri" id="au-go" type="submit">Se connecter</button><button class="btn" id="au-fg" type="button">Mot de passe oublié ?</button><button class="btn" id="au-rc" type="button" title="Administrateur : réinitialiser avec la clé de secours (variable Vercel L2C_RECOVERY)">Clé de secours (admin)</button><button class="btn" id="au-sw" type="button">Créer un compte</button><button class="btn" id="au-x" type="button">Fermer</button></div></form></dialog>
 <div id="esp" hidden><div class="espbar"><img class="logo" id="esp-logo" alt="L2C"><b>Mon espace</b><span class="mut" id="esp-who"></span><span style="flex:1"></span><button class="btn pri" id="esp-back" type="button">← Retour au plan</button></div>
 <div class="espbody"><nav class="espnav" id="esp-nav"><button data-et="projets" type="button">Projets</button><button data-et="equipes" type="button">Équipes et rôles</button><button data-et="compte" type="button">Compte</button><button data-et="admin" id="esp-nav-adm" type="button" hidden>Administration</button><button data-et="prefs" type="button">Préférences</button></nav>
 <main class="espmain"><section id="esp-p-projets" hidden><div id="esp-proj"></div></section><section id="esp-p-equipes" hidden><h2>Équipes et rôles</h2></section><section id="esp-p-compte" hidden><div id="esp-acct"></div></section><section id="esp-p-admin" hidden><h2>Administration</h2><p class="mut">Le premier compte créé est administrateur : il gère les comptes, les équipes et la réinitialisation des mots de passe.</p></section><section id="esp-p-prefs" hidden><div id="esp-prefs"></div></section></main></div></div>
@@ -922,7 +922,7 @@ function buildList(){
     g('.f2k colonnes · couche A',f2k.filter(s=>s.kind==='fc'&&s.layer==='A')) + g('.f2k colonnes · couche B',f2k.filter(s=>s.kind==='fc'&&s.layer==='B')) +
     g('.f2k milieu · couche A',f2k.filter(s=>s.kind==='fm'&&s.layer==='A')) + g('.f2k milieu · couche B',f2k.filter(s=>s.kind==='fm'&&s.layer==='B'));
 }
-const APP_VERSION='1.29.0', APP_DATE='2026-11-25';
+const APP_VERSION='1.30.0', APP_DATE='2026-11-25';
 $('#ver').innerHTML=`<span>L2C · Trame des bandes</span><span>v${APP_VERSION} · ${APP_DATE}</span>`;
 let selObj=null;
 function selectObj(k){ const [t,i]=k.split(':'); selObj=(selObj&&selObj.t===t&&selObj.i===+i)?null:{t,i:+i}; selId=null; document.querySelectorAll('.item.on,.gi.on').forEach(x=>x.classList.remove('on')); draw(); renderInfo(); }
@@ -2382,13 +2382,13 @@ let clPT=null; function clPrefsPush(){ if(!CL.me) return; clearTimeout(clPT); cl
 { const s0=setSave; setSave=function(){ s0(); clPrefsPush(); }; const u0=unApply; unApply=function(){ u0.apply(this,arguments); clPrefsPush(); }; }
 /* --- connexion / création de compte --- */
 function clAuthDlg(mode){ $('#au-mode').value=mode||'login'; clAuthMode(); $('#au-err').textContent=''; const d=$('#authdlg'); if(!d.open) d.showModal(); }
-function clAuthMode(){ const reg=$('#au-mode').value==='register'; $('#au-name-l').hidden=!reg; $('#au-go').textContent=reg?'Créer le compte':'Se connecter'; $('#au-sw').textContent=reg?'J’ai déjà un compte':'Créer un compte'; $('#au-fg').hidden=reg; $('#au-t').textContent=reg?'Créer un compte':'Connexion'; $('#au-pw').autocomplete=reg?'new-password':'current-password';
+function clAuthMode(){ const reg=$('#au-mode').value==='register'; $('#au-name-l').hidden=!reg; $('#au-go').textContent=reg?'Créer le compte':'Se connecter'; $('#au-sw').textContent=reg?'J’ai déjà un compte':'Créer un compte'; $('#au-fg').hidden=reg; $('#au-rc').hidden=reg; $('#au-t').textContent=reg?'Créer un compte':'Connexion'; $('#au-pw').autocomplete=reg?'new-password':'current-password';
   $('#au-note').textContent=CL.avail?(reg?'Le premier compte créé devient administrateur. Les comptes suivants doivent être approuvés par un administrateur avant la première connexion.':'Connexion obligatoire. Un nouveau compte doit d’abord être approuvé par un administrateur.'):'Service cloud indisponible sur ce serveur (déploiement Vercel avec stockage Blob requis).'; }
 $('#au-sw').onclick=()=>{ $('#au-mode').value=$('#au-mode').value==='register'?'login':'register'; clAuthMode(); };
 $('#au-x').onclick=()=>{ if(!clGated()) $('#authdlg').close(); };
 $('#authdlg').addEventListener('cancel',e=>{ if(clGated()) e.preventDefault(); });
 function clGated(){ return !!(CL.loaded&&!CL.me&&CL.avail!==false); }
-{ const r0=clRender; clRender=function(){ r0.apply(this,arguments); const g=clGated(); $('#gate').hidden=CL.loaded?!g:false; $('#au-x').hidden=g; if(g){ document.body.style.overflow='hidden'; $('#esp').hidden=true; ['#clouddlg','#teamdlg','#admdlg','#pwdlg'].forEach(i=>{ try{ if($(i).open) $(i).close(); }catch(e){} }); if(!$('#authdlg').open) clAuthDlg($('#au-mode').value||'login'); } else if($('#esp').hidden) document.body.style.overflow=''; }; }
+{ const r0=clRender; clRender=function(){ r0.apply(this,arguments); const g=clGated(); $('#gate').hidden=CL.loaded?!g:false; $('#au-x').hidden=g; if(g){ document.body.style.overflow='hidden'; $('#esp').hidden=true; ['#clouddlg','#teamdlg','#admdlg','#pwdlg'].forEach(i=>{ try{ if($(i).open) $(i).close(); }catch(e){} }); if(!$('#authdlg').open) clAuthDlg('login'); } else if($('#esp').hidden) document.body.style.overflow=''; }; }
 $('#authform').addEventListener('submit',async e=>{ e.preventDefault(); const reg=$('#au-mode').value==='register'; $('#au-err').textContent=''; $('#au-go').disabled=true;
   try{ const d=await api(reg?'register':'login',{json:{email:$('#au-email').value,password:$('#au-pw').value,name:$('#au-name').value}}); if(d.pending){ $('#au-pw').value=''; $('#au-mode').value='login'; clAuthMode(); $('#au-err').style.color='#2b8a3e'; $('#au-err').textContent='Compte créé. Un administrateur doit l’approuver avant que vous puissiez vous connecter.'; $('#au-go').disabled=false; return; } $('#au-err').style.color=''; CL.me=d.user; CL.teams=d.teams; CL.projects=d.projects; $('#au-pw').value=''; $('#authdlg').close(); clPrefsPull(); clRender(); clLinkState(); pjMsg('Connecté : '+CL.me.name); }
   catch(er){ $('#au-err').style.color=''; $('#au-err').textContent=er.message; } $('#au-go').disabled=false; });
@@ -2572,6 +2572,9 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
   if(b.id==='rbf-new') rbFileNew(false); else if(b.id==='rbf-dup') rbFileNew(true);
   else if(b.id==='rbf-ren'){ const n=prompt('Nom du fichier d’armature :',a.name); if(n&&n.trim()){ a.name=n.trim(); touch(); rbFileUI(); } }
   else if(b.id==='rbf-del'){ if(RBF.list.length<2||!confirm('Supprimer le fichier « '+a.name+' » et ses '+a.rb.bars.length+' élément(s) ?')) return; RBF.list=RBF.list.filter(f=>f!==a); rbFileSwitch(RBF.list[0].id); } });
+$('#au-rc').onclick=async()=>{ const em=$('#au-email').value.trim(); if(!em){ $('#au-err').style.color=''; $('#au-err').textContent='Entrez le courriel de l’administrateur.'; return; }
+  const key=prompt('Clé de secours (variable Vercel L2C_RECOVERY) :'); if(!key) return; const pw=prompt('Nouveau mot de passe (8 caractères minimum) :'); if(!pw) return;
+  try{ await api('recover',{json:{email:em,secret:key,password:pw}}); $('#au-pw').value=pw; $('#au-err').style.color='#2b8a3e'; $('#au-err').textContent='Mot de passe administrateur réinitialisé. Cliquez « Se connecter ».'; }catch(er){ $('#au-err').style.color=''; $('#au-err').textContent=er.message; } };
 try{ $('#au-logo').src=document.querySelector('.hdr1 .logo').src; }catch(e){}
 $('#cl-st').onclick=()=>{ espOpen('projets'); };
 clAuthMode(); clLoadMe();

@@ -95,6 +95,18 @@ async function handle(req, res) {
     await applyInvites(u); setSession(req, res, u.id);
     return send(res, 200, { user: pubUser(u), teams: await userTeams(u), projects: await projectsOf(u) });
   }
+  if (r === 'recover') { // réinitialisation d'un compte administrateur avec la clé de secours (variable Vercel L2C_RECOVERY)
+    const key = process.env.L2C_RECOVERY || '', given = String(J.secret || '');
+    if (!key) throw fail(503, 'Clé de secours non configurée : ajoutez la variable L2C_RECOVERY dans Vercel.');
+    await new Promise(r2 => setTimeout(r2, 800));
+    const h1 = crypto.createHash('sha256').update(key).digest(), h2 = crypto.createHash('sha256').update(given).digest();
+    if (!crypto.timingSafeEqual(h1, h2)) throw fail(403, 'Clé de secours incorrecte.');
+    const e = await getJ(ePath(normEmail(J.email))), u = e && await getUser(e.id);
+    if (!u || !u.sa) throw fail(404, 'Aucun compte administrateur avec ce courriel.');
+    if (String(J.password || '').length < 8) throw fail(400, 'Mot de passe : 8 caractères minimum.');
+    u.pwd = hashPwd(String(J.password)); u.mustChange = false; u.disabled = false; u.pending = false; await putJ(uPath(u.id), u);
+    return send(res, 200, { ok: true });
+  }
   if (r === 'forgot') { const e = normEmail(J.email); if (okEmail(e) && (await getJ(ePath(e)))) { const m = (await getJ('meta/resets.json')) || { list: [] }; if (!m.list.find(x => x.email === e)) { m.list.push({ email: e, at: Date.now() }); await putJ('meta/resets.json', m); } } return send(res, 200, { ok: true }); }
   if (r === 'login') {
     const e = await getJ(ePath(normEmail(J.email))), u = e && await getUser(e.id);
